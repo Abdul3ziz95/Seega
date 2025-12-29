@@ -1,40 +1,170 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>Click Game</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background: #f4f4f4;
-            padding-top: 50px;
-        }
-        button {
-            font-size: 20px;
-            padding: 15px 30px;
-            cursor: pointer;
-        }
-        h1 {
-            color: #333;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ميزانك الذكي</title>
+
+<style>
+body{margin:0;font-family:sans-serif;background:#f2f2f2}
+header{background:#0d47a1;color:#fff;padding:15px;text-align:center;font-size:20px}
+nav{display:flex;gap:5px;padding:10px}
+nav button{flex:1;padding:10px;background:#1976d2;color:#fff;border:0;border-radius:6px}
+section{padding:15px}
+input,select,button{width:100%;padding:10px;margin-bottom:8px;border-radius:6px;border:1px solid #ccc}
+button{background:#1565c0;color:#fff}
+ul{list-style:none;padding:0}
+li{background:#fff;padding:10px;margin-top:6px;border-radius:6px;cursor:pointer}
+.hidden{display:none}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.modal-box{background:#fff;padding:15px;width:90%;border-radius:8px}
+.modal img{max-width:100%;margin-top:10px}
+</style>
 </head>
+
 <body>
 
-    <h1>🎮 Click the Button!</h1>
-    <p>Score: <span id="score">0</span></p>
-    <button onclick="increaseScore()">Click Me!</button>
+<header>💰 ميزانك الذكي</header>
 
-    <script>
-        let score = 0;
+<nav>
+<button onclick="show('expenses')">المصروفات</button>
+<button onclick="show('onme')">ديون عليك</button>
+<button onclick="show('forme')">ديون لك</button>
+</nav>
 
-        function increaseScore() {
-            score++;
-            document.getElementById("score").innerText = score;
-        }
-    </script>
+<section id="expenses">
+<h3>المصروفات</h3>
+<input id="amount" type="number" placeholder="المبلغ">
+<select id="cat">
+<option value="">اختر الفئة</option>
+<option>أكل</option>
+<option>مواصلات</option>
+<option>فواتير</option>
+<option>تسوق</option>
+<option>أخرى</option>
+</select>
+<input id="note" placeholder="ملاحظة">
+<input id="img" type="file" accept="image/*">
+<button onclick="addExpense()">إضافة</button>
+<ul id="expList"></ul>
+</section>
+
+<section id="onme" class="hidden">
+<h3>ديون عليك</h3>
+<input id="onName" placeholder="الاسم">
+<input id="onAmount" type="number" placeholder="المبلغ">
+<button onclick="addOnMe()">إضافة</button>
+<ul id="onList"></ul>
+</section>
+
+<section id="forme" class="hidden">
+<h3>ديون لك</h3>
+<input id="forName" placeholder="الاسم">
+<input id="forAmount" type="number" placeholder="المبلغ">
+<button onclick="addForMe()">إضافة</button>
+<ul id="forList"></ul>
+</section>
+
+<div id="modal" class="modal hidden">
+<div class="modal-box">
+<h3>تفاصيل</h3>
+<div id="details"></div>
+<button onclick="closeModal()">إغلاق</button>
+</div>
+</div>
+
+<script>
+let expenses = JSON.parse(localStorage.getItem("expenses")||"[]");
+let onme = JSON.parse(localStorage.getItem("onme")||"[]");
+let forme = JSON.parse(localStorage.getItem("forme")||"[]");
+
+function save(){
+localStorage.setItem("expenses",JSON.stringify(expenses));
+localStorage.setItem("onme",JSON.stringify(onme));
+localStorage.setItem("forme",JSON.stringify(forme));
+}
+
+function show(id){
+document.querySelectorAll("section").forEach(s=>s.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+}
+
+function addExpense(){
+if(!amount.value||!cat.value){alert("أكمل البيانات");return;}
+const file=img.files[0];
+if(file){
+const r=new FileReader();
+r.onload=()=>pushExpense(r.result);
+r.readAsDataURL(file);
+}else pushExpense(null);
+}
+
+function pushExpense(image){
+expenses.push({
+amount:amount.value,
+cat:cat.value,
+note:note.value,
+img:image,
+date:new Date().toLocaleString()
+});
+save();render();
+amount.value=note.value="";cat.value="";img.value="";
+}
+
+function addOnMe(){
+onme.push({name:onName.value,amount:onAmount.value,date:new Date().toLocaleString()});
+save();render();
+onName.value=onAmount.value="";
+}
+
+function addForMe(){
+forme.push({name:forName.value,amount:forAmount.value,date:new Date().toLocaleString()});
+save();render();
+forName.value=forAmount.value="";
+}
+
+function render(){
+expList.innerHTML="";
+expenses.forEach(e=>{
+let li=document.createElement("li");
+li.textContent=e.amount+" - "+e.cat;
+li.onclick=()=>showDetails(e);
+expList.appendChild(li);
+});
+
+onList.innerHTML="";
+onme.forEach(d=>{
+let li=document.createElement("li");
+li.textContent=d.name+" - "+d.amount;
+li.onclick=()=>showDetails(d);
+onList.appendChild(li);
+});
+
+forList.innerHTML="";
+forme.forEach(d=>{
+let li=document.createElement("li");
+li.textContent=d.name+" - "+d.amount;
+li.onclick=()=>showDetails(d);
+forList.appendChild(li);
+});
+}
+
+function showDetails(d){
+details.innerHTML=`
+<p>المبلغ: ${d.amount}</p>
+<p>${d.cat||d.name||""}</p>
+<p>${d.note||""}</p>
+<p>${d.date}</p>
+${d.img?`<img src="${d.img}">`:""}
+`;
+modal.classList.remove("hidden");
+}
+
+function closeModal(){modal.classList.add("hidden");}
+
+render();
+</script>
 
 </body>
 </html>
