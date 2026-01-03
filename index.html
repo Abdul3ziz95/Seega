@@ -454,6 +454,7 @@ function saveData(storeName, data) {
 
     const transaction = IDB_connection.transaction([storeName], "readwrite");
     const store = transaction.objectStore(storeName);
+    // put() updates if ID exists, adds if not. Essential for the fix.
     const request = store.put(data); 
 
     request.onsuccess = () => resolve(request.result);
@@ -482,6 +483,7 @@ function loadStoreData(storeName) {
     const store = transaction.objectStore(storeName);
     const request = store.getAll();
 
+    // يتم تحميل البيانات معكوسة لضمان أن الأحدث في الأعلى عند العرض
     request.onsuccess = (e) => resolve(e.target.result.reverse());
     request.onerror = () => resolve([]);
   });
@@ -509,7 +511,7 @@ async function addExpense() {
   if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
-  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (المعكوسة)**
+  // جلب البيانات القديمة بناءً على الـ index الموثوق به والمُعين في showDetailById
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
   
   const data = isEditing ? { ...oldData } : {}; 
@@ -521,7 +523,7 @@ async function addExpense() {
   data.صورة = oldData.صورة || null;
   
   if (isEditing) {
-      // **التصحيح: التأكد الصريح من حفظ الـ ID للتعديل (Bug 1 & 2 Fix)**
+      // **التصحيح: التأكد من بقاء الـ ID لتحديث السجل بدلاً من إضافته**
       data.id = oldData.id; 
   }
   
@@ -553,7 +555,6 @@ async function addRight() {
   if (!rName.value || !rAmount.value || !rDate.value || !rStatus.value || !rType.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "rig";
-  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (المعكوسة)**
   const oldData = isEditing ? db.rig[editMode.index] : {};
   const rExpectedDate = document.getElementById('rExpectedDate');
 
@@ -568,7 +569,7 @@ async function addRight() {
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   if (isEditing) {
-      // **التصحيح: التأكد الصريح من حفظ الـ ID للتعديل (Bug 1 & 2 Fix)**
+      // **التصحيح: التأكد من بقاء الـ ID لتحديث السجل بدلاً من إضافته**
       data.id = oldData.id;
   }
   
@@ -599,7 +600,6 @@ async function addDebt() {
   if (isMasterLiability && !dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
 
   const isEditing = editMode && editMode.type === "deb";
-  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (المعكوسة)**
   const oldData = isEditing ? db.deb[editMode.index] : {};
 
   const data = isEditing ? { ...oldData } : {};
@@ -665,7 +665,7 @@ async function addDebt() {
   }
   
   if (isEditing) {
-      // **التصحيح: التأكد الصريح من حفظ الـ ID للتعديل (Bug 1 & 2 Fix)**
+      // **التصحيح: التأكد من بقاء الـ ID لتحديث السجل بدلاً من إضافته**
       data.id = oldData.id;
   }
   
@@ -703,24 +703,20 @@ function renderLog() {
   const filteredData = db[currentLog]
     .filter(i => JSON.stringify(i).toLowerCase().includes(q));
 
-  // **تصحيح عرض سجل المصروفات (Bug 3 Fix):** تم التأكد من أن حقول المصروفات تعرض بشكل صحيح
+  // **التصحيح: استخدام الـ ID في onclick بدلاً من تمرير الكائن الكامل أو الفهرس**
   logContent.innerHTML = filteredData
     .map((i) => {
-        // نستخدم findIndex للحصول على الموقع الصحيح في المصفوفة الرئيسية (المعكوسة)
-        const originalIndex = db[currentLog].findIndex(item => item.id === i.id);
-        
         let subText = i.الحالة || '';
         let displayAmount = i.المبلغ;
-        let displayTitle = i.النوع || i.الفئة || i.الاسم;
+        let displayTitle = i.النوع || i.الفئة || i.الاسم || 'معاملة';
         
         if (i.المتبقي_للالتزام) {
-             // عرض المتبقي من الالتزام الرئيسي
              subText = `مدفوع: ${i.إجمالي_المدفوع} / متبقي: ${i.المتبقي_للالتزام}`;
              displayAmount = i.المبلغ_الكلي_للالتزام;
         }
 
         return `
-            <div class="list-item" onclick='showDetail(${JSON.stringify(i)},"${currentLog}",${originalIndex})'>
+            <div class="list-item" onclick='showDetailById(${i.id},"${currentLog}")'>
                 <div style="font-weight: bold; margin-bottom: 5px;">
                     ${displayTitle} - ${formatCurrency(displayAmount)}
                 </div>
@@ -733,57 +729,72 @@ function renderLog() {
     .join("");
 }
 
-function showDetail(o, type, index) {
-  const detailModal = document.getElementById("detailModal");
-  const detailContent = document.getElementById("detailContent");
-  
-  editMode = { type, index }; 
-  detailModal.style.display = "flex";
-  
-  const customMap = {
-      'تاريخ_متوقع': 'تاريخ السداد المتوقع',
-      'المبلغ_الكلي_للالتزام': 'المبلغ الكلي للالتزام (الأصلي)',
-      'إجمالي_المدفوع': 'إجمالي المدفوع حتى الآن (مصروف)',
-      'المتبقي_للالتزام': 'المتبقي من الالتزام',
-      'عدد_الاقساط': 'عدد الأقساط الكلي',
-      'قيمة_القسط': 'قيمة القسط',
-      'الأقساط_المدفوعة': 'عدد الأقساط المدفوعة',
-      'المبلغ': 'المبلغ (قسط/فاتورة)',
-      'الاسم': type === 'rig' ? 'اسم المدين' : type === 'deb' ? 'اسم الدائن/الجهة' : '—',
-  };
-  
-  detailContent.innerHTML = Object.entries(o).map(([k, v]) => {
-    if (k === "صورة" && v) return `<p><b>صورة:</b></p><img src="${v}">`;
-    if (k === "id") return ""; 
+// **دالة جديدة: البحث عن العنصر وتحديد الـ Index لتشغيل وضع التعديل**
+function showDetailById(id, type) {
+    const o = db[type].find(item => item.id === id);
+    if (!o) return toastMsg("لم يتم العثور على المعاملة.");
     
-    const displayKey = customMap[k] || k;
+    // إيجاد الفهرس الصحيح في المصفوفة الرئيسية (المعكوسة) لتحديث editMode
+    const index = db[type].findIndex(item => item.id === id);
+    if (index === -1) return toastMsg("خطأ في العثور على فهرس المعاملة.");
     
-    // القيم التي تحتاج لتنسيق عملة (غير منسقة في DB)
-    if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام") {
-        if (v === "—" || v === null) return "";
-        return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
-    }
+    editMode = { type, index }; // تعيين وضع التعديل على العنصر الصحيح
     
-    // القيمة المحسوبة (المتبقي، قيمة القسط، إجمالي المدفوع) التي هي مُنسقة بالفعل
-    if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") {
-         if (v === "—" || v === null) return "";
-         return `<p><b>${displayKey}:</b> ${v}</p>`;
-    }
-    
-    if (k === "التاريخ" || k === "تاريخ_متوقع") {
-        return `<p><b>${displayKey}:</b> ${formatDateTime(v)}</p>`;
-    }
-    
-    if (v === null || v === undefined || v === "" || v === "—") return "";
-    
-    return `<p><b>${displayKey}:</b> ${v}</p>`;
-  }).filter(p => p !== "").join("") + 
-  `<button class="action" onclick="editTransaction()">✏️ تعديل</button>
-  <button class="secondary" onclick="deleteTransaction()">🗑️ حذف</button>`;
+    _renderDetailContent(o, type); // تمرير الكائن للعرض
+}
+
+// **دالة مساعدة لعرض محتوى التفاصيل (تم استخراجها من showDetail القديمة)**
+function _renderDetailContent(o, type) {
+    const detailModal = document.getElementById("detailModal");
+    const detailContent = document.getElementById("detailContent");
+
+    detailModal.style.display = "flex";
+
+    const customMap = {
+        'تاريخ_متوقع': 'تاريخ السداد المتوقع',
+        'المبلغ_الكلي_للالتزام': 'المبلغ الكلي للالتزام (الأصلي)',
+        'إجمالي_المدفوع': 'إجمالي المدفوع حتى الآن (مصروف)',
+        'المتبقي_للالتزام': 'المتبقي من الالتزام',
+        'عدد_الاقساط': 'عدد الأقساط الكلي',
+        'قيمة_القسط': 'قيمة القسط',
+        'الأقساط_المدفوعة': 'عدد الأقساط المدفوعة',
+        'المبلغ': 'المبلغ (قسط/فاتورة)',
+        'الاسم': type === 'rig' ? 'اسم المدين' : type === 'deb' ? 'اسم الدائن/الجهة' : '—',
+    };
+
+    detailContent.innerHTML = Object.entries(o).map(([k, v]) => {
+        if (k === "صورة" && v) return `<p><b>صورة:</b></p><img src="${v}">`;
+        if (k === "id") return ""; 
+        
+        const displayKey = customMap[k] || k;
+        
+        // القيم التي تحتاج لتنسيق عملة (غير منسقة في DB)
+        if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام") {
+            if (v === "—" || v === null) return "";
+            return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
+        }
+        
+        // القيمة المحسوبة (المتبقي، قيمة القسط، إجمالي المدفوع) التي هي مُنسقة بالفعل
+        if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") {
+             if (v === "—" || v === null) return "";
+             return `<p><b>${displayKey}:</b> ${v}</p>`;
+        }
+        
+        if (k === "التاريخ" || k === "تاريخ_متوقع") {
+            return `<p><b>${displayKey}:</b> ${formatDateTime(v)}</p>`;
+        }
+        
+        if (v === null || v === undefined || v === "" || v === "—") return "";
+        
+        return `<p><b>${displayKey}:</b> ${v}</p>`;
+    }).filter(p => p !== "").join("") + 
+    `<button class="action" onclick="editTransaction()">✏️ تعديل</button>
+    <button class="secondary" onclick="deleteTransaction()">🗑️ حذف</button>`;
 }
 
 function editTransaction() {
   if (!editMode) return;
+  // **التصحيح: الوصول إلى البيانات بالاعتماد على الفهرس الموثوق به والمخزن في editMode**
   const currentData = db[editMode.type][editMode.index];
 
   if (editMode.type === "exp") {
@@ -809,26 +820,20 @@ function editTransaction() {
   }
   
   if (editMode.type === "deb") {
-    // 1. فتح التبويبة أولاً لإعادة تعيين الحقول
     openTab('debts'); 
     
-    // 2. تعبئة الحقول الأساسية
     dName.value = currentData.الاسم; 
     dType.value = currentData.النوع;
     dDesc.value = currentData.الوصف;
     dDate.value = currentData.التاريخ;
 
-    // 3. إعادة إنشاء الحقول الديناميكية (يؤدي إلى إخفاء/إظهار dAmount و dStatus)
     updateDebtFields(dType.value); 
 
-    // 4. تعبئة الحقول بناءً على النوع
     if (currentData.النوع === 'قرض' || currentData.النوع === 'دين شخصي') {
-        // Master Liabilities
         if (currentData.المبلغ_الكلي_للالتزام && document.getElementById('dTotalAmount')) {
             document.getElementById('dTotalAmount').value = currentData.المبلغ_الكلي_للالتزام;
         }
         
-        // القرض
         if (currentData.النوع === 'قرض') {
             if (currentData.عدد_الاقساط && document.getElementById('dInstallments')) {
                 document.getElementById('dInstallments').value = currentData.عدد_الاقساط;
@@ -836,18 +841,15 @@ function editTransaction() {
             if (currentData.الأقساط_المدفوعة !== null && document.getElementById('dPaidInstallments')) {
                 document.getElementById('dPaidInstallments').value = currentData.الأقساط_المدفوعة;
             }
-            // يجب إعادة حساب وعرض قيمة القسط
             calculateInstallmentValue();
 
         } else if (currentData.النوع === 'دين شخصي') {
-            // الدين الشخصي (المدفوع نقداً)
             const paidAmountUnformatted = parseAmount(currentData.إجمالي_المدفوع) || 0;
             if (document.getElementById('dPaidInstallments')) {
                 document.getElementById('dPaidInstallments').value = paidAmountUnformatted.toLocaleString('ar');
             }
         }
     } else {
-        // Standard Liabilities (Fines, Bills, etc.)
         dAmount.value = currentData.المبلغ;
         dStatus.value = currentData.الحالة;
     }
@@ -864,7 +866,7 @@ async function deleteTransaction() {
   if (!confirm("هل أنت متأكد من حذف هذه المعاملة؟")) return;
   
   const typeToDelete = editMode.type;
-  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (Bug 2 Fix)**
+  // **التصحيح: الوصول إلى الـ ID بالاعتماد على الفهرس الموثوق به والمخزن في editMode**
   const idToDelete = db[typeToDelete][editMode.index].id;
   
   try {
@@ -911,21 +913,14 @@ function updateStats() {
     
     if (isMasterLiability) {
         const totalLiability = parseAmount(d.المبلغ_الكلي_للالتزام);
-        // استخراج المبلغ المدفوع من حقل إجمالي_المدفوع المنسق
         const paidAmount = parseAmount(d.إجمالي_المدفوع); 
         
-        // أ) تجميع إجمالي الالتزامات الكلية (dt)
         dt += totalLiability; 
-        
-        // ب) تجميع إجمالي المدفوع (dp)
         dp += paidAmount;
         
-        // ج) المتبقي (du)
         const remaining = totalLiability - paidAmount;
         du += remaining;
         
-        // د) **النقل التلقائي إلى المصروفات (Et):**
-        // يُضاف فقط إجمالي المدفوع إلى إجمالي المصروفات
         if (paidAmount > 0) {
             et += paidAmount; 
             ec++; 
@@ -935,20 +930,18 @@ function updateStats() {
 
     } else {
         // الالتزامات العادية (فواتير، أقساط/فواتير أخرى)
-        let amount = parseAmount(d.المبلغ); // المبلغ الحالي / الفاتورة
-        dt += amount; // الفاتورة تُحسب كإجمالي التزام مؤقت
+        let amount = parseAmount(d.المبلغ); 
+        dt += amount; 
         
         if (d.الحالة === "مدفوع") {
             dp += amount;
             
-            // النقل التلقائي: الالتزام المدفوع يُضاف إلى إجمالي المصروفات
             et += amount; 
             ec++;
             
             const category = `التزام مدفوع: ${d.الاسم} (${d.النوع})`;
             cats[category] = (cats[category] || 0) + amount;
         } else {
-            // غير مدفوع: يضاف إلى المتبقي
             du += amount;
         }
     }
