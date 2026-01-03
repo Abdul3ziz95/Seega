@@ -389,7 +389,8 @@ function updateDebtFields(type) {
     }
 }
 
-function openTab(id) {
+// **التصحيح الحاسم: إضافة معلمة لـ openTab**
+function openTab(id, keepEditMode = false) {
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -397,8 +398,10 @@ function openTab(id) {
   const button = event.currentTarget || document.querySelector(`.tabs button[onclick="openTab('${id}')"]`);
   if(button) button.classList.add("active");
   
-  editMode = null; 
-  clearFields(); 
+  if (!keepEditMode) { // **تمت إضافة هذا الشرط**
+      editMode = null; 
+      clearFields(); 
+  }
   
   if (document.getElementById('search')) {
       document.getElementById('search').value = "";
@@ -528,7 +531,7 @@ async function addExpense() {
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
   
-  // 1. **التصحيح الحاسم**: نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
+  // 1. نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {}; 
 
   // 2. تحديث الحقول بقيم النموذج الجديدة
@@ -575,7 +578,7 @@ async function addRight() {
   const oldData = isEditing ? db.rig[editMode.index] : {};
   const rExpectedDate = document.getElementById('rExpectedDate');
 
-  // 1. **التصحيح الحاسم**: نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
+  // 1. نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {};
 
   // 2. تحديث الحقول بقيم النموذج الجديدة
@@ -620,7 +623,7 @@ async function addDebt() {
   const isEditing = editMode && editMode.type === "deb";
   const oldData = isEditing ? db.deb[editMode.index] : {};
 
-  // 1. **التصحيح الحاسم**: نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
+  // 1. نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {};
 
   // 2. تحديث الحقول بقيم النموذج الجديدة
@@ -811,7 +814,8 @@ function editTransaction() {
   logModal.style.display = "none"; 
   
   if (editMode.type === "exp") {
-    openTab('expenses'); 
+    // **التصحيح: تمرير true لمنع openTab من مسح editMode**
+    openTab('expenses', true); 
     eAmount.value = currentData.المبلغ;
     eType.value = currentData.الفئة;
     eDesc.value = currentData.الوصف;
@@ -819,7 +823,8 @@ function editTransaction() {
   }
   
   if (editMode.type === "rig") {
-    openTab('rights'); 
+    // **التصحيح: تمرير true لمنع openTab من مسح editMode**
+    openTab('rights', true); 
     rName.value = currentData.الاسم;
     rType.value = currentData.النوع;
     updateRightFields(rType.value); 
@@ -833,7 +838,8 @@ function editTransaction() {
   }
   
   if (editMode.type === "deb") {
-    openTab('debts'); 
+    // **التصحيح: تمرير true لمنع openTab من مسح editMode**
+    openTab('debts', true); 
     
     dName.value = currentData.الاسم; 
     dType.value = currentData.النوع;
