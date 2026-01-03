@@ -286,7 +286,7 @@ function clearFields(keepExpenseImage = false) {
   document.getElementById('dDynamicFields').innerHTML = '';
   dName.placeholder = dName.getAttribute('data-default-placeholder');
   
-  // **إعادة إظهار حقول الالتزامات العادية**
+  // إعادة إظهار حقول الالتزامات العادية
   document.getElementById('dAmount').style.display = 'block'; 
   document.getElementById('dStatus').style.display = 'block'; 
 }
@@ -502,6 +502,21 @@ async function loadAllData() {
     if (logModal.style.display === "flex") renderLog();
 }
 
+// **وظيفة مساعدة جديدة لمعالجة ما بعد الحفظ (لتنظيف الحقول وإعادة فتح السجل)**
+function postSaveCleanup(isEditing, type) {
+    editMode = null; 
+    clearFields(); // تفريغ الحقول
+    updateStats();
+    
+    // إغلاق نافذة التفاصيل إذا كانت مفتوحة
+    document.getElementById("detailModal").style.display = "none";
+    
+    // إذا كانت العملية تعديلاً، قم بإعادة فتح نافذة السجل لعرض القائمة المحدثة
+    if (isEditing) {
+        openLog(type); 
+    }
+}
+
 
 // ===================================================
 // 3. وظائف الإضافة والتعديل والحذف (CRUD)
@@ -511,19 +526,19 @@ async function addExpense() {
   if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
-  // جلب البيانات القديمة بناءً على الـ index الموثوق به والمُعين في showDetailById
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
   
+  // ننسخ البيانات القديمة لضمان الحفاظ على الـ ID إن وجد
   const data = isEditing ? { ...oldData } : {}; 
 
   data.المبلغ = eAmount.value; 
   data.الفئة = eType.value; 
   data.الوصف = eDesc.value; 
   data.التاريخ = eDate.value; 
-  data.صورة = oldData.صورة || null;
-  
+  data.صورة = oldData.صورة || null; // الاحتفاظ بالصورة القديمة
+
+  // **التصحيح الحاسم: التأكد الصريح من بقاء الـ ID لتحديث السجل**
   if (isEditing) {
-      // **التصحيح: التأكد من بقاء الـ ID لتحديث السجل بدلاً من إضافته**
       data.id = oldData.id; 
   }
   
@@ -531,11 +546,10 @@ async function addExpense() {
     try {
         await saveData('exp', data); 
         toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
-        editMode = null; 
         
         await loadAllData(); 
-        clearFields();
-        updateStats();
+        postSaveCleanup(isEditing, 'exp'); 
+
     } catch (error) {
         toastMsg("فشل الحفظ. تحقق من Console.");
         console.error(error);
@@ -568,19 +582,18 @@ async function addRight() {
   data.الحالة = rStatus.value;
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
+  // **التصحيح الحاسم: التأكد الصريح من بقاء الـ ID لتحديث السجل**
   if (isEditing) {
-      // **التصحيح: التأكد من بقاء الـ ID لتحديث السجل بدلاً من إضافته**
       data.id = oldData.id;
   }
   
   try {
       await saveData('rig', data);
       toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
-      editMode = null;
       
       await loadAllData(); 
-      clearFields();
-      updateStats();
+      postSaveCleanup(isEditing, 'rig');
+
   } catch (error) {
       toastMsg("فشل الحفظ. تحقق من Console.");
       console.error(error);
@@ -629,7 +642,6 @@ async function addDebt() {
           data.الأقساط_المدفوعة = paidInstallmentsCount;
           
       } else if (data.النوع === 'دين شخصي') {
-          // dPaidInstallments is repurposed for the monetary paid amount
           totalPaidAmount = parseAmount(dPaidInstallmentsInput.value);
           
           if (totalPaidAmount > totalAmount) return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
@@ -641,21 +653,17 @@ async function addDebt() {
       
       remainingAmount = totalAmount - totalPaidAmount;
       
-      // حفظ القيم المحسوبة والمدخلات الرئيسية
       data.المبلغ_الكلي_للالتزام = dTotalAmountInput.value;
       data.إجمالي_المدفوع = formatCurrency(totalPaidAmount); 
       data.المتبقي_للالتزام = formatCurrency(remainingAmount);
       
-      // تنظيف حقول الالتزامات العادية لتجنب تضارب البيانات
       data.المبلغ = "—";
       data.الحالة = "—";
       
   } else {
-      // الالتزامات العادية (فواتير، إيجار، قسط/فاتورة أخرى)
       data.المبلغ = dAmount.value; 
       data.الحالة = dStatus.value;
       
-      // تنظيف حقول Master Liability
       delete data.المبلغ_الكلي_للالتزام;
       delete data.إجمالي_المدفوع;
       delete data.المتبقي_للالتزام;
@@ -664,19 +672,18 @@ async function addDebt() {
       delete data.الأقساط_المدفوعة;
   }
   
+  // **التصحيح الحاسم: التأكد الصريح من بقاء الـ ID لتحديث السجل**
   if (isEditing) {
-      // **التصحيح: التأكد من بقاء الـ ID لتحديث السجل بدلاً من إضافته**
       data.id = oldData.id;
   }
   
   try {
       await saveData('deb', data);
       toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
-      editMode = null;
       
       await loadAllData(); 
-      clearFields();
-      updateStats();
+      postSaveCleanup(isEditing, 'deb');
+
   } catch (error) {
       toastMsg("فشل الحفظ. تحقق من Console.");
       console.error(error);
@@ -703,7 +710,6 @@ function renderLog() {
   const filteredData = db[currentLog]
     .filter(i => JSON.stringify(i).toLowerCase().includes(q));
 
-  // **التصحيح: استخدام الـ ID في onclick بدلاً من تمرير الكائن الكامل أو الفهرس**
   logContent.innerHTML = filteredData
     .map((i) => {
         let subText = i.الحالة || '';
@@ -729,21 +735,18 @@ function renderLog() {
     .join("");
 }
 
-// **دالة جديدة: البحث عن العنصر وتحديد الـ Index لتشغيل وضع التعديل**
 function showDetailById(id, type) {
     const o = db[type].find(item => item.id === id);
     if (!o) return toastMsg("لم يتم العثور على المعاملة.");
     
-    // إيجاد الفهرس الصحيح في المصفوفة الرئيسية (المعكوسة) لتحديث editMode
     const index = db[type].findIndex(item => item.id === id);
     if (index === -1) return toastMsg("خطأ في العثور على فهرس المعاملة.");
     
-    editMode = { type, index }; // تعيين وضع التعديل على العنصر الصحيح
+    editMode = { type, index }; 
     
-    _renderDetailContent(o, type); // تمرير الكائن للعرض
+    _renderDetailContent(o, type); 
 }
 
-// **دالة مساعدة لعرض محتوى التفاصيل (تم استخراجها من showDetail القديمة)**
 function _renderDetailContent(o, type) {
     const detailModal = document.getElementById("detailModal");
     const detailContent = document.getElementById("detailContent");
@@ -768,13 +771,11 @@ function _renderDetailContent(o, type) {
         
         const displayKey = customMap[k] || k;
         
-        // القيم التي تحتاج لتنسيق عملة (غير منسقة في DB)
         if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام") {
             if (v === "—" || v === null) return "";
             return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
         }
         
-        // القيمة المحسوبة (المتبقي، قيمة القسط، إجمالي المدفوع) التي هي مُنسقة بالفعل
         if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") {
              if (v === "—" || v === null) return "";
              return `<p><b>${displayKey}:</b> ${v}</p>`;
@@ -794,9 +795,14 @@ function _renderDetailContent(o, type) {
 
 function editTransaction() {
   if (!editMode) return;
-  // **التصحيح: الوصول إلى البيانات بالاعتماد على الفهرس الموثوق به والمخزن في editMode**
   const currentData = db[editMode.type][editMode.index];
 
+  // **التصحيح: إخفاء نافذتي التفاصيل والسجل عند الانتقال إلى التعديل**
+  const detailModal = document.getElementById("detailModal");
+  const logModal = document.getElementById("logModal");
+  detailModal.style.display = "none";
+  logModal.style.display = "none"; 
+  
   if (editMode.type === "exp") {
     openTab('expenses'); 
     eAmount.value = currentData.المبلغ;
@@ -853,11 +859,6 @@ function editTransaction() {
         dAmount.value = currentData.المبلغ;
         dStatus.value = currentData.الحالة;
     }
-
-    const detailModal = document.getElementById("detailModal");
-    const logModal = document.getElementById("logModal");
-    detailModal.style.display = "none";
-    logModal.style.display = "none"; 
   }
 }
 
@@ -866,7 +867,6 @@ async function deleteTransaction() {
   if (!confirm("هل أنت متأكد من حذف هذه المعاملة؟")) return;
   
   const typeToDelete = editMode.type;
-  // **التصحيح: الوصول إلى الـ ID بالاعتماد على الفهرس الموثوق به والمخزن في editMode**
   const idToDelete = db[typeToDelete][editMode.index].id;
   
   try {
@@ -893,11 +893,11 @@ async function deleteTransaction() {
 // ===================================================
 
 function updateStats() {
-  let et = 0, ec = 0; // et: Expenses Total | ec: Expenses Count
-  let cats = {}; // Categories for top expense
+  let et = 0, ec = 0; 
+  let cats = {}; 
   
-  let rt = 0, rp = 0, ru = 0; // Rights
-  let dt = 0, dp = 0, du = 0; // Debts (dt: Total Liability | dp: Total Paid Expense | du: Total Remaining)
+  let rt = 0, rp = 0, ru = 0; 
+  let dt = 0, dp = 0, du = 0; 
 
   // 1. حساب المصروفات المتغيرة (Variable Expenses)
   db.exp.forEach(e => { 
