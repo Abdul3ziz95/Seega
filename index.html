@@ -280,6 +280,9 @@ function clearFields(keepExpenseImage = false) {
   rName.value = rAmount.value = rDesc.value = rDate.value = rType.value = rStatus.value = "";
   document.getElementById('rDynamicFields').innerHTML = '';
   rName.placeholder = rName.getAttribute('data-default-placeholder');
+  document.getElementById('rAmount').oninput = function() { formatAmount(this); };
+  document.getElementById('rAmount').placeholder = "💵 المبلغ المستحق (المبلغ الكلي)";
+
 
   // Debts fields
   dName.value = dType.value = dAmount.value = dDesc.value = dDate.value = dStatus.value = "";
@@ -320,12 +323,60 @@ function updateNamePlaceholder(type, nameInputId) {
     nameInput.placeholder = placeholder;
 }
 
+function calculateRightRemaining() {
+    const totalInput = document.getElementById('rAmount');
+    const paidInput = document.getElementById('rPaidAmount');
+    const remainingDisplay = document.getElementById('rRemainingDisplay');
+
+    if (!totalInput || !paidInput || !remainingDisplay) return;
+
+    const total = parseAmount(totalInput.value);
+    const paid = parseAmount(paidInput.value);
+
+    const remaining = total - paid;
+    
+    if (remaining < 0) {
+        remainingDisplay.textContent = `المتبقي: خطأ! المدفوع أكبر من الكلي`;
+        remainingDisplay.style.color = 'red';
+        return;
+    }
+    
+    remainingDisplay.style.color = '#dc3545';
+    remainingDisplay.textContent = `المتبقي: ${formatCurrency(remaining.toFixed(2))}`;
+}
+
 function updateRightFields(type) {
     const dynamicContainer = document.getElementById('rDynamicFields');
     dynamicContainer.innerHTML = '';
     updateNamePlaceholder(type, 'rName');
+    
+    const rStatusSelect = document.getElementById('rStatus'); 
+    
+    // إعادة تعيين Placeholder و oninput لـ rAmount
+    const rAmountInput = document.getElementById('rAmount');
+    rAmountInput.placeholder = "💵 المبلغ المستحق (المبلغ الكلي)";
+    rAmountInput.oninput = function() { formatAmount(this); };
 
-    if (type === 'دين' || type === 'بيع بالآجل') {
+    if (type === 'دين') {
+        rStatusSelect.style.display = 'none'; // سيتم حساب الحالة تلقائياً
+        rAmountInput.placeholder = "💵 المبلغ الكلي للدين";
+        rAmountInput.oninput = function() { formatAmount(this); calculateRightRemaining(); };
+
+        dynamicContainer.innerHTML = `
+            <div class="datetime-container">
+                <input id="rExpectedDate" type="datetime-local">
+                <span class="calendar-icon">🗓️</span>
+            </div>
+            <label for="rExpectedDate" style="display:block; font-size: 0.9em; color: #555; text-align: right; margin-top: -10px;">تاريخ السداد المتوقع</label>
+            
+            <input id="rPaidAmount" type="text" placeholder="المبلغ المدفوع/المحصل حتى الآن" oninput="calculateRightRemaining(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <p id="rRemainingDisplay" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: #dc3545; font-weight: bold;">المتبقي: —</p>
+        `;
+        
+    } else if (type === 'بيع بالآجل') {
+        rStatusSelect.style.display = 'block';
+        rAmountInput.placeholder = "💵 المبلغ الكلي للبيع بالآجل";
+
         dynamicContainer.innerHTML = `
             <div class="datetime-container">
                 <input id="rExpectedDate" type="datetime-local">
@@ -333,6 +384,8 @@ function updateRightFields(type) {
             </div>
             <label for="rExpectedDate" style="display:block; font-size: 0.9em; color: #555; text-align: right; margin-top: -10px;">تاريخ السداد المتوقع (إن وجد)</label>
         `;
+    } else {
+        rStatusSelect.style.display = 'block';
     }
 }
 
@@ -398,7 +451,7 @@ function openTab(id, keepEditMode = false) {
   const button = event.currentTarget || document.querySelector(`.tabs button[onclick="openTab('${id}')"]`);
   if(button) button.classList.add("active");
   
-  if (!keepEditMode) { 
+  if (!keepEditMode) { // **تمت إضافة هذا الشرط**
       editMode = null; 
       clearFields(); 
   }
@@ -572,11 +625,14 @@ async function addExpense() {
 }
 
 async function addRight() {
-  if (!rName.value || !rAmount.value || !rDate.value || !rStatus.value || !rType.value) return toastMsg("أكمل البيانات");
+  if (!rName.value || !rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "rig";
   const oldData = isEditing ? db.rig[editMode.index] : {};
   const rExpectedDate = document.getElementById('rExpectedDate');
+  const rPaidAmountInput = document.getElementById('rPaidAmount'); 
+  const totalAmount = parseAmount(rAmount.value);
+
 
   // 1. نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {};
@@ -587,8 +643,36 @@ async function addRight() {
   data.المبلغ = rAmount.value; 
   data.الوصف = rDesc.value; 
   data.التاريخ = rDate.value; 
-  data.الحالة = rStatus.value;
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
+  
+  if (data.النوع === 'دين') {
+      const paidAmount = rPaidAmountInput ? parseAmount(rPaidAmountInput.value) : 0;
+      const remaining = totalAmount - paidAmount;
+      
+      if (paidAmount > totalAmount) return toastMsg("المبلغ المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
+
+      data.المبلغ_المدفوع = paidAmount.toLocaleString('ar'); // تخزين كرقم منسق (بدون رمز العملة)
+      data.المتبقي = remaining.toLocaleString('ar'); // تخزين كرقم منسق (بدون رمز العملة)
+      
+      if (remaining <= 0) {
+          data.الحالة = "مدفوع بالكامل";
+      } else if (paidAmount > 0) {
+          data.الحالة = "مدفوع جزئياً";
+      } else {
+          data.الحالة = "غير مدفوع بعد";
+      }
+      
+      // حذف الحقول القديمة الغير مستخدمة في حال التعديل
+      delete data.الحالة_اليدوية;
+      
+  } else {
+      // الأنواع الأخرى (بيع بالآجل، أخرى)
+      if (!rStatus.value) return toastMsg("يرجى تحديد الحالة.");
+      data.الحالة = rStatus.value;
+      
+      delete data.المبلغ_المدفوع;
+      delete data.المتبقي;
+  }
   
   // 3. تأكيد ID مرة أخرى لضمان عملية put() الصحيحة للتعديل (إجراء وقائي إضافي)
   if (isEditing) {
@@ -729,6 +813,9 @@ function renderLog() {
         if (i.المتبقي_للالتزام) {
              subText = `مدفوع: ${i.إجمالي_المدفوع} / متبقي: ${i.المتبقي_للالتزام}`;
              displayAmount = i.المبلغ_الكلي_للالتزام;
+        } else if (i.المتبقي) { // New logic for rights (دين)
+             subText = `الحالة: ${i.الحالة} / المتبقي: ${formatCurrency(i.المتبقي)}`;
+             displayAmount = i.المبلغ; // Total amount
         }
 
         return `
@@ -771,8 +858,10 @@ function _renderDetailContent(o, type) {
         'عدد_الاقساط': 'عدد الأقساط الكلي',
         'قيمة_القسط': 'قيمة القسط',
         'الأقساط_المدفوعة': 'عدد الأقساط المدفوعة',
-        'المبلغ': 'المبلغ (قسط/فاتورة)',
+        'المبلغ': 'المبلغ (قسط/فاتورة/إجمالي)',
         'الاسم': type === 'rig' ? 'اسم المدين' : type === 'deb' ? 'اسم الدائن/الجهة' : '—',
+        'المبلغ_المدفوع': 'المحصل/المدفوع حتى الآن', // New for Rights
+        'المتبقي': 'المتبقي للتحصيل', // New for Rights
     };
 
     detailContent.innerHTML = Object.entries(o).map(([k, v]) => {
@@ -786,9 +875,16 @@ function _renderDetailContent(o, type) {
             return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
         }
         
-        if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") {
+        // الالتزامات الرئيسية (Debts - Master Liabilities)
+        if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") { 
              if (v === "—" || v === null) return "";
-             return `<p><b>${displayKey}:</b> ${v}</p>`;
+             return `<p><b>${displayKey}:</b> ${v}</p>`; // هذه القيم مخزنة مسبقًا مع رمز العملة
+        }
+        
+        // الحقوق التي يتم حسابها (Rights - الدين)
+        if (k === "المبلغ_المدفوع" || k === "المتبقي") { 
+             if (v === "—" || v === null) return "";
+             return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`; // هذه القيم مخزنة كرقم منسق فقط
         }
         
         if (k === "التاريخ" || k === "تاريخ_متوقع") {
@@ -831,7 +927,18 @@ function editTransaction() {
     rAmount.value = currentData.المبلغ;
     rDesc.value = currentData.الوصف;
     rDate.value = currentData.التاريخ;
-    rStatus.value = currentData.الحالة;
+    
+    if (currentData.النوع === 'دين') {
+        const rPaidAmountInput = document.getElementById('rPaidAmount');
+        if (rPaidAmountInput && currentData.المبلغ_المدفوع) {
+             // تعيين القيمة إلى حقل الإدخال
+             rPaidAmountInput.value = currentData.المبلغ_المدفوع; 
+             calculateRightRemaining();
+        }
+    } else {
+        rStatus.value = currentData.الحالة;
+    }
+
     if (currentData.تاريخ_متوقع && document.getElementById('rExpectedDate')) {
         document.getElementById('rExpectedDate').value = currentData.تاريخ_متوقع;
     }
@@ -967,7 +1074,17 @@ function updateStats() {
   db.rig.forEach(r => { 
     let a = parseAmount(r.المبلغ); 
     rt += a; 
-    r.الحالة === "مدفوع بالكامل" ? rp += a : ru += a;
+    
+    if (r.النوع === 'دين') {
+        // الحقوق من نوع دين
+        const paid = parseAmount(r.المبلغ_المدفوع);
+        rp += paid;
+        ru += a - paid;
+
+    } else {
+        // الحقوق من أنواع أخرى (بيع بالآجل، أخرى)
+        r.الحالة === "مدفوع بالكامل" ? rp += a : ru += a;
+    }
   });
 
   // تحديد أعلى فئة مصروفات
@@ -980,10 +1097,10 @@ function updateStats() {
     }
   }
   
-  // **التصحيح الجديد:** تبسيط اسم الفئة إذا كانت من الالتزامات (Master Liabilities or Regular Paid Liabilities)
+  // **التصحيح الجديد:** تبسيط اسم الفئة إذا كانت من الالتزامات
   if (topCatName !== '—') {
       if (topCatName.startsWith('قرض/دين:') || topCatName.startsWith('التزام مدفوع:')) {
-          topCatName = 'أعلى فئة التزامات';
+          topCatName = 'في قسم الالتزامات'; // تم تغيير الاسم بناء على طلب المستخدم
       }
   }
 
