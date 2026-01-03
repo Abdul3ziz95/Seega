@@ -528,16 +528,16 @@ async function addExpense() {
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
   
-  // ننسخ البيانات القديمة لضمان الحفاظ على الـ ID إن وجد
+  // 1. **التصحيح الحاسم**: نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {}; 
 
+  // 2. تحديث الحقول بقيم النموذج الجديدة
   data.المبلغ = eAmount.value; 
   data.الفئة = eType.value; 
   data.الوصف = eDesc.value; 
   data.التاريخ = eDate.value; 
-  data.صورة = oldData.صورة || null; // الاحتفاظ بالصورة القديمة
-
-  // **التصحيح الحاسم: التأكد الصريح من بقاء الـ ID لتحديث السجل**
+  
+  // 3. تأكيد ID مرة أخرى لضمان عملية put() الصحيحة للتعديل (إجراء وقائي إضافي)
   if (isEditing) {
       data.id = oldData.id; 
   }
@@ -558,7 +558,10 @@ async function addExpense() {
 
   if (eImg.files[0]) {
     const r = new FileReader();
-    r.onload = () => { data.صورة = r.result; done(); };
+    r.onload = () => { 
+        data.صورة = r.result; // يتم تحديث الصورة الجديدة أو القديمة
+        done(); 
+    };
     r.readAsDataURL(eImg.files[0]);
   } else {
       done(); 
@@ -572,8 +575,10 @@ async function addRight() {
   const oldData = isEditing ? db.rig[editMode.index] : {};
   const rExpectedDate = document.getElementById('rExpectedDate');
 
+  // 1. **التصحيح الحاسم**: نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {};
 
+  // 2. تحديث الحقول بقيم النموذج الجديدة
   data.الاسم = rName.value; 
   data.النوع = rType.value; 
   data.المبلغ = rAmount.value; 
@@ -582,7 +587,7 @@ async function addRight() {
   data.الحالة = rStatus.value;
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
-  // **التصحيح الحاسم: التأكد الصريح من بقاء الـ ID لتحديث السجل**
+  // 3. تأكيد ID مرة أخرى لضمان عملية put() الصحيحة للتعديل (إجراء وقائي إضافي)
   if (isEditing) {
       data.id = oldData.id;
   }
@@ -615,8 +620,10 @@ async function addDebt() {
   const isEditing = editMode && editMode.type === "deb";
   const oldData = isEditing ? db.deb[editMode.index] : {};
 
+  // 1. **التصحيح الحاسم**: نسخ جميع خصائص السجل القديم أولاً (لضمان وجود ID)
   const data = isEditing ? { ...oldData } : {};
 
+  // 2. تحديث الحقول بقيم النموذج الجديدة
   data.الاسم = dName.value;
   data.النوع = dType.value; 
   data.الوصف = dDesc.value; 
@@ -672,7 +679,7 @@ async function addDebt() {
       delete data.الأقساط_المدفوعة;
   }
   
-  // **التصحيح الحاسم: التأكد الصريح من بقاء الـ ID لتحديث السجل**
+  // 3. تأكيد ID مرة أخرى لضمان عملية put() الصحيحة للتعديل (إجراء وقائي إضافي)
   if (isEditing) {
       data.id = oldData.id;
   }
@@ -797,7 +804,7 @@ function editTransaction() {
   if (!editMode) return;
   const currentData = db[editMode.type][editMode.index];
 
-  // **التصحيح: إخفاء نافذتي التفاصيل والسجل عند الانتقال إلى التعديل**
+  // إخفاء نافذتي التفاصيل والسجل عند الانتقال إلى التعديل
   const detailModal = document.getElementById("detailModal");
   const logModal = document.getElementById("logModal");
   detailModal.style.display = "none";
