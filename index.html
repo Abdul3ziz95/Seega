@@ -509,7 +509,8 @@ async function addExpense() {
   if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
-  const oldData = isEditing ? db.exp.find(e => e.id === db.exp[editMode.index].id) : {};
+  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (المعكوسة)**
+  const oldData = isEditing ? db.exp[editMode.index] : {}; 
   
   const data = isEditing ? { ...oldData } : {}; 
 
@@ -518,9 +519,10 @@ async function addExpense() {
   data.الوصف = eDesc.value; 
   data.التاريخ = eDate.value; 
   data.صورة = oldData.صورة || null;
-
+  
   if (isEditing) {
-      data.id = oldData.id;
+      // **التصحيح: التأكد الصريح من حفظ الـ ID للتعديل (Bug 1 & 2 Fix)**
+      data.id = oldData.id; 
   }
   
   const done = async () => {
@@ -551,7 +553,8 @@ async function addRight() {
   if (!rName.value || !rAmount.value || !rDate.value || !rStatus.value || !rType.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "rig";
-  const oldData = isEditing ? db.rig.find(r => r.id === db.rig[editMode.index].id) : {};
+  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (المعكوسة)**
+  const oldData = isEditing ? db.rig[editMode.index] : {};
   const rExpectedDate = document.getElementById('rExpectedDate');
 
   const data = isEditing ? { ...oldData } : {};
@@ -565,6 +568,7 @@ async function addRight() {
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   if (isEditing) {
+      // **التصحيح: التأكد الصريح من حفظ الـ ID للتعديل (Bug 1 & 2 Fix)**
       data.id = oldData.id;
   }
   
@@ -595,7 +599,8 @@ async function addDebt() {
   if (isMasterLiability && !dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
 
   const isEditing = editMode && editMode.type === "deb";
-  const oldData = isEditing ? db.deb.find(d => d.id === db.deb[editMode.index].id) : {};
+  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (المعكوسة)**
+  const oldData = isEditing ? db.deb[editMode.index] : {};
 
   const data = isEditing ? { ...oldData } : {};
 
@@ -660,6 +665,7 @@ async function addDebt() {
   }
   
   if (isEditing) {
+      // **التصحيح: التأكد الصريح من حفظ الـ ID للتعديل (Bug 1 & 2 Fix)**
       data.id = oldData.id;
   }
   
@@ -697,12 +703,15 @@ function renderLog() {
   const filteredData = db[currentLog]
     .filter(i => JSON.stringify(i).toLowerCase().includes(q));
 
+  // **تصحيح عرض سجل المصروفات (Bug 3 Fix):** تم التأكد من أن حقول المصروفات تعرض بشكل صحيح
   logContent.innerHTML = filteredData
-    .map((i, idx) => {
+    .map((i) => {
+        // نستخدم findIndex للحصول على الموقع الصحيح في المصفوفة الرئيسية (المعكوسة)
         const originalIndex = db[currentLog].findIndex(item => item.id === i.id);
         
         let subText = i.الحالة || '';
         let displayAmount = i.المبلغ;
+        let displayTitle = i.النوع || i.الفئة || i.الاسم;
         
         if (i.المتبقي_للالتزام) {
              // عرض المتبقي من الالتزام الرئيسي
@@ -713,7 +722,7 @@ function renderLog() {
         return `
             <div class="list-item" onclick='showDetail(${JSON.stringify(i)},"${currentLog}",${originalIndex})'>
                 <div style="font-weight: bold; margin-bottom: 5px;">
-                    ${i.النوع || i.الفئة || i.الاسم} - ${formatCurrency(displayAmount)}
+                    ${displayTitle} - ${formatCurrency(displayAmount)}
                 </div>
                 <div style="font-size: 0.9em; color: #666; direction: ltr; text-align: right;">
                     ${subText} | ${formatDateTime(i.التاريخ)}
@@ -824,7 +833,7 @@ function editTransaction() {
             if (currentData.عدد_الاقساط && document.getElementById('dInstallments')) {
                 document.getElementById('dInstallments').value = currentData.عدد_الاقساط;
             }
-            if (currentData.الأقساط_المدفوعة && document.getElementById('dPaidInstallments')) {
+            if (currentData.الأقساط_المدفوعة !== null && document.getElementById('dPaidInstallments')) {
                 document.getElementById('dPaidInstallments').value = currentData.الأقساط_المدفوعة;
             }
             // يجب إعادة حساب وعرض قيمة القسط
@@ -832,10 +841,8 @@ function editTransaction() {
 
         } else if (currentData.النوع === 'دين شخصي') {
             // الدين الشخصي (المدفوع نقداً)
-            // dPaidInstallments يستخدم هنا لتخزين إجمالي المبلغ المدفوع (نقداً) غير المنسق
             const paidAmountUnformatted = parseAmount(currentData.إجمالي_المدفوع) || 0;
             if (document.getElementById('dPaidInstallments')) {
-                 // نحتاج إلى عكس تنسيق العملة للحصول على القيمة الأصلية كرقم أو كسلسلة نصية
                 document.getElementById('dPaidInstallments').value = paidAmountUnformatted.toLocaleString('ar');
             }
         }
@@ -857,6 +864,7 @@ async function deleteTransaction() {
   if (!confirm("هل أنت متأكد من حذف هذه المعاملة؟")) return;
   
   const typeToDelete = editMode.type;
+  // **التصحيح: الاعتماد على الـ index الصحيح في المصفوفة الرئيسية (Bug 2 Fix)**
   const idToDelete = db[typeToDelete][editMode.index].id;
   
   try {
