@@ -89,8 +89,9 @@ input[type="file"]:before {
 <input id="eAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 <select id="eType">
 <option value="">الفئة (نفقات متغيرة)</option>
-<option>طعام</option><option>مواصلات</option><option>فواتير</option>
-<option>إيجار</option><option>صحة</option><option>ترفيه</option><option>تسوق</option>
+<option>طعام</option><option>مواصلات</option>
+<option>رعاية شخصية</option><option>أجهزة إلكترونية</option>
+<option>صحة</option><option>ترفيه</option><option>تسوق</option>
 <option>تعليم</option><option>صيانة وإصلاح</option><option>أخرى</option>
 </select>
 <input id="eDesc" placeholder="وصف / ملاحظة">
@@ -110,11 +111,10 @@ input[type="file"]:before {
 <select id="rType" onchange="updateRightFields(this.value)">
 <option value="">نوع الحق</option>
 <option>دين</option>
-<option>سلفة</option>
 <option>بيع بالآجل</option>
 <option>أخرى</option>
 </select>
-<input id="rAmount" type="text" placeholder="💵 المبلغ المستحق" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+<input id="rAmount" type="text" placeholder="💵 المبلغ المستحق (المبلغ الكلي)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 <div id="rDynamicFields"></div>
 <input id="rDesc" placeholder="وصف / ملاحظة">
 <div class="datetime-container">
@@ -140,10 +140,11 @@ input[type="file"]:before {
 <option>كهرباء</option>
 <option>ماء</option>
 <option>إنترنت</option>
-<option>قرض</option> <option>دين شخصي</option> <option>قسط</option>
+<option>قرض</option> <option>دين شخصي</option> <option>قسط/فاتورة أخرى</option>
 <option>أخرى</option>
 </select>
-<input id="dAmount" type="text" placeholder="💵 المبلغ الحالي / قيمة القسط / الفاتورة" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+<input id="dAmount" type="text" placeholder="💵 قيمة الفاتورة/القسط الحالي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+
 <div id="dDynamicFields"></div>
 <input id="dDesc" placeholder="وصف / ملاحظة">
 <div class="datetime-container">
@@ -162,16 +163,16 @@ input[type="file"]:before {
 
 <div id="stats" class="section">
 <div class="card">
-<h3>💸 إجمالي المصروفات (المتغيرة والثابتة والمدفوع من القروض)</h3>
+<h3>💸 إجمالي المصروفات (المتغيرة والمدفوع من الالتزامات)</h3>
 <p>الإجمالي الكلي: <b id="sExpTotal">0</b></p>
 <p>عدد العمليات: <b id="sExpCount">0</b></p>
 <p>أعلى فئة: <b id="sTopCat">—</b></p>
 </div>
 <div class="card">
 <h3>🤝 الحقوق</h3>
-<p>الإجمالي: <b id="sRigTotal">0</b></p>
-<p>مدفوع: <b id="sRigPaid">0</b></p>
-<p>غير مدفوع: <b id="sRigUnpaid">0</b></p>
+<p>الإجمالي المستحق: <b id="sRigTotal">0</b></p>
+<p>المحصل: <b id="sRigPaid">0</b></p>
+<p>المتبقي تحصيله: <b id="sRigUnpaid">0</b></p>
 </div>
 <div class="card">
 <h3>📌 الالتزامات (المبالغ الكلية للمسؤوليات)</h3>
@@ -271,16 +272,23 @@ function toastMsg(m) {
 }
 
 function clearFields(keepExpenseImage = false) {
+  // Expense fields
   eAmount.value = eDesc.value = eType.value = eDate.value = "";
   eImg.value = ""; 
   
+  // Rights fields
   rName.value = rAmount.value = rDesc.value = rDate.value = rType.value = rStatus.value = "";
   document.getElementById('rDynamicFields').innerHTML = '';
   rName.placeholder = rName.getAttribute('data-default-placeholder');
 
+  // Debts fields
   dName.value = dType.value = dAmount.value = dDesc.value = dDate.value = dStatus.value = "";
   document.getElementById('dDynamicFields').innerHTML = '';
   dName.placeholder = dName.getAttribute('data-default-placeholder');
+  
+  // **إعادة إظهار حقول الالتزامات العادية**
+  document.getElementById('dAmount').style.display = 'block'; 
+  document.getElementById('dStatus').style.display = 'block'; 
 }
 
 // **وظائف تخصيص الحقول الديناميكية**
@@ -302,7 +310,6 @@ function updateNamePlaceholder(type, nameInputId) {
     } else if (nameInputId === 'rName') {
         switch (type) {
             case 'دين':
-            case 'سلفة':
                 placeholder = 'اسم المدين (الذي يدفع لك)'; break;
             case 'بيع بالآجل':
                 placeholder = 'اسم المشتري'; break;
@@ -318,7 +325,7 @@ function updateRightFields(type) {
     dynamicContainer.innerHTML = '';
     updateNamePlaceholder(type, 'rName');
 
-    if (type === 'دين' || type === 'سلفة' || type === 'بيع بالآجل') {
+    if (type === 'دين' || type === 'بيع بالآجل') {
         dynamicContainer.innerHTML = `
             <div class="datetime-container">
                 <input id="rExpectedDate" type="datetime-local">
@@ -352,21 +359,33 @@ function updateDebtFields(type) {
     dynamicContainer.innerHTML = '';
     updateNamePlaceholder(type, 'dName');
     
-    // **القرض والدين الشخصي يُعاملان كالتزام كلي مع تتبع للمدفوعات**
-    if (type === 'قرض' || type === 'دين شخصي') {
-        let loanSpecificFields = '';
-        if (type === 'قرض') {
-             loanSpecificFields = `
-                <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" min="1" oninput="calculateInstallmentValue()">
-                <p id="dInstallmentValue" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: var(--p); font-weight: bold;"></p>
-             `;
-        }
+    const dAmountInput = document.getElementById('dAmount');
+    const dStatusSelect = document.getElementById('dStatus'); 
+
+    if (type === 'قرض') {
+        dAmountInput.style.display = 'none'; 
+        dStatusSelect.style.display = 'none'; 
 
         dynamicContainer.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للالتزام (الأصلي)" oninput="calculateInstallmentValue(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-            ${loanSpecificFields}
-            <input id="dPaidAmount" type="text" placeholder="إجمالي المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للقرض" oninput="calculateInstallmentValue(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" min="1" oninput="calculateInstallmentValue()">
+            <p id="dInstallmentValue" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: var(--p); font-weight: bold;">قيمة القسط: —</p>
+            <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" min="0">
         `;
+        
+    } else if (type === 'دين شخصي') {
+        dAmountInput.style.display = 'none'; 
+        dStatusSelect.style.display = 'none'; 
+
+        dynamicContainer.innerHTML = `
+            <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للدين" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dPaidInstallments" type="text" placeholder="إجمالي المبلغ المدفوع نقداً حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+        `;
+        
+    } else {
+        // الالتزامات العادية (فواتير، إيجار، قسط/فاتورة أخرى)
+        dAmountInput.style.display = 'block';
+        dStatusSelect.style.display = 'block'; 
     }
 }
 
@@ -564,15 +583,15 @@ async function addRight() {
 }
 
 async function addDebt() {
-  if (!dName.value || !dType.value || !dAmount.value || !dDate.value || !dStatus.value) return toastMsg("أكمل البيانات");
+  if (!dName.value || !dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
   
   const isMasterLiability = (dType.value === 'قرض' || dType.value === 'دين شخصي');
   
   const dTotalAmountInput = document.getElementById('dTotalAmount');
   const dInstallmentsInput = document.getElementById('dInstallments');
-  const dPaidAmountInput = document.getElementById('dPaidAmount');
-
-  // التحقق من الحقول الأساسية إذا كانت التزاماً رئيسياً
+  const dPaidInstallmentsInput = document.getElementById('dPaidInstallments'); 
+  
+  if (!isMasterLiability && (!dAmount.value || !dStatus.value)) return toastMsg("أكمل بيانات الفاتورة/القسط العادي.");
   if (isMasterLiability && !dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
 
   const isEditing = editMode && editMode.type === "deb";
@@ -582,34 +601,62 @@ async function addDebt() {
 
   data.الاسم = dName.value;
   data.النوع = dType.value; 
-  data.المبلغ = dAmount.value; // المبلغ الحالي / القسط / الفاتورة
   data.الوصف = dDesc.value; 
   data.التاريخ = dDate.value; 
-  data.الحالة = dStatus.value;
   
   if (isMasterLiability) {
-      // حقول تتبع الالتزام الكلي (Master Record)
       const totalAmount = parseAmount(dTotalAmountInput.value);
-      const paidAmount = parseAmount(dPaidAmountInput.value);
-      const installments = parseInt(dInstallmentsInput ? dInstallmentsInput.value : 0) || 0;
+      let totalPaidAmount = 0;
+      let remainingAmount = 0;
 
+      if (data.النوع === 'قرض') {
+          const paidInstallmentsCount = parseInt(dPaidInstallmentsInput.value) || 0;
+          const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
+          
+          if (installmentsTotal <= 0) return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.");
+          if (paidInstallmentsCount > installmentsTotal) return toastMsg("عدد الأقساط المدفوعة لا يمكن أن يتجاوز الكلي.");
+
+          const installmentValue = totalAmount / installmentsTotal;
+          totalPaidAmount = paidInstallmentsCount * installmentValue;
+          
+          data.عدد_الاقساط = installmentsTotal;
+          data.قيمة_القسط = formatCurrency(installmentValue.toFixed(2));
+          data.الأقساط_المدفوعة = paidInstallmentsCount;
+          
+      } else if (data.النوع === 'دين شخصي') {
+          // dPaidInstallments is repurposed for the monetary paid amount
+          totalPaidAmount = parseAmount(dPaidInstallmentsInput.value);
+          
+          if (totalPaidAmount > totalAmount) return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
+          
+          delete data.عدد_الاقساط;
+          delete data.قيمة_القسط;
+          data.الأقساط_المدفوعة = null;
+      }
+      
+      remainingAmount = totalAmount - totalPaidAmount;
+      
+      // حفظ القيم المحسوبة والمدخلات الرئيسية
       data.المبلغ_الكلي_للالتزام = dTotalAmountInput.value;
-      data.إجمالي_المدفوع = dPaidAmountInput.value;
-      data.عدد_الاقساط = installments;
+      data.إجمالي_المدفوع = formatCurrency(totalPaidAmount); 
+      data.المتبقي_للالتزام = formatCurrency(remainingAmount);
       
-      // حساب قيمة القسط والمتبقي
-      const installmentValue = (data.النوع === 'قرض' && installments > 0) ? totalAmount / installments : 0;
-      data.قيمة_القسط = formatCurrency(installmentValue.toFixed(2));
+      // تنظيف حقول الالتزامات العادية لتجنب تضارب البيانات
+      data.المبلغ = "—";
+      data.الحالة = "—";
       
-      const remainingAmount = totalAmount - paidAmount;
-      data.المتبقي_للالتزام = formatCurrency(remainingAmount.toFixed(2));
   } else {
-      // تنظيف حقول Master Liability إذا لم تكن موجودة
+      // الالتزامات العادية (فواتير، إيجار، قسط/فاتورة أخرى)
+      data.المبلغ = dAmount.value; 
+      data.الحالة = dStatus.value;
+      
+      // تنظيف حقول Master Liability
       delete data.المبلغ_الكلي_للالتزام;
       delete data.إجمالي_المدفوع;
+      delete data.المتبقي_للالتزام;
       delete data.عدد_الاقساط;
       delete data.قيمة_القسط;
-      delete data.المتبقي_للالتزام;
+      delete data.الأقساط_المدفوعة;
   }
   
   if (isEditing) {
@@ -655,14 +702,18 @@ function renderLog() {
         const originalIndex = db[currentLog].findIndex(item => item.id === i.id);
         
         let subText = i.الحالة || '';
+        let displayAmount = i.المبلغ;
+        
         if (i.المتبقي_للالتزام) {
-             subText = `المتبقي: ${i.المتبقي_للالتزام}`;
+             // عرض المتبقي من الالتزام الرئيسي
+             subText = `مدفوع: ${i.إجمالي_المدفوع} / متبقي: ${i.المتبقي_للالتزام}`;
+             displayAmount = i.المبلغ_الكلي_للالتزام;
         }
 
         return `
             <div class="list-item" onclick='showDetail(${JSON.stringify(i)},"${currentLog}",${originalIndex})'>
                 <div style="font-weight: bold; margin-bottom: 5px;">
-                    ${i.النوع || i.الفئة} - ${formatCurrency(i.المبلغ)}
+                    ${i.النوع || i.الفئة || i.الاسم} - ${formatCurrency(displayAmount)}
                 </div>
                 <div style="font-size: 0.9em; color: #666; direction: ltr; text-align: right;">
                     ${subText} | ${formatDateTime(i.التاريخ)}
@@ -687,7 +738,8 @@ function showDetail(o, type, index) {
       'المتبقي_للالتزام': 'المتبقي من الالتزام',
       'عدد_الاقساط': 'عدد الأقساط الكلي',
       'قيمة_القسط': 'قيمة القسط',
-      'المبلغ': (type === 'deb' && (o.النوع === 'قرض' || o.النوع === 'دين شخصي')) ? 'المبلغ الحالي / القسط (للتذكرة)' : 'المبلغ',
+      'الأقساط_المدفوعة': 'عدد الأقساط المدفوعة',
+      'المبلغ': 'المبلغ (قسط/فاتورة)',
       'الاسم': type === 'rig' ? 'اسم المدين' : type === 'deb' ? 'اسم الدائن/الجهة' : '—',
   };
   
@@ -697,13 +749,15 @@ function showDetail(o, type, index) {
     
     const displayKey = customMap[k] || k;
     
-    // القيم المحاسبية التي تحتاج لتنسيق عملة
-    if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام" || k === "إجمالي_المدفوع") {
+    // القيم التي تحتاج لتنسيق عملة (غير منسقة في DB)
+    if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام") {
+        if (v === "—" || v === null) return "";
         return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
     }
     
-    // القيمة المحسوبة (المتبقي وقيمة القسط) التي هي مُنسقة بالفعل في دالة addDebt
-    if (k === "المتبقي_للالتزام" || k === "قيمة_القسط") {
+    // القيمة المحسوبة (المتبقي، قيمة القسط، إجمالي المدفوع) التي هي مُنسقة بالفعل
+    if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") {
+         if (v === "—" || v === null) return "";
          return `<p><b>${displayKey}:</b> ${v}</p>`;
     }
     
@@ -746,34 +800,56 @@ function editTransaction() {
   }
   
   if (editMode.type === "deb") {
+    // 1. فتح التبويبة أولاً لإعادة تعيين الحقول
     openTab('debts'); 
+    
+    // 2. تعبئة الحقول الأساسية
     dName.value = currentData.الاسم; 
     dType.value = currentData.النوع;
-    updateDebtFields(dType.value); // إعادة إنشاء الحقول الديناميكية أولاً
-    
-    dAmount.value = currentData.المبلغ;
     dDesc.value = currentData.الوصف;
     dDate.value = currentData.التاريخ;
-    dStatus.value = currentData.الحالة;
-    
-    // تعبئة الحقول الديناميكية بعد التأكد من وجودها
-    if (currentData.المبلغ_الكلي_للالتزام && document.getElementById('dTotalAmount')) {
-        document.getElementById('dTotalAmount').value = currentData.المبلغ_الكلي_للالتزام;
-    }
-    if (currentData.إجمالي_المدفوع && document.getElementById('dPaidAmount')) {
-        document.getElementById('dPaidAmount').value = currentData.إجمالي_المدفوع;
-    }
-    if (currentData.عدد_الاقساط && document.getElementById('dInstallments')) {
-        document.getElementById('dInstallments').value = currentData.عدد_الاقساط;
-        // يجب إعادة حساب وعرض قيمة القسط
-        calculateInstallmentValue();
-    }
-  }
 
-  const detailModal = document.getElementById("detailModal");
-  const logModal = document.getElementById("logModal");
-  detailModal.style.display = "none";
-  logModal.style.display = "none"; 
+    // 3. إعادة إنشاء الحقول الديناميكية (يؤدي إلى إخفاء/إظهار dAmount و dStatus)
+    updateDebtFields(dType.value); 
+
+    // 4. تعبئة الحقول بناءً على النوع
+    if (currentData.النوع === 'قرض' || currentData.النوع === 'دين شخصي') {
+        // Master Liabilities
+        if (currentData.المبلغ_الكلي_للالتزام && document.getElementById('dTotalAmount')) {
+            document.getElementById('dTotalAmount').value = currentData.المبلغ_الكلي_للالتزام;
+        }
+        
+        // القرض
+        if (currentData.النوع === 'قرض') {
+            if (currentData.عدد_الاقساط && document.getElementById('dInstallments')) {
+                document.getElementById('dInstallments').value = currentData.عدد_الاقساط;
+            }
+            if (currentData.الأقساط_المدفوعة && document.getElementById('dPaidInstallments')) {
+                document.getElementById('dPaidInstallments').value = currentData.الأقساط_المدفوعة;
+            }
+            // يجب إعادة حساب وعرض قيمة القسط
+            calculateInstallmentValue();
+
+        } else if (currentData.النوع === 'دين شخصي') {
+            // الدين الشخصي (المدفوع نقداً)
+            // dPaidInstallments يستخدم هنا لتخزين إجمالي المبلغ المدفوع (نقداً) غير المنسق
+            const paidAmountUnformatted = parseAmount(currentData.إجمالي_المدفوع) || 0;
+            if (document.getElementById('dPaidInstallments')) {
+                 // نحتاج إلى عكس تنسيق العملة للحصول على القيمة الأصلية كرقم أو كسلسلة نصية
+                document.getElementById('dPaidInstallments').value = paidAmountUnformatted.toLocaleString('ar');
+            }
+        }
+    } else {
+        // Standard Liabilities (Fines, Bills, etc.)
+        dAmount.value = currentData.المبلغ;
+        dStatus.value = currentData.الحالة;
+    }
+
+    const detailModal = document.getElementById("detailModal");
+    const logModal = document.getElementById("logModal");
+    detailModal.style.display = "none";
+    logModal.style.display = "none"; 
+  }
 }
 
 async function deleteTransaction() {
@@ -824,11 +900,11 @@ function updateStats() {
   // 2. حساب الالتزامات والنقل التلقائي للمصروفات المدفوعة
   db.deb.forEach(d => { 
     const isMasterLiability = (d.النوع === 'قرض' || d.النوع === 'دين شخصي');
-    let amount = parseAmount(d.المبلغ); // المبلغ الحالي / الفاتورة
     
     if (isMasterLiability) {
         const totalLiability = parseAmount(d.المبلغ_الكلي_للالتزام);
-        const paidAmount = parseAmount(d.إجمالي_المدفوع);
+        // استخراج المبلغ المدفوع من حقل إجمالي_المدفوع المنسق
+        const paidAmount = parseAmount(d.إجمالي_المدفوع); 
         
         // أ) تجميع إجمالي الالتزامات الكلية (dt)
         dt += totalLiability; 
@@ -850,7 +926,8 @@ function updateStats() {
         }
 
     } else {
-        // الالتزامات العادية (فواتير، أقساط)
+        // الالتزامات العادية (فواتير، أقساط/فواتير أخرى)
+        let amount = parseAmount(d.المبلغ); // المبلغ الحالي / الفاتورة
         dt += amount; // الفاتورة تُحسب كإجمالي التزام مؤقت
         
         if (d.الحالة === "مدفوع") {
