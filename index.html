@@ -398,7 +398,7 @@ function openTab(id, keepEditMode = false) {
   const button = event.currentTarget || document.querySelector(`.tabs button[onclick="openTab('${id}')"]`);
   if(button) button.classList.add("active");
   
-  if (!keepEditMode) { // **تمت إضافة هذا الشرط**
+  if (!keepEditMode) { 
       editMode = null; 
       clearFields(); 
   }
@@ -814,7 +814,7 @@ function editTransaction() {
   logModal.style.display = "none"; 
   
   if (editMode.type === "exp") {
-    // **التصحيح: تمرير true لمنع openTab من مسح editMode**
+    // التصحيح: تمرير true لمنع openTab من مسح editMode
     openTab('expenses', true); 
     eAmount.value = currentData.المبلغ;
     eType.value = currentData.الفئة;
@@ -823,7 +823,7 @@ function editTransaction() {
   }
   
   if (editMode.type === "rig") {
-    // **التصحيح: تمرير true لمنع openTab من مسح editMode**
+    // التصحيح: تمرير true لمنع openTab من مسح editMode
     openTab('rights', true); 
     rName.value = currentData.الاسم;
     rType.value = currentData.النوع;
@@ -838,7 +838,7 @@ function editTransaction() {
   }
   
   if (editMode.type === "deb") {
-    // **التصحيح: تمرير true لمنع openTab من مسح editMode**
+    // التصحيح: تمرير true لمنع openTab من مسح editMode
     openTab('debts', true); 
     
     dName.value = currentData.الاسم; 
@@ -917,6 +917,7 @@ function updateStats() {
     let a = parseAmount(e.المبلغ); 
     et += a; 
     ec++;
+    // تسجيل الفئة باسمها العادي
     cats[e.الفئة] = (cats[e.الفئة] || 0) + a;
   });
 
@@ -937,6 +938,7 @@ function updateStats() {
         if (paidAmount > 0) {
             et += paidAmount; 
             ec++; 
+            // تسجيل الفئة بالبادئة الخاصة "قرض/دين:"
             const category = `قرض/دين: ${d.الاسم} (${d.النوع})`;
             cats[category] = (cats[category] || 0) + paidAmount;
         }
@@ -952,6 +954,7 @@ function updateStats() {
             et += amount; 
             ec++;
             
+            // تسجيل الفئة بالبادئة الخاصة "التزام مدفوع:"
             const category = `التزام مدفوع: ${d.الاسم} (${d.النوع})`;
             cats[category] = (cats[category] || 0) + amount;
         } else {
@@ -976,11 +979,19 @@ function updateStats() {
       topCatName = cat;
     }
   }
+  
+  // **التصحيح الجديد:** تبسيط اسم الفئة إذا كانت من الالتزامات (Master Liabilities or Regular Paid Liabilities)
+  if (topCatName !== '—') {
+      if (topCatName.startsWith('قرض/دين:') || topCatName.startsWith('التزام مدفوع:')) {
+          topCatName = 'أعلى فئة التزامات';
+      }
+  }
 
   // تحديث واجهة الإحصائيات
   document.getElementById("sExpTotal").innerHTML = formatCurrency(et); 
   document.getElementById("sExpCount").textContent = ec;
   document.getElementById("sTopCat").textContent = topCatName;
+  // ... (تحديث باقي الإحصائيات)
 
   document.getElementById("sRigTotal").innerHTML = formatCurrency(rt); 
   document.getElementById("sRigPaid").innerHTML = formatCurrency(rp); 
