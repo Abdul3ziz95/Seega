@@ -4,10 +4,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عرض الرصيد الحالي</title>
+<title>ميزانيتك المالية الذكية</title>
 
 <style>
-/* ... (كود الـ CSS السابق) ... */
+/* ---------------------------------------------------- */
+/* التنسيقات العامة (General Styling) */
+/* ---------------------------------------------------- */
 :root{--p:#0d6efd;--s:#28a745;--bg:#f4f6f8;--danger:#dc3545}
 body{margin:0;font-family:Tahom,a;background:var(--bg);overflow-x: hidden;}
 
@@ -15,7 +17,7 @@ header{background:var(--p);color:#fff;padding:15px;text-align:center;font-size:2
 header .title {
     flex-grow: 1; 
     text-align: center;
-    display: flex; /* لتوسيط البطاقة */
+    display: flex; 
     justify-content: center;
     align-items: center;
 }
@@ -59,7 +61,7 @@ button.secondary{background:#ddd;padding:10px;width:100%;border:none;border-radi
 .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:none;flex-direction:column;z-index:10}
 .modal header{display:flex;gap:6px;padding:10px;border-bottom:1px solid #ddd}
 /* تعديل Modal Header لاستيعاب عنوان وإغلاق */
-.modal#currencyModal header, .modal#balanceModal header, .modal#collectModal header { justify-content: space-between; align-items: center; } 
+.modal#currencyModal header, .modal#balanceModal header, .modal#collectModal header, .modal#calculatorModal header { justify-content: space-between; align-items: center; } 
 .modal-content{padding:15px;overflow:auto;flex:1}
 .list-item{background:#eef6ff;padding:14px;border-radius:12px;margin-bottom:8px;cursor:pointer}
 .detail p{margin:8px 0}
@@ -78,7 +80,7 @@ input[type="file"]:before {
     cursor: pointer;
 }
 .currency-symbol { 
-    color: inherit; /* ليتناسب مع لون البطاقة */
+    color: inherit; 
     font-weight: bold;
     font-size: 1em;
     margin-right: 5px; 
@@ -160,7 +162,7 @@ input[type="file"]:before {
 /* كود الـ CSS لبطاقة الرصيد الحديثة في الـ Header */
 /* ---------------------------------------------------- */
 .balance-card {
-    background: #fff; /* Card background */
+    background: #fff; 
     color: #333;
     padding: 8px 15px;
     border-radius: 8px;
@@ -171,7 +173,7 @@ input[type="file"]:before {
     margin: 0 auto;
     width: fit-content;
     max-width: 90%;
-    transform: translateY(1px); /* تصحيح بسيط في المحاذاة */
+    transform: translateY(1px); 
 }
 
 .balance-card .balance-value {
@@ -212,6 +214,63 @@ input[type="file"]:before {
     filter: blur(4px);
     user-select: none;
 }
+
+/* ---------------------------------------------------- */
+/* كود الـ CSS للآلة الحاسبة (Calculator Modal) */
+/* ---------------------------------------------------- */
+.calculator-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%; 
+    max-width: 350px; 
+    height: 500px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 50; 
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.calculator-modal header {
+     padding: 15px; 
+     background: var(--p);
+     color: #fff;
+     font-size: 18px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     border-bottom: 1px solid #ddd;
+}
+
+.calc-button {
+    padding: 15px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #eee;
+    transition: background 0.1s;
+}
+.calc-button:hover {
+     background: #ddd;
+}
+.calc-button.operator {
+    background: #ff9500;
+    color: #fff;
+}
+.calc-button.clear {
+    background: var(--danger);
+    color: #fff;
+}
+.calc-button.equal {
+    background: var(--s);
+    color: #fff;
+    grid-column: span 2;
+}
 </style>
 </head>
 
@@ -221,7 +280,7 @@ input[type="file"]:before {
     <button onclick="toggleSidebar()">☰</button> 
     <div class="title" id="balanceContainer">
         </div> 
-    <button style="visibility: hidden;">🔍</button> 
+    <button onclick="openCalculatorModal()">🧮</button> 
 </header>
 
 <div class="tabs">
@@ -422,7 +481,7 @@ input[type="file"]:before {
             <li>📌 **الالتزامات** المالية المستحقة عليك (فواتير، أقساط، قروض).</li>
         </ul>
         <p><strong>ملاحظة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية.</p>
-        <p style="text-align: center; margin-top: 20px;">الإصدار 1.3.0 (تحديث واجهة الرصيد)</p>
+        <p style="text-align: center; margin-top: 20px;">الإصدار 1.3.1 (تحديث الآلة الحاسبة)</p>
     </div>
 </div>
 
@@ -466,6 +525,42 @@ input[type="file"]:before {
         </div>
     </div>
 </div>
+<div class="calculator-modal" id="calculatorModal">
+    <header>
+        <h3>الآلة الحاسبة</h3>
+        <button onclick="closeCalculatorModal()" style="color: #fff; background: none; border: none; font-size: 24px;">✖</button>
+    </header>
+    <div class="modal-content" style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
+        <div id="calculatorHistory" style="font-size: 0.8em; color: #777; text-align: left; min-height: 1.5em; overflow: hidden;"></div>
+        <div id="calculatorDisplay" style="background: #f4f6f8; color: #333; padding: 10px; font-size: 2.5em; text-align: right; border-radius: 8px; margin-bottom: 10px; min-height: 60px; word-break: break-all; overflow: hidden; font-weight: bold;">0</div>
+        <div id="calculatorGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex-grow: 1;">
+            <button class="calc-button clear" onclick="calculator.clear()">C</button>
+            <button class="calc-button operator" onclick="calculator.inputOperator('/')">÷</button>
+            <button class="calc-button operator" onclick="calculator.inputOperator('*')">×</button>
+            <button class="calc-button operator" onclick="calculator.inputOperator('-')">−</button>
+
+            <button class="calc-button" onclick="calculator.inputDigit('7')">7</button>
+            <button class="calc-button" onclick="calculator.inputDigit('8')">8</button>
+            <button class="calc-button" onclick="calculator.inputDigit('9')">9</button>
+            <button class="calc-button operator" onclick="calculator.inputOperator('+')">+</button>
+
+            <button class="calc-button" onclick="calculator.inputDigit('4')">4</button>
+            <button class="calc-button" onclick="calculator.inputDigit('5')">5</button>
+            <button class="calc-button" onclick="calculator.inputDigit('6')">6</button>
+            <button class="calc-button" onclick="calculator.deleteLast()">DEL</button>
+            
+            <button class="calc-button" onclick="calculator.inputDigit('1')">1</button>
+            <button class="calc-button" onclick="calculator.inputDigit('2')">2</button>
+            <button class="calc-button" onclick="calculator.inputDigit('3')">3</button>
+            
+            <button class="calc-button" onclick="calculator.inputDigit('0')">0</button>
+            <button class="calc-button" onclick="calculator.inputDecimal('.')">.</button>
+            <button class="calc-button equal" onclick="calculator.calculate()">=</button>
+
+        </div>
+        <button class="action" onclick="copyResult()" style="margin-top: 15px; background: var(--s);">📋 نسخ النتيجة</button>
+    </div>
+</div>
 <script>
 // ===================================================
 // 1. إعداد IndexedDB ومتغيرات الحالة والعملات
@@ -480,7 +575,7 @@ let IDB_connection = null;
 let currentLog = "", editMode = null;
 let currentCollectingItem = null; 
 let initialBalance = 0; 
-let isBalanceHidden = false; // متغير جديد لحالة إخفاء الرصيد
+let isBalanceHidden = false; 
 
 // قائمة العملات العربية
 const ARABIC_CURRENCIES = [
@@ -518,7 +613,6 @@ function loadCurrencyPreference() {
 }
 
 function updateCurrencyDisplay() {
-    // تحديث الرصيد عند تغيير العملة
     updateStats(); 
     if (document.getElementById("logModal").style.display === "flex") renderLog();
 }
@@ -535,7 +629,7 @@ function loadBalanceVisibility() {
 
 loadInitialBalance(); 
 loadCurrencyPreference(); 
-loadBalanceVisibility(); // تحميل حالة إخفاء الرصيد
+loadBalanceVisibility(); 
 
 
 // ===================================================
@@ -573,7 +667,6 @@ function formatCurrency(amount) {
         minimumFractionDigits: num % 1 === 0 ? 0 : 2,
         maximumFractionDigits: 2 
     });
-    // استخدام الرمز المختار من currentCurrency
     return `${formattedNum} <span class="currency-symbol">${currentCurrency.symbol}</span>`;
 }
 
@@ -618,8 +711,6 @@ function clearFields(keepExpenseImage = false) {
   document.getElementById('dAmount').style.display = 'block'; 
   document.getElementById('dStatus').style.display = 'block'; 
 }
-
-// **وظائف تخصيص الحقول الديناميكية (لم تتغير)**
 
 function calculateRightRemaining() {
     const totalInput = document.getElementById('rAmount');
@@ -762,7 +853,7 @@ function closeDetailAndClearEditMode() {
 }
 
 
-// **وظائف IndexedDB (لم تتغير)**
+// **وظائف IndexedDB**
 
 function initDB() {
   return new Promise((resolve, reject) => {
@@ -840,7 +931,6 @@ function loadStoreData(storeName) {
 }
 
 async function loadAllData() {
-    // تحديث لتحميل متجر bal
     const [expData, rigData, debData, balData] = await Promise.all([
         loadStoreData('exp'),
         loadStoreData('rig'),
@@ -850,7 +940,7 @@ async function loadAllData() {
     db.exp = expData;
     db.rig = rigData;
     db.deb = debData;
-    db.bal = balData; // تأكد من تحميل البيانات هنا
+    db.bal = balData; 
 
     const logModal = document.getElementById("logModal");
     if (logModal.style.display === "flex") renderLog();
@@ -870,7 +960,7 @@ function postSaveCleanup(isEditing, type) {
 
 
 // ===================================================
-// 3. وظائف الإضافة والتعديل والحذف (CRUD) (لم تتغير)
+// 3. وظائف الإضافة والتعديل والحذف (CRUD)
 // ===================================================
 
 async function addExpense() { 
@@ -1065,7 +1155,7 @@ async function addDebt() {
   }
 }
 
-// **وظائف التحصيل (لم تتغير)**
+// **وظائف التحصيل**
 
 function promptCollection(id, type) {
     const item = db[type].find(i => i.id === id);
@@ -1440,7 +1530,7 @@ async function deleteTransaction() {
 function toggleBalanceVisibility() {
     isBalanceHidden = !isBalanceHidden;
     localStorage.setItem('isBalanceHidden', isBalanceHidden);
-    updateStats(); // إعادة عرض الرصيد لتطبيق حالة الإخفاء/الإظهار
+    updateStats(); 
 }
 
 function updateStats() {
@@ -1563,13 +1653,13 @@ function updateStats() {
   document.getElementById("sDebUnpaid").innerHTML = formatCurrency(du);
   
   // ===================================================
-  // تحديث عرض الرصيد في الـ Header (New Implementation)
+  // تحديث عرض الرصيد في الـ Header
   // ===================================================
   const balanceContainer = document.getElementById("balanceContainer");
   const formattedBalance = formatCurrency(balanceTotal);
   
   let balanceClass = 'healthy';
-  const LOW_BALANCE_THRESHOLD = 500; // قيمة الحد الأدنى
+  const LOW_BALANCE_THRESHOLD = 500; 
 
   if (balanceTotal < 0) {
       balanceClass = 'negative';
@@ -1610,7 +1700,7 @@ function openAboutModal() {
     toggleSidebar();
 }
 
-// **وظائف العملات (لم تتغير)**
+// **وظائف العملات**
 
 function openCurrencyModal() {
     document.getElementById('currencyModal').style.display = 'flex';
@@ -1641,14 +1731,14 @@ function selectCurrency(code) {
     const newCurrency = ARABIC_CURRENCIES.find(c => c.code === code);
     if (newCurrency) {
         currentCurrency = newCurrency;
-        saveCurrencyPreference(code);
+        localStorage.setItem('selectedCurrencyCode', code);
         updateCurrencyDisplay();
         document.getElementById('currencyModal').style.display = 'none';
         toastMsg(`تم تغيير العملة إلى: ${newCurrency.name}`);
     }
 }
 
-// **وظائف الرصيد الجديد**
+// **وظائف الرصيد**
 
 function openBalanceModal() {
     document.getElementById('balanceModal').style.display = 'flex';
@@ -1714,7 +1804,7 @@ async function addBalanceTransaction() {
 }
 
 
-// **تصدير البيانات (Export) (لم تتغير)**
+// **تصدير البيانات (Export)**
 function exportData() {
     toggleSidebar();
     
@@ -1735,6 +1825,7 @@ function exportData() {
             if (storesProcessed === STORE_NAMES.length) {
                 // إضافة الرصيد الأولي لملف التصدير
                 dataToExport.initialBalance = initialBalance;
+                dataToExport.selectedCurrencyCode = currentCurrency.code;
                 
                 const json = JSON.stringify(dataToExport, null, 2);
                 const blob = new Blob([json], { type: 'application/json' });
@@ -1758,7 +1849,7 @@ function exportData() {
     });
 }
 
-// **استيراد البيانات (Import) (لم تتغير)**
+// **استيراد البيانات (Import)**
 async function importData(event) {
     toggleSidebar();
     const file = event.target.files[0];
@@ -1812,11 +1903,16 @@ async function importData(event) {
                 }
             }
             
-            // استيراد الرصيد الأولي
+            // استيراد الرصيد الأولي والعملة
             if (importedData.initialBalance !== undefined) {
                  initialBalance = parseAmount(importedData.initialBalance);
                  localStorage.setItem('initialBalance', initialBalance);
             }
+            if (importedData.selectedCurrencyCode) {
+                 localStorage.setItem('selectedCurrencyCode', importedData.selectedCurrencyCode);
+                 loadCurrencyPreference(); 
+            }
+
 
             await loadAllData(); 
             updateStats();
@@ -1853,7 +1949,7 @@ function resetAllData() {
         request.onsuccess = () => {
             storesCleared++;
             if (storesCleared === STORE_NAMES.length) {
-                db.exp = db.rig = db.deb = db.bal = []; // التأكد من مسح الـ bal
+                db.exp = db.rig = db.deb = db.bal = []; 
                 
                 // إعادة تعيين الرصيد الأولي
                 initialBalance = 0;
@@ -1867,6 +1963,170 @@ function resetAllData() {
         request.onerror = () => toastMsg("فشل في حذف بعض البيانات.");
     });
 }
+
+
+// ===================================================
+// 6. وظائف الآلة الحاسبة (Calculator Functions)
+// ===================================================
+
+function openCalculatorModal() {
+    document.getElementById('calculatorModal').style.display = 'flex';
+}
+
+function closeCalculatorModal() {
+    document.getElementById('calculatorModal').style.display = 'none';
+    calculator.clear(); 
+}
+
+function copyResult() {
+    const result = document.getElementById('calculatorDisplay').textContent;
+    const parsedResult = parseAmount(result);
+    // ننسخ القيمة الرقمية فقط
+    navigator.clipboard.writeText(parsedResult)
+        .then(() => toastMsg('تم نسخ النتيجة: ' + parsedResult.toLocaleString('ar')))
+        .catch(() => toastMsg('فشل النسخ. يرجى النسخ يدوياً.'));
+}
+
+
+class Calculator {
+    constructor() {
+        this.clear();
+    }
+
+    clear() {
+        this.currentOperand = '0';
+        this.previousOperand = '';
+        this.operation = undefined;
+        this.isResult = false;
+        this.updateDisplay();
+    }
+
+    inputDigit(digit) {
+        if (this.isResult) {
+            this.currentOperand = digit;
+            this.isResult = false;
+        } else if (this.currentOperand === '0' && digit !== '0') {
+            this.currentOperand = digit;
+        } else if (this.currentOperand.length < 15) {
+            this.currentOperand += digit;
+        }
+        this.updateDisplay();
+    }
+
+    inputDecimal(dot) {
+        if (this.isResult) {
+            this.currentOperand = '0.';
+            this.isResult = false;
+        } else if (!this.currentOperand.includes(dot)) {
+            this.currentOperand += dot;
+        }
+        this.updateDisplay();
+    }
+
+    inputOperator(operation) {
+        if (this.currentOperand === '' || this.currentOperand === '.') return;
+        
+        if (this.previousOperand !== '') {
+            this.calculate();
+        }
+        this.operation = operation;
+        this.previousOperand = this.currentOperand;
+        this.currentOperand = '';
+        this.isResult = false;
+        this.updateDisplay();
+    }
+
+    deleteLast() {
+        if (this.isResult) return;
+        this.currentOperand = this.currentOperand.toString().slice(0, -1);
+        if (this.currentOperand === '' || this.currentOperand === '-') {
+            this.currentOperand = '0';
+        }
+        this.updateDisplay();
+    }
+
+    calculate() {
+        let result;
+        const prev = parseFloat(this.previousOperand);
+        const current = parseFloat(this.currentOperand);
+        if (isNaN(prev) || isNaN(current)) return;
+        
+        switch (this.operation) {
+            case '+':
+                result = prev + current;
+                break;
+            case '-':
+                result = prev - current;
+                break;
+            case '*':
+                result = prev * current;
+                break;
+            case '/':
+                if (current === 0) {
+                    toastMsg("لا يمكن القسمة على صفر!");
+                    this.clear();
+                    return;
+                }
+                result = prev / current;
+                break;
+            default:
+                return;
+        }
+
+        // استخدام toPrecision (10) للمساعدة في تقليل مشاكل الفاصلة العائمة في JS
+        result = parseFloat(result.toPrecision(10)); 
+        
+        this.currentOperand = result.toString();
+        this.operation = undefined;
+        this.previousOperand = '';
+        this.isResult = true;
+        this.updateDisplay();
+    }
+    
+    getDisplayNumber(number) {
+        const stringNumber = number.toString();
+        const integerDigits = parseFloat(stringNumber.split('.')[0]);
+        const decimalDigits = stringNumber.split('.')[1];
+        
+        let integerDisplay;
+        if (isNaN(integerDigits)) {
+            integerDisplay = '0';
+        } else {
+            // تنسيق الجزء الصحيح باستخدام اللغة العربية
+            integerDisplay = integerDigits.toLocaleString('ar', { 
+                maximumFractionDigits: 0 
+            });
+        }
+        
+        // إرجاع الأجزاء العشرية كما هي لتجنب مشاكل التنسيق أثناء الإدخال
+        if (decimalDigits != null) {
+            return `${integerDisplay}.${decimalDigits}`;
+        } else {
+            return integerDisplay;
+        }
+    }
+
+    updateDisplay() {
+        const displayElement = document.getElementById('calculatorDisplay');
+        const historyElement = document.getElementById('calculatorHistory');
+        
+        if (displayElement) {
+            displayElement.textContent = this.getDisplayNumber(this.currentOperand);
+        }
+        
+        if (historyElement) {
+            if (this.operation != null && this.previousOperand !== '') {
+                // عرض العملية في سطر التاريخ
+                historyElement.textContent = `${this.getDisplayNumber(this.previousOperand)} ${this.operation === '*' ? '×' : this.operation === '/' ? '÷' : this.operation}`;
+            } else {
+                historyElement.textContent = '';
+            }
+        }
+    }
+}
+
+// إنشاء مثيل للآلة الحاسبة عند بدء التشغيل
+const calculator = new Calculator();
 </script>
 
 </body>
