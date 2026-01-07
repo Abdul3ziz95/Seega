@@ -762,6 +762,13 @@ function postSaveCleanup(isEditing, type) {
 // **وظائف إضافة المعاملات (بدون ربط بالعميل)**
 
 async function addExpense() { 
+  // يجب أن يتم التحقق من وجود جميع العناصر المطلوبة قبل استخدامها
+  const eAmount = document.getElementById('eAmount');
+  const eType = document.getElementById('eType');
+  const eDate = document.getElementById('eDate');
+  const eDesc = document.getElementById('eDesc');
+  const eImg = document.getElementById('eImg');
+
   if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
@@ -805,7 +812,13 @@ async function addExpense() {
 }
 
 async function addRight() {
-  // تم حذف التحقق من rClientID.value
+  // يجب أن يتم التحقق من وجود جميع العناصر المطلوبة قبل استخدامها
+  const rAmount = document.getElementById('rAmount');
+  const rType = document.getElementById('rType');
+  const rDate = document.getElementById('rDate');
+  const rDesc = document.getElementById('rDesc');
+  const rStatus = document.getElementById('rStatus');
+
   if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "rig";
@@ -868,7 +881,13 @@ async function addRight() {
 }
 
 async function addDebt() {
-  // تم حذف التحقق من dClientID.value
+  // يجب أن يتم التحقق من وجود جميع العناصر المطلوبة قبل استخدامها
+  const dType = document.getElementById('dType');
+  const dAmount = document.getElementById('dAmount');
+  const dDate = document.getElementById('dDate');
+  const dDesc = document.getElementById('dDesc');
+  const dStatus = document.getElementById('dStatus');
+
   if (!dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
   
   const isMasterLiability = (dType.value.includes('قرض') || dType.value.includes('دين شخصي'));
@@ -878,7 +897,7 @@ async function addDebt() {
   const dPaidInstallmentsInput = document.getElementById('dPaidInstallments'); 
   
   if (!isMasterLiability && (!dAmount.value || !dStatus.value)) return toastMsg("أكمل بيانات الفاتورة/القسط العادي.");
-  if (isMasterLiability && !dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
+  if (isMasterLiability && (!dTotalAmountInput || !dTotalAmountInput.value)) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
 
   const isEditing = editMode && editMode.type === "deb";
   const oldData = isEditing ? db.deb[editMode.index] : {};
@@ -896,8 +915,8 @@ async function addDebt() {
       let remainingAmount = 0;
 
       if (data.النوع.includes('قرض')) {
-          const paidInstallmentsCount = parseInt(dPaidInstallmentsInput.value) || 0;
           const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
+          const paidInstallmentsCount = parseInt(dPaidInstallmentsInput.value) || 0;
           
           if (installmentsTotal <= 0) return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.");
           if (paidInstallmentsCount > installmentsTotal) return toastMsg("عدد الأقساط المدفوعة لا يمكن أن يتجاوز الكلي.");
@@ -1084,6 +1103,25 @@ function editTransaction() {
   detailModal.style.display = "none";
   logModal.style.display = "none"; 
   
+  // يجب أن يتم التحقق من وجود جميع العناصر المطلوبة قبل استخدامها
+  const eAmount = document.getElementById('eAmount');
+  const eType = document.getElementById('eType');
+  const eDate = document.getElementById('eDate');
+  const eDesc = document.getElementById('eDesc');
+  
+  const rType = document.getElementById('rType');
+  const rAmount = document.getElementById('rAmount');
+  const rDate = document.getElementById('rDate');
+  const rDesc = document.getElementById('rDesc');
+  const rStatus = document.getElementById('rStatus');
+
+  const dType = document.getElementById('dType');
+  const dAmount = document.getElementById('dAmount');
+  const dDate = document.getElementById('dDate');
+  const dDesc = document.getElementById('dDesc');
+  const dStatus = document.getElementById('dStatus');
+
+
   if (editMode.type === "exp") {
     openTab('expenses', true); 
     eAmount.value = currentData.المبلغ;
