@@ -4,10 +4,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ميزانيتك الذكية</title>
+<title>عرض الرصيد الحالي</title>
 
 <style>
-/* ... (كود الـ CSS لم يتغير) ... */
+/* ... (كود الـ CSS السابق) ... */
 :root{--p:#0d6efd;--s:#28a745;--bg:#f4f6f8;--danger:#dc3545}
 body{margin:0;font-family:Tahom,a;background:var(--bg);overflow-x: hidden;}
 
@@ -15,14 +15,11 @@ header{background:var(--p);color:#fff;padding:15px;text-align:center;font-size:2
 header .title {
     flex-grow: 1; 
     text-align: center;
-    font-weight: bold; /* لإبراز الرصيد */
-    font-size: 22px; /* حجم أكبر قليلاً */
+    display: flex; /* لتوسيط البطاقة */
+    justify-content: center;
+    align-items: center;
 }
 header button {background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px;}
-
-/* ألوان عرض الرصيد في الهيدر */
-.balance-positive { color: #fff; } 
-.balance-negative { color: #ffeb3b; }
 
 .tabs{display:flex;background:#fff}
 .tabs button{flex:1;padding:12px;border:none;background:#fff}
@@ -81,9 +78,9 @@ input[type="file"]:before {
     cursor: pointer;
 }
 .currency-symbol { 
-    color: var(--s); 
+    color: inherit; /* ليتناسب مع لون البطاقة */
     font-weight: bold;
-    font-size: 1.1em;
+    font-size: 1em;
     margin-right: 5px; 
 }
 
@@ -158,6 +155,63 @@ input[type="file"]:before {
 .sidebar-overlay.open {
     display: block;
 }
+
+/* ---------------------------------------------------- */
+/* كود الـ CSS لبطاقة الرصيد الحديثة في الـ Header */
+/* ---------------------------------------------------- */
+.balance-card {
+    background: #fff; /* Card background */
+    color: #333;
+    padding: 8px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    width: fit-content;
+    max-width: 90%;
+    transform: translateY(1px); /* تصحيح بسيط في المحاذاة */
+}
+
+.balance-card .balance-value {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0 10px;
+    transition: color 0.3s ease;
+}
+
+.balance-card .balance-label {
+    font-size: 14px;
+    color: #777;
+    margin-left: 5px;
+}
+
+/* Color Coding */
+.balance-card.healthy { border-right: 5px solid var(--s); } /* Green */
+.balance-card.healthy .balance-value { color: var(--s); }
+
+.balance-card.low { border-right: 5px solid #ff9800; } /* Orange */
+.balance-card.low .balance-value { color: #ff9800; }
+
+.balance-card.negative { border-right: 5px solid var(--danger); } /* Red */
+.balance-card.negative .balance-value { color: var(--danger); }
+
+/* Hide button */
+.balance-card .hide-toggle-btn {
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+    margin-right: 10px;
+}
+
+.hidden-balance {
+    filter: blur(4px);
+    user-select: none;
+}
 </style>
 </head>
 
@@ -165,7 +219,9 @@ input[type="file"]:before {
 
 <header>
     <button onclick="toggleSidebar()">☰</button> 
-    <span class="title" id="currentBalanceDisplay">...</span> <button style="visibility: hidden;">🔍</button> 
+    <div class="title" id="balanceContainer">
+        </div> 
+    <button style="visibility: hidden;">🔍</button> 
 </header>
 
 <div class="tabs">
@@ -321,7 +377,7 @@ input[type="file"]:before {
         <div class="card" style="margin: 0 15px 15px;">
              <p style="font-weight: bold; margin-top: 0;">إدارة العمليات النقدية</p>
              <button class="secondary" onclick="openBalanceModal()" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                 <span>إدارة الرصيد الأولي / الإيداع (الدخل)</span>
+                 <span>إدارة الرصيد الأولي / الدخل</span>
                  <span>فتح</span>
              </button>
              <button class="secondary" onclick="openCurrencyModal()" style="display: flex; justify-content: space-between; align-items: center;">
@@ -366,7 +422,7 @@ input[type="file"]:before {
             <li>📌 **الالتزامات** المالية المستحقة عليك (فواتير، أقساط، قروض).</li>
         </ul>
         <p><strong>ملاحظة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية.</p>
-        <p style="text-align: center; margin-top: 20px;">الإصدار 1.2.0 (مع ميزة الرصيد والتحصيل اليدوي)</p>
+        <p style="text-align: center; margin-top: 20px;">الإصدار 1.3.0 (تحديث واجهة الرصيد)</p>
     </div>
 </div>
 
@@ -388,16 +444,16 @@ input[type="file"]:before {
         <button onclick="document.getElementById('balanceModal').style.display='none'">إغلاق</button>
     </header>
     <div class="modal-content">
-        <div class="card">
-            <p style="font-weight: bold;">تعيين/تعديل الرصيد الأولي</p>
-            <input id="initialBalanceInput" type="text" placeholder="💰 الرصيد الأولي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-            <button class="action" onclick="setInitialBalance()">حفظ الرصيد الأولي</button>
+        <div class="card" style="border: 2px solid var(--p);">
+            <p style="font-weight: bold; color: var(--p);">💰 الرصيد الأولي / الافتتاحي</p>
+            <input id="initialBalanceInput" type="text" placeholder="القيمة النقدية في البداية" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <button class="action" onclick="setInitialBalance()" style="background: var(--p);">حفظ الرصيد الأولي</button>
         </div>
 
-        <div class="card" style="margin-top: 15px;">
-            <p style="font-weight: bold;">تسجيل إيداع (دخل) أو سحب شخصي</p>
+        <div class="card" style="margin-top: 15px; border: 2px solid var(--s);">
+            <p style="font-weight: bold; color: var(--s);">📊 تسجيل دخل أو سحب</p>
             <select id="transactionTypeSelect">
-                <option value="deposit">✅ إيداع / دخل إضافي (أو تحصيل عام)</option>
+                <option value="deposit">✅ إيداع / دخل إضافي</option>
                 <option value="withdrawal">❌ سحب شخصي / خصم</option>
             </select>
             <input id="balanceAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
@@ -406,23 +462,25 @@ input[type="file"]:before {
                 <input id="balanceDate" type="datetime-local">
                 <span class="calendar-icon">📅</span>
             </div>
-            <button class="action" onclick="addBalanceTransaction()">تسجيل العملية</button>
+            <button class="action" onclick="addBalanceTransaction()" style="background: var(--s);">تسجيل العملية</button>
         </div>
     </div>
 </div>
 <script>
 // ===================================================
-// 1. إعداد IndexedDB ومتغيرات الحالة والعملات الجديدة
+// 1. إعداد IndexedDB ومتغيرات الحالة والعملات
 // ===================================================
 
 const IDB_NAME = "MySmartBudgetDB";
-const IDB_VERSION = 3; // تم ترقية الإصدار لإضافة متجر "bal"
-const STORE_NAMES = ["exp", "rig", "deb", "bal"]; // إضافة متجر bal
-let db = { exp: [], rig: [], deb: [], bal: [] }; // إضافة بال
+const IDB_VERSION = 3; 
+const STORE_NAMES = ["exp", "rig", "deb", "bal"]; 
+let db = { exp: [], rig: [], deb: [], bal: [] }; 
 let IDB_connection = null; 
 
 let currentLog = "", editMode = null;
-let currentCollectingItem = null; // لتخزين المعاملة التي يتم تحصيلها حالياً
+let currentCollectingItem = null; 
+let initialBalance = 0; 
+let isBalanceHidden = false; // متغير جديد لحالة إخفاء الرصيد
 
 // قائمة العملات العربية
 const ARABIC_CURRENCIES = [
@@ -448,8 +506,6 @@ const ARABIC_CURRENCIES = [
 
 let currentCurrency = ARABIC_CURRENCIES.find(c => c.code === 'SAR'); 
 
-let initialBalance = 0; // متغير جديد للرصيد الأولي
-
 function loadCurrencyPreference() {
     const savedCode = localStorage.getItem('selectedCurrencyCode');
     if (savedCode) {
@@ -461,16 +517,8 @@ function loadCurrencyPreference() {
     updateCurrencyDisplay();
 }
 
-function saveCurrencyPreference(code) {
-    localStorage.setItem('selectedCurrencyCode', code);
-}
-
 function updateCurrencyDisplay() {
-    const displayElement = document.getElementById('currentCurrencyDisplay');
-    if (displayElement) {
-        // تحديث الرصيد عند تغيير العملة
-        updateStats(); 
-    }
+    // تحديث الرصيد عند تغيير العملة
     updateStats(); 
     if (document.getElementById("logModal").style.display === "flex") renderLog();
 }
@@ -480,8 +528,14 @@ function loadInitialBalance() {
     initialBalance = parseAmount(savedBalance);
 }
 
+function loadBalanceVisibility() {
+    const state = localStorage.getItem('isBalanceHidden');
+    isBalanceHidden = (state === 'true');
+}
+
 loadInitialBalance(); 
 loadCurrencyPreference(); 
+loadBalanceVisibility(); // تحميل حالة إخفاء الرصيد
 
 
 // ===================================================
@@ -510,7 +564,6 @@ function formatAmount(input) {
 }
 
 function parseAmount(amount) {
-  // إزالة أي فواصل خاصة بالصيغة (مثل الآلاف) وإعادة القيمة كرقم
   return parseFloat(String(amount).replace(/[^0-9.]/g, '')) || 0;
 }
 
@@ -566,7 +619,7 @@ function clearFields(keepExpenseImage = false) {
   document.getElementById('dStatus').style.display = 'block'; 
 }
 
-// **وظائف تخصيص الحقول الديناميكية**
+// **وظائف تخصيص الحقول الديناميكية (لم تتغير)**
 
 function calculateRightRemaining() {
     const totalInput = document.getElementById('rAmount');
@@ -709,7 +762,8 @@ function closeDetailAndClearEditMode() {
 }
 
 
-// **وظائف IndexedDB**
+// **وظائف IndexedDB (لم تتغير)**
+
 function initDB() {
   return new Promise((resolve, reject) => {
     if (!window.indexedDB) {
@@ -796,7 +850,7 @@ async function loadAllData() {
     db.exp = expData;
     db.rig = rigData;
     db.deb = debData;
-    db.bal = balData;
+    db.bal = balData; // تأكد من تحميل البيانات هنا
 
     const logModal = document.getElementById("logModal");
     if (logModal.style.display === "flex") renderLog();
@@ -816,7 +870,7 @@ function postSaveCleanup(isEditing, type) {
 
 
 // ===================================================
-// 3. وظائف الإضافة والتعديل والحذف (CRUD)
+// 3. وظائف الإضافة والتعديل والحذف (CRUD) (لم تتغير)
 // ===================================================
 
 async function addExpense() { 
@@ -970,7 +1024,7 @@ async function addDebt() {
           
           delete data.عدد_الاقساط;
           delete data.قيمة_القسط;
-          data.الأقساط_المدفوعة = null;
+          delete data.الأقساط_المدفوعة;
       }
       
       remainingAmount = totalAmount - totalPaidAmount;
@@ -1011,7 +1065,7 @@ async function addDebt() {
   }
 }
 
-// **وظائف التحصيل الجديدة**
+// **وظائف التحصيل (لم تتغير)**
 
 function promptCollection(id, type) {
     const item = db[type].find(i => i.id === id);
@@ -1168,11 +1222,14 @@ function renderLog() {
         let subText = i.الحالة || '';
         let displayAmount = i.المبلغ;
         let displayTitle = i.النوع || i.الفئة || 'معاملة';
+        let amountClass = ''; 
 
         if (currentLog === 'bal') {
-             displayTitle = (i.النوع === 'deposit' ? 'إيداع/دخل' : 'سحب/خصم');
+             displayTitle = (i.النوع === 'deposit' ? '✅ إيداع/دخل' : '❌ سحب/خصم');
              subText = i.الوصف || 'لا يوجد ملاحظات';
              displayAmount = i.المبلغ;
+             // تلوين حسب النوع
+             amountClass = i.النوع === 'deposit' ? 'color: var(--s);' : 'color: var(--danger);'; 
 
         } else if (i.المتبقي_للالتزام) {
              subText = `مدفوع: ${i.إجمالي_المدفوع} / متبقي: ${i.المتبقي_للالتزام}`;
@@ -1186,7 +1243,7 @@ function renderLog() {
         return `
             <div class="list-item" onclick='showDetailById(${i.id},"${currentLog}")'>
                 <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between;">
-                    <span>${displayTitle}</span> <span>${formatCurrency(displayAmount)}</span>
+                    <span>${displayTitle}</span> <span style="${amountClass}">${formatCurrency(displayAmount)}</span>
                 </div>
                 <div style="font-size: 0.9em; color: #666; text-align: right;">
                     ${subText} | ${formatDateTime(i.التاريخ)}
@@ -1380,6 +1437,12 @@ async function deleteTransaction() {
 // 4. وظائف الإحصائيات (Stats) والرصيد الحالي
 // ===================================================
 
+function toggleBalanceVisibility() {
+    isBalanceHidden = !isBalanceHidden;
+    localStorage.setItem('isBalanceHidden', isBalanceHidden);
+    updateStats(); // إعادة عرض الرصيد لتطبيق حالة الإخفاء/الإظهار
+}
+
 function updateStats() {
   let et = 0, ec = 0; // المصروفات
   let cats = {}; // فئات المصروفات
@@ -1499,12 +1562,35 @@ function updateStats() {
   document.getElementById("sDebPaid").innerHTML = formatCurrency(dp); 
   document.getElementById("sDebUnpaid").innerHTML = formatCurrency(du);
   
-  // تحديث عرض الرصيد في الـ Header
-  const balanceDisplay = document.getElementById("currentBalanceDisplay");
-  balanceDisplay.innerHTML = `الرصيد: ${formatCurrency(balanceTotal)}`;
+  // ===================================================
+  // تحديث عرض الرصيد في الـ Header (New Implementation)
+  // ===================================================
+  const balanceContainer = document.getElementById("balanceContainer");
+  const formattedBalance = formatCurrency(balanceTotal);
   
-  balanceDisplay.classList.remove('balance-positive', 'balance-negative');
-  balanceDisplay.classList.add(balanceTotal >= 0 ? 'balance-positive' : 'balance-negative');
+  let balanceClass = 'healthy';
+  const LOW_BALANCE_THRESHOLD = 500; // قيمة الحد الأدنى
+
+  if (balanceTotal < 0) {
+      balanceClass = 'negative';
+  } else if (balanceTotal <= LOW_BALANCE_THRESHOLD) { 
+      balanceClass = 'low';
+  }
+
+  // قيمة الرصيد المعروضة (مشوشة أو واضحة)
+  const balanceValueHTML = isBalanceHidden 
+      ? `<span class="hidden-balance">1,000,000 ${currentCurrency.symbol}</span>` 
+      : formattedBalance;
+  
+  balanceContainer.innerHTML = `
+      <div class="balance-card ${balanceClass}">
+          <button class="hide-toggle-btn" onclick="toggleBalanceVisibility()">
+              ${isBalanceHidden ? '👁️' : '🔒'} 
+          </button>
+          <span class="balance-label">الرصيد الحالي:</span>
+          <span class="balance-value">${balanceValueHTML}</span>
+      </div>
+  `;
 }
 
 
@@ -1524,7 +1610,7 @@ function openAboutModal() {
     toggleSidebar();
 }
 
-// **وظائف العملات**
+// **وظائف العملات (لم تتغير)**
 
 function openCurrencyModal() {
     document.getElementById('currencyModal').style.display = 'flex';
@@ -1628,7 +1714,7 @@ async function addBalanceTransaction() {
 }
 
 
-// **تصدير البيانات (Export)**
+// **تصدير البيانات (Export) (لم تتغير)**
 function exportData() {
     toggleSidebar();
     
@@ -1672,7 +1758,7 @@ function exportData() {
     });
 }
 
-// **استيراد البيانات (Import)**
+// **استيراد البيانات (Import) (لم تتغير)**
 async function importData(event) {
     toggleSidebar();
     const file = event.target.files[0];
@@ -1767,7 +1853,7 @@ function resetAllData() {
         request.onsuccess = () => {
             storesCleared++;
             if (storesCleared === STORE_NAMES.length) {
-                db.exp = db.rig = db.deb = db.bal = []; 
+                db.exp = db.rig = db.deb = db.bal = []; // التأكد من مسح الـ bal
                 
                 // إعادة تعيين الرصيد الأولي
                 initialBalance = 0;
