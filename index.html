@@ -149,81 +149,6 @@ input[type="file"]:before {
 .sidebar-overlay.open {
     display: block;
 }
-
-/* ---------------------------------------------------- */
-/* كود الـ CSS للآلة الحاسبة (Calculator) */
-/* ---------------------------------------------------- */
-.calculator-modal {
-    position: fixed;
-    top: 60px; /* بعد الـ header */
-    left: 10px; /* في الجانب الأيسر */
-    width: 250px; 
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    z-index: 50; 
-    display: none; /* مخفي بشكل افتراضي */
-    overflow: hidden;
-}
-
-.calculator-screen {
-    background: var(--bg);
-    color: #333;
-    font-size: 2em;
-    padding: 15px 10px;
-    text-align: left; /* المحاذاة لليسار لأرقام الآلة الحاسبة */
-    height: 60px;
-    box-sizing: border-box;
-    overflow-x: auto;
-    white-space: nowrap;
-    border-bottom: 1px solid #eee;
-}
-
-.calculator-keys {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 10px;
-}
-
-.calculator-keys button {
-    padding: 15px;
-    font-size: 1.2em;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: #f0f0f0;
-    color: #333;
-    transition: background 0.1s;
-}
-
-.calculator-keys button:active {
-    background: #ccc;
-}
-
-/* تنسيقات خاصة لأزرار العمليات */
-.calculator-keys .operator {
-    background: var(--p);
-    color: #fff;
-}
-.calculator-keys .operator:active {
-    background: #0a58ca;
-}
-
-/* تنسيق زر يساوي */
-.calculator-keys .equal-sign {
-    grid-column: span 1;
-    background: var(--s);
-    color: #fff;
-}
-.calculator-keys .equal-sign:active {
-    background: #1e7e34;
-}
-
-/* تنسيق زر مسح */
-.calculator-keys .clear-btn {
-    color: var(--danger);
-}
 </style>
 </head>
 
@@ -232,7 +157,7 @@ input[type="file"]:before {
 <header>
     <button onclick="toggleSidebar()">☰</button> 
     <span class="title">ميزانيتك المالية الذكية</span>
-    <button id="calculator-btn" onclick="toggleCalculator()" style="font-size: 20px;">🧮</button> 
+    <button style="visibility: hidden;">🔍</button> 
 </header>
 
 <div class="tabs">
@@ -419,33 +344,6 @@ input[type="file"]:before {
     </div>
 </div>
 
-<div class="calculator-modal" id="calculatorModal">
-    <div class="calculator-screen" id="calcScreen">0</div>
-    <div class="calculator-keys">
-        <button class="clear-btn" onclick="clearCalculator()">C</button>
-        <button class="operator" onclick="setOperator('/')">÷</button>
-        <button class="operator" onclick="setOperator('*')">×</button>
-        <button onclick="backspace()">⌫</button>
-
-        <button onclick="appendNumber('7')">7</button>
-        <button onclick="appendNumber('8')">8</button>
-        <button onclick="appendNumber('9')">9</button>
-        <button class="operator" onclick="setOperator('-')">−</button>
-        
-        <button onclick="appendNumber('4')">4</button>
-        <button onclick="appendNumber('5')">5</button>
-        <button onclick="appendNumber('6')">6</button>
-        <button class="operator" onclick="setOperator('+')">+</button>
-        
-        <button onclick="appendNumber('1')">1</button>
-        <button onclick="appendNumber('2')">2</button>
-        <button onclick="appendNumber('3')">3</button>
-        <button class="equal-sign" onclick="calculate()">=</button>
-        
-        <button onclick="appendNumber('0')">0</button>
-        <button onclick="appendDecimal()">.</button>
-    </div>
-</div>
 <script>
 // ===================================================
 // 1. إعداد IndexedDB ومتغيرات الحالة والعملات الجديدة
@@ -1570,125 +1468,6 @@ function resetAllData() {
 
         request.onerror = () => toastMsg("فشل في حذف بعض البيانات.");
     });
-}
-
-// ===================================================
-// 6. وظائف الآلة الحاسبة (Calculator Functions)
-// ===================================================
-
-let currentInput = '0';
-let previousInput = '';
-let operator = null;
-let waitForSecondOperand = false;
-const calcScreen = document.getElementById('calcScreen');
-
-function updateScreen() {
-    calcScreen.textContent = currentInput.length > 15 ? 
-        parseFloat(currentInput).toExponential(5) : currentInput;
-}
-
-function appendNumber(number) {
-    if (waitForSecondOperand) {
-        currentInput = number;
-        waitForSecondOperand = false;
-    } else {
-        if (currentInput === '0') {
-            currentInput = number;
-        } else {
-            currentInput += number;
-        }
-    }
-    updateScreen();
-}
-
-function appendDecimal() {
-    if (waitForSecondOperand) {
-        currentInput = '0.';
-        waitForSecondOperand = false;
-    } else if (!currentInput.includes('.')) {
-        currentInput += '.';
-    }
-    updateScreen();
-}
-
-function setOperator(nextOperator) {
-    const value = parseFloat(currentInput);
-
-    if (operator && waitForSecondOperand) {
-        operator = nextOperator;
-        return;
-    }
-
-    if (previousInput === '') {
-        previousInput = value;
-    } else if (operator) {
-        const result = operate(previousInput, value, operator);
-        currentInput = result.toString();
-        previousInput = result;
-    }
-
-    waitForSecondOperand = true;
-    operator = nextOperator;
-    updateScreen();
-}
-
-function calculate() {
-    if (operator === null || waitForSecondOperand) return;
-    
-    const secondOperand = parseFloat(currentInput);
-    const firstOperand = previousInput;
-
-    const result = operate(firstOperand, secondOperand, operator);
-    
-    currentInput = result.toString();
-    operator = null;
-    previousInput = '';
-    waitForSecondOperand = false;
-    updateScreen();
-}
-
-function operate(num1, num2, op) {
-    switch (op) {
-        case '+':
-            return num1 + num2;
-        case '-':
-            return num1 - num2;
-        case '*':
-            return num1 * num2;
-        case '/':
-            if (num2 === 0) {
-                toastMsg("خطأ: القسمة على صفر!");
-                return NaN;
-            }
-            return num1 / num2;
-        default:
-            return num2;
-    }
-}
-
-function clearCalculator() {
-    currentInput = '0';
-    previousInput = '';
-    operator = null;
-    waitForSecondOperand = false;
-    updateScreen();
-}
-
-function backspace() {
-    if (currentInput === '0' || waitForSecondOperand) return;
-    currentInput = currentInput.slice(0, -1);
-    if (currentInput === '') {
-        currentInput = '0';
-    }
-    updateScreen();
-}
-
-function toggleCalculator() {
-    const calcModal = document.getElementById('calculatorModal');
-    calcModal.style.display = calcModal.style.display === 'flex' ? 'none' : 'flex';
-    if (calcModal.style.display === 'flex') {
-        clearCalculator(); // إعادة تعيين عند الفتح
-    }
 }
 </script>
 
