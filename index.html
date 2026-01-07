@@ -149,29 +149,6 @@ input[type="file"]:before {
 .sidebar-overlay.open {
     display: block;
 }
-
-/* تنسيق خاص بآلة الحاسبة لتظهر في الأسفل بخلفية شفافة */
-.modal#calculatorModal {
-    justify-content: flex-end; 
-    align-items: center; 
-    background: rgba(0, 0, 0, 0.4); 
-    padding: 0;
-}
-.modal#calculatorModal .modal-content {
-    width: 100%;
-    max-width: 400px; 
-    padding: 0;
-    overflow: hidden;
-    background: #fff; 
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
-}
-.modal#calculatorModal header {
-    border-bottom: 1px solid #ddd; /* إعادة إظهار الخط الفاصل */
-    background: #fff;
-    color: var(--p);
-    justify-content: space-between; /* لتحريك زر الإغلاق لليمين */
-}
 </style>
 </head>
 
@@ -195,10 +172,16 @@ input[type="file"]:before {
 <input id="eAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 <select id="eType">
 <option value="">الفئة (نفقات متغيرة)</option>
-<option>طعام</option><option>مواصلات</option>
-<option>رعاية شخصية</option><option>أجهزة إلكترونية</option>
-<option>صحة</option><option>ترفيه</option><option>تسوق</option>
-<option>تعليم</option><option>صيانة وإصلاح</option><option>أخرى</option>
+<option>🍔 طعام</option>
+<option>🚗 مواصلات</option>
+<option>🧑 رعاية شخصية</option>
+<option>📱 أجهزة إلكترونية</option>
+<option>💊 صحة</option>
+<option>🎮 ترفيه</option>
+<option>🛒 تسوق</option>
+<option>📚 تعليم</option>
+<option>🔧 صيانة وإصلاح</option>
+<option>📦 أخرى</option>
 </select>
 <input id="eDesc" placeholder="وصف / ملاحظة">
 <div class="datetime-container">
@@ -215,9 +198,9 @@ input[type="file"]:before {
 <div class="card">
 <select id="rType" onchange="updateRightFields(this.value)">
 <option value="">نوع الحق</option>
-<option>دين</option>
-<option>بيع بالآجل</option>
-<option>أخرى</option>
+<option>💰 دين</option>
+<option>🛍️ بيع بالآجل</option>
+<option>📋 أخرى</option>
 </select>
 <input id="rAmount" type="text" placeholder="💵 المبلغ المستحق (المبلغ الكلي)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 <div id="rDynamicFields"></div>
@@ -240,12 +223,14 @@ input[type="file"]:before {
 <div class="card">
 <select id="dType" onchange="updateDebtFields(this.value)">
 <option value="">نوع الالتزام</option>
-<option>إيجار</option>
-<option>كهرباء</option>
-<option>ماء</option>
-<option>إنترنت</option>
-<option>قرض</option> <option>دين شخصي</option> <option>قسط/فاتورة أخرى</option>
-<option>أخرى</option>
+<option>🏡 إيجار</option>
+<option>⚡ كهرباء</option>
+<option>💧 ماء</option>
+<option>📶 إنترنت</option>
+<option>🏦 قرض</option> 
+<option>🤝 دين شخصي</option> 
+<option>📄 قسط/فاتورة أخرى</option>
+<option>📋 أخرى</option>
 </select>
 <input id="dAmount" type="text" placeholder="💵 قيمة الفاتورة/القسط الحالي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 
@@ -367,22 +352,13 @@ input[type="file"]:before {
     </div>
 </div>
 
-<div class="modal" id="calculatorModal"> 
-    <header>
-        <h3>الآلة الحاسبة</h3>
-        <button onclick="closeCalculatorModal()">✖</button> 
-    </header>
-    <div class="modal-content" style="padding: 0; align-self: flex-end; width: 100%; max-width: 400px; margin-top: auto; background: #fff; border-radius: 12px 12px 0 0;">
-        <img src="1000084460.jpg" alt="Calculator" style="width: 100%; height: auto; display: block;">
-    </div>
-</div>
 <script>
 // ===================================================
 // 1. إعداد IndexedDB ومتغيرات الحالة والعملات الجديدة
 // ===================================================
 
 const IDB_NAME = "MySmartBudgetDB";
-const IDB_VERSION = 3; // *** تم التعديل إلى 3 لحل مشكلة Object Store Not Found ***
+const IDB_VERSION = 2; 
 const STORE_NAMES = ["exp", "rig", "deb"]; // إزالة clients
 let db = { exp: [], rig: [], deb: [] }; // إزالة clients
 let IDB_connection = null; 
@@ -565,7 +541,7 @@ function updateRightFields(type) {
     rAmountInput.placeholder = "💵 المبلغ المستحق (المبلغ الكلي)";
     rAmountInput.oninput = function() { formatAmount(this); };
 
-    if (type === 'دين') {
+    if (type.includes('دين')) {
         rStatusSelect.style.display = 'none'; 
         rAmountInput.placeholder = "💵 المبلغ الكلي للدين";
         rAmountInput.oninput = function() { formatAmount(this); calculateRightRemaining(); };
@@ -581,7 +557,7 @@ function updateRightFields(type) {
             <p id="rRemainingDisplay" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: var(--danger); font-weight: bold;">المتبقي: —</p>
         `;
         
-    } else if (type === 'بيع بالآجل') {
+    } else if (type.includes('بيع بالآجل')) {
         rStatusSelect.style.display = 'block';
         rAmountInput.placeholder = "💵 المبلغ الكلي للبيع بالآجل";
 
@@ -622,7 +598,7 @@ function updateDebtFields(type) {
     const dAmountInput = document.getElementById('dAmount');
     const dStatusSelect = document.getElementById('dStatus'); 
 
-    if (type === 'قرض') {
+    if (type.includes('قرض')) {
         dAmountInput.style.display = 'none'; 
         dStatusSelect.style.display = 'none'; 
 
@@ -633,7 +609,7 @@ function updateDebtFields(type) {
             <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" min="0">
         `;
         
-    } else if (type === 'دين شخصي') {
+    } else if (type.includes('دين شخصي')) {
         dAmountInput.style.display = 'none'; 
         dStatusSelect.style.display = 'none'; 
 
@@ -847,7 +823,7 @@ async function addRight() {
   data.التاريخ = rDate.value; 
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
-  if (data.النوع === 'دين') {
+  if (data.النوع.includes('دين')) {
       const paidAmount = rPaidAmountInput ? parseAmount(rPaidAmountInput.value) : 0;
       const remaining = totalAmount - paidAmount;
       
@@ -895,7 +871,7 @@ async function addDebt() {
   // تم حذف التحقق من dClientID.value
   if (!dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
   
-  const isMasterLiability = (dType.value === 'قرض' || dType.value === 'دين شخصي');
+  const isMasterLiability = (dType.value.includes('قرض') || dType.value.includes('دين شخصي'));
   
   const dTotalAmountInput = document.getElementById('dTotalAmount');
   const dInstallmentsInput = document.getElementById('dInstallments');
@@ -919,7 +895,7 @@ async function addDebt() {
       let totalPaidAmount = 0;
       let remainingAmount = 0;
 
-      if (data.النوع === 'قرض') {
+      if (data.النوع.includes('قرض')) {
           const paidInstallmentsCount = parseInt(dPaidInstallmentsInput.value) || 0;
           const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
           
@@ -933,7 +909,7 @@ async function addDebt() {
           data.قيمة_القسط = formatCurrency(installmentValue.toFixed(2));
           data.الأقساط_المدفوعة = paidInstallmentsCount;
           
-      } else if (data.النوع === 'دين شخصي') {
+      } else if (data.النوع.includes('دين شخصي')) {
           totalPaidAmount = parseAmount(dPaidInstallmentsInput.value);
           
           if (totalPaidAmount > totalAmount) return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
@@ -1126,7 +1102,7 @@ function editTransaction() {
     rDesc.value = currentData.الوصف;
     rDate.value = currentData.التاريخ;
     
-    if (currentData.النوع === 'دين') {
+    if (currentData.النوع.includes('دين')) {
         const rPaidAmountInput = document.getElementById('rPaidAmount');
         if (rPaidAmountInput && currentData.المبلغ_المدفوع) {
              rPaidAmountInput.value = currentData.المبلغ_المدفوع; 
@@ -1151,12 +1127,12 @@ function editTransaction() {
 
     updateDebtFields(dType.value); 
 
-    if (currentData.النوع === 'قرض' || currentData.النوع === 'دين شخصي') {
+    if (currentData.النوع.includes('قرض') || currentData.النوع.includes('دين شخصي')) {
         if (currentData.المبلغ_الكلي_للالتزام && document.getElementById('dTotalAmount')) {
             document.getElementById('dTotalAmount').value = currentData.المبلغ_الكلي_للالتزام;
         }
         
-        if (currentData.النوع === 'قرض') {
+        if (currentData.النوع.includes('قرض')) {
             if (currentData.عدد_الاقساط && document.getElementById('dInstallments')) {
                 document.getElementById('dInstallments').value = currentData.عدد_الاقساط;
             }
@@ -1165,7 +1141,7 @@ function editTransaction() {
             }
             calculateInstallmentValue();
 
-        } else if (currentData.النوع === 'دين شخصي') {
+        } else if (currentData.النوع.includes('دين شخصي')) {
             const paidAmountUnformatted = parseAmount(currentData.إجمالي_المدفوع) || 0;
             if (document.getElementById('dPaidInstallments')) {
                 document.getElementById('dPaidInstallments').value = paidAmountUnformatted.toLocaleString('ar');
@@ -1220,12 +1196,18 @@ function updateStats() {
     let a = parseAmount(e.المبلغ); 
     et += a; 
     ec++;
-    cats[e.الفئة] = (cats[e.الفئة] || 0) + a;
+    
+    // إزالة الايموجي عند تصنيف الفئة لحساب الإحصائيات
+    const categoryKey = e.الفئة.replace(/[\uD800-\uDBFF\uDC00-\uDFFF\u2000-\u2FFF\uE000-\uFFFF]/g, '').trim(); 
+    cats[categoryKey] = (cats[categoryKey] || 0) + a;
   });
 
   // 2. حساب الالتزامات والنقل التلقائي للمصروفات المدفوعة
   db.deb.forEach(d => { 
-    const isMasterLiability = (d.النوع === 'قرض' || d.النوع === 'دين شخصي');
+    const isMasterLiability = (d.النوع.includes('قرض') || d.النوع.includes('دين شخصي'));
+    
+    // إزالة الايموجي من النوع عند الحاجة
+    const cleanType = d.النوع.replace(/[\uD800-\uDBFF\uDC00-\uDFFF\u2000-\u2FFF\uE000-\uFFFF]/g, '').trim();
     
     if (isMasterLiability) {
         const totalLiability = parseAmount(d.المبلغ_الكلي_للالتزام);
@@ -1240,7 +1222,7 @@ function updateStats() {
         if (paidAmount > 0) {
             et += paidAmount; 
             ec++; 
-            const category = `التزام مدفوع: ${d.النوع}`; // تبسيط الفئة
+            const category = `التزام مدفوع: ${cleanType}`; // تبسيط الفئة
             cats[category] = (cats[category] || 0) + paidAmount;
         }
 
@@ -1254,7 +1236,7 @@ function updateStats() {
             et += amount; 
             ec++;
             
-            const category = `التزام مدفوع: ${d.النوع}`; // تبسيط الفئة
+            const category = `التزام مدفوع: ${cleanType}`; // تبسيط الفئة
             cats[category] = (cats[category] || 0) + amount;
         } else {
             du += amount;
@@ -1267,7 +1249,7 @@ function updateStats() {
     let a = parseAmount(r.المبلغ); 
     rt += a; 
     
-    if (r.النوع === 'دين') {
+    if (r.النوع.includes('دين')) {
         const paid = parseAmount(r.المبلغ_المدفوع);
         rp += paid;
         ru += a - paid;
@@ -1501,31 +1483,6 @@ function resetAllData() {
         request.onerror = () => toastMsg("فشل في حذف بعض البيانات.");
     });
 }
-
-// ===================================================
-// 6. وظائف الآلة الحاسبة (Calculator Functions)
-// ===================================================
-
-function openCalculatorModal() {
-    document.getElementById('calculatorModal').style.display = 'flex';
-}
-
-function closeCalculatorModal() {
-    document.getElementById('calculatorModal').style.display = 'none';
-}
-
-// تفعيل الإغلاق عند الضغط على الخلفية (خارج محتوى الـmodal)
-document.addEventListener('DOMContentLoaded', () => {
-    const calculatorModal = document.getElementById('calculatorModal');
-    if (calculatorModal) {
-        calculatorModal.addEventListener('click', function(e) {
-            // التحقق من أن النقر كان على الخلفية وليس على رأس النافذة أو محتواها
-            if (e.target.id === 'calculatorModal') {
-                closeCalculatorModal();
-            }
-        });
-    }
-});
 </script>
 
 </body>
