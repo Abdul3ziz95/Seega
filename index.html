@@ -717,6 +717,28 @@ input:checked + .slider:before { transform: translateX(20px); }
         </div>
 </div>
 
+<div class="modal" id="reportsModal">
+    <header>
+        <h3 style="color: var(--p);">اختيار التقرير والتصدير</h3>
+        <button onclick="closeLayer('reports')"><i class="fas fa-times"></i></button>
+    </header>
+    <div class="modal-content">
+        <p style="font-weight: bold; margin-bottom: 10px;">اختر نوع التقرير المطلوب:</p>
+        
+        <button class="secondary" onclick="prepareReport('exp')" style="margin-top: 5px;"><i class="fas fa-money-bill-wave" style="margin-left: 5px;"></i> تقرير المصروفات</button>
+        <button class="secondary" onclick="prepareReport('rig')" style="margin-top: 5px;"><i class="fas fa-handshake" style="margin-left: 5px;"></i> تقرير الحقوق</button>
+        <button class="secondary" onclick="prepareReport('deb')" style="margin-top: 5px;"><i class="fas fa-file-invoice" style="margin-left: 5px;"></i> تقرير الالتزامات</button>
+        <button class="secondary" onclick="prepareReport('bal')" style="margin-top: 5px;"><i class="fas fa-history" style="margin-left: 5px;"></i> سجل حركات الرصيد</button>
+
+        <p id="reportActionPrompt" style="margin-top: 20px; font-weight: bold; color: var(--danger); display: none;">تم اختيار تقرير:</p>
+        
+        <div id="reportActionButtons" style="margin-top: 15px; display: none; justify-content: space-between; gap: 10px;">
+            <button class="action" style="flex: 1; background: var(--success);" onclick="exportToCSV()"><i class="fas fa-file-csv" style="margin-left: 5px;"></i> تصدير CSV/Excel</button>
+            <button class="action" style="flex: 1; background: #c63d3d;" onclick="exportToPDF()"><i class="fas fa-file-pdf" style="margin-left: 5px;"></i> تصدير PDF</button>
+        </div>
+    </div>
+</div>
+
 <div id="imageSourceModal">
     <h3 style="margin-bottom: 20px;">اختيار مصدر الصورة</h3>
     <button class="action" onclick="openCameraInput()"><i class="fas fa-camera" style="margin-left: 10px;"></i> التقاط بالكاميرا</button>
@@ -750,6 +772,10 @@ input:checked + .slider:before { transform: translateX(20px); }
                  <span id="currentCurrencyDisplay" style="font-weight: bold;">العملة: ريال سعودي (ر.س)</span>
                  <span style="color: var(--p);"><i class="fas fa-exchange-alt"></i> تغيير</span>
              </button>
+        </div>
+        
+        <div class="sidebar-menu-item" onclick="openReportsModal()">
+            <i class="fas fa-chart-bar"></i> <span>التقارير والتصدير</span>
         </div>
         
         <div class="sidebar-menu-item" onclick="exportData()">
@@ -817,6 +843,7 @@ let IDB_connection = null;
 let currentLog = "", editMode = null, balanceActionType = null;
 let currentBalance = 0; 
 let balanceHidden = localStorage.getItem('balanceHidden') === 'true'; 
+let currentReportType = null; // حالة جديدة لنوع التقرير المحدد
 
 // إدارة حالة التنقل
 const LAYERS = {
@@ -827,7 +854,8 @@ const LAYERS = {
     'about': { elementId: 'aboutModal', type: 'modal' },
     'balanceAction': { elementId: 'balanceActionModal', type: 'modal' },
     'balanceLog': { elementId: 'balanceLogModal', type: 'modal' }, 
-    'imageSource': { elementId: 'imageSourceModal', type: 'menu' } 
+    'imageSource': { elementId: 'imageSourceModal', type: 'menu' },
+    'reports': { elementId: 'reportsModal', type: 'modal' } // ADDED
 };
 let historyStack = []; 
 
@@ -1007,6 +1035,11 @@ function _visualOpen(layerName, data = {}) {
             renderCurrencyList();
         } else if (layerName === 'balanceLog') { 
              renderBalanceLog();
+        } else if (layerName === 'reports') {
+             // Reset report modal state
+            currentReportType = null;
+            document.getElementById('reportActionPrompt').style.display = 'none';
+            document.getElementById('reportActionButtons').style.display = 'none';
         }
     } else if (layer.type === 'menu') {
         element.classList.add('open');
@@ -1095,6 +1128,7 @@ function showDetailById(id, type) { openLayer('detail', { logType: type, id: id 
 function openCurrencyModal() { openLayer('currency'); }
 function openAboutModal() { openLayer('about'); }
 function showImageSourceModal() { openLayer('imageSource'); } 
+function openReportsModal() { openLayer('reports'); } // ADDED
 
 function formatAmount(input) {
   let value = input.value.replace(/[^\d.]/g, ''); 
@@ -1346,7 +1380,7 @@ function renderBalanceLog() {
             const icon = isDeposit ? 'fa-arrow-up' : (i.القيمة_الصافية < 0 ? 'fa-arrow-down' : 'fa-minus');
             
             return `
-                <div class="list-item" style="border-right-color: ${color};">
+                <div class="list-item" style="border-right-color: ${color};" onclick="toastMsg('لا يمكن تعديل سجلات الرصيد بشكل مباشر. يجب تعديل المعاملة الأصلية.')">
                     <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
                         <span><i class="fas ${icon}" style="margin-left: 8px; color: ${color};"></i> ${i.النوع}</span> 
                         <span style="color: ${color};">${formatCurrency(i.المبلغ)}</span>
@@ -1416,11 +1450,12 @@ async function addExpense() {
   if (isEditing && shouldClearOldImage) {
       // إذا كان وضع تعديل وتم الضغط على مسح، نحذف مفتاح الصورة
       delete data.صورة;
+      localStorage.removeItem('clearImageFlag'); // مسح العلم بعد معالجة التعديل
   } else if (!isEditing) {
       // إذا كانت معاملة جديدة بدون صورة، نضمن عدم وجود المفتاح
       delete data.صورة;
   }
-  // إذا كان وضع تعديل ولم يتم إرفاق ملف جديد ولم يتم الضغط على مسح، فسيتم الاحتفاظ بالصورة القديمة من oldData
+  // إذا كان هناك ملف جديد، سيتم معالجته لاحقاً في done/reader.onload
 
   
   const done = async () => {
@@ -1799,8 +1834,8 @@ function _renderDetailContent(o, type) {
         // Skip null/undefined/empty string values, except for important fields
         if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '' && key !== 'الوصف')) continue;
         
-        const isAmountField = key.includes('المبلغ') || key.includes('المدفوع') || key.includes('المتبقي') || key.includes('القسط');
-        const formattedValue = isAmountField ? formatCurrency(value, true) : value;
+        const isAmountField = key.includes('المبلغ') || key.includes('المدفوع') || key.includes('المتبقي') || key.includes('القسط') || key.includes('الرصيد') || key.includes('القيمة');
+        const formattedValue = isAmountField ? formatCurrency(value, true) : (key.includes('التاريخ') ? formatDateTime(value) : value);
         
         html += `<p style="margin: 8px 0;"><strong>${key.replace(/_/g, ' ')}:</strong> <span>${formattedValue}</span></p>`;
     }
@@ -2079,7 +2114,196 @@ function resetAllData() {
         request.onerror = () => toastMsg("فشل حذف البيانات.");
     });
 }
+
+// ---------------------------------------------
+// وظائف التقارير والتصدير (NEW)
+// ---------------------------------------------
+
+function prepareReport(type) {
+    currentReportType = type;
+    const typeMap = {
+        'exp': 'المصروفات',
+        'rig': 'الحقوق',
+        'deb': 'الالتزامات',
+        'bal': 'سجل الرصيد'
+    };
+    
+    document.getElementById('reportActionPrompt').textContent = `تم اختيار تقرير: ${typeMap[type]}`;
+    document.getElementById('reportActionPrompt').style.display = 'block';
+    
+    const actionButtons = document.getElementById('reportActionButtons');
+    actionButtons.style.display = 'flex'; // Use flex to maintain layout
+}
+
+function exportToCSV() {
+    if (!currentReportType || !db[currentReportType]) return toastMsg("الرجاء اختيار نوع التقرير أولاً.");
+
+    const data = db[currentReportType];
+    const typeMap = { 'exp': 'المصروفات', 'rig': 'الحقوق', 'deb': 'الالتزامات', 'bal': 'سجل الرصيد' };
+    
+    if (data.length === 0) return toastMsg(`لا توجد بيانات لتصديرها في سجل ${typeMap[currentReportType]}.`);
+    
+    // Get headers: Use all keys from all objects to ensure comprehensive columns
+    const allKeys = new Set();
+    data.forEach(item => Object.keys(item).forEach(key => {
+        if (key !== 'id' && key !== 'clientId' && key !== 'صورة') { 
+            allKeys.add(key.trim());
+        }
+    }));
+    const headers = Array.from(allKeys).sort(); 
+
+    // Escape function for CSV (handle commas and double quotes)
+    const escapeCSV = (str) => {
+        if (str === null || str === undefined) return '';
+        str = String(str);
+        if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+             // Replace double quotes with two double quotes, and wrap in double quotes
+            return `"${str.replace(/"/g, '""')}"`; 
+        }
+        return str;
+    };
+    
+    let csv = headers.map(escapeCSV).join(',') + '\n';
+    
+    data.forEach(item => {
+        const row = headers.map(header => {
+            const value = item[header];
+            
+            // Export raw number for calculation in Excel/CSV
+            if (header.includes('المبلغ') || header.includes('المدفوع') || header.includes('المتبقي') || header.includes('القسط') || header.includes('الرصيد') || header.includes('القيمة')) {
+                 return parseAmount(value || 0); 
+            }
+            if (header.includes('التاريخ') || header.includes('تاريخ')) {
+                 return escapeCSV(value ? new Date(value).toISOString() : ''); // Export ISO date for Excel compatibility
+            }
+
+            return escapeCSV(value);
+        }).join(',');
+        csv += row + '\n';
+    });
+
+    // Create Blob and download link (Adding \uFEFF for Arabic/UTF-8 compatibility in Excel)
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${typeMap[currentReportType]}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toastMsg(`تم تصدير تقرير ${typeMap[currentReportType]} بصيغة CSV`);
+    closeLayer('reports');
+}
+
+
+function exportToPDF() {
+    if (!currentReportType || !db[currentReportType]) return toastMsg("الرجاء اختيار نوع التقرير أولاً.");
+    
+    const data = db[currentReportType];
+    const typeMap = { 'exp': 'المصروفات', 'rig': 'الحقوق', 'deb': 'الالتزامات', 'bal': 'سجل الرصيد' };
+
+    if (data.length === 0) return toastMsg(`لا توجد بيانات لتصديرها في سجل ${typeMap[currentReportType]}.`);
+    
+    // 1. Get headers 
+    const allKeys = new Set();
+    data.forEach(item => Object.keys(item).forEach(key => {
+        if (key !== 'id' && key !== 'clientId' && key !== 'صورة') { 
+            allKeys.add(key.trim());
+        }
+    }));
+    const headers = Array.from(allKeys).sort();
+
+    // 2. Generate Table Rows
+    const tableRows = data.map(item => {
+        const rowData = headers.map(header => {
+            let value = item[header];
+            
+            // Format amounts for display in PDF
+            if (header.includes('المبلغ') || header.includes('المدفوع') || header.includes('المتبقي') || header.includes('القسط') || header.includes('الرصيد') || header.includes('القيمة')) {
+                value = value ? formatCurrency(value) : (value === 0 ? formatCurrency(0) : '—');
+            } else if (header.includes('التاريخ') || header.includes('تاريخ')) {
+                value = formatDateTime(value);
+            } else {
+                value = value || '—';
+            }
+            
+            return `<td>${value}</td>`;
+        }).join('');
+        return `<tr>${rowData}</tr>`; // Changed tableRows to rowData
+    }).join('');
+
+    // 3. Generate Table Headers
+    const tableHeaders = headers.map(header => `<th>${header.replace(/_/g, ' ')}</th>`).join('');
+
+    // 4. Construct Full HTML for Print
+    const reportTitle = `تقرير ${typeMap[currentReportType]} - ${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+    const currencyInfo = `العملة المستخدمة في التقرير: ${currentCurrency.name} (${currentCurrency.symbol})`;
+
+    const pdfContent = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>${reportTitle}</title>
+            <style>
+                /* Styles for PDF Generation (Print) */
+                @page { size: A4; margin: 15mm; }
+                body { font-family: 'Tajawal', 'Arial', sans-serif; direction: rtl; }
+                h1 { color: #0077b6; text-align: center; border-bottom: 3px solid #0077b6; padding-bottom: 10px; margin-bottom: 10px; font-weight: 800; font-size: 24px; }
+                p.info { text-align: center; color: #555; font-size: 14px; margin: 5px 0; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+                th, td { 
+                    border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; word-wrap: break-word;
+                }
+                th { 
+                    background-color: #f0f8ff; 
+                    color: #0077b6; 
+                    font-weight: bold; 
+                }
+                .currency-symbol { color: #0077b6; font-weight: bold; }
+                .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #999; }
+                @media print {
+                    .footer { display: none; } /* Hide footer on print */
+                }
+            </style>
+            <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+        </head>
+        <body>
+            <h1>${reportTitle}</h1>
+            <p class="info">${currencyInfo}</p>
+            <table>
+                <thead>
+                    <tr>${tableHeaders}</tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            <div class="footer">
+                تم إنشاء هذا التقرير بتاريخ: ${formatDateTime(new Date().toISOString())} - ميزانيتك الذكية
+            </div>
+        </body>
+        </html>
+    `;
+
+    // 5. Open new window and print
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+    
+    // Ensure content is loaded before print is called
+    printWindow.onload = function() {
+        printWindow.focus();
+        printWindow.print();
+        toastMsg(`جارٍ إنشاء تقرير ${typeMap[currentReportType]} بصيغة PDF`);
+    };
+    
+    closeLayer('reports');
+}
 </script>
 
 </body>
 </html>
+
