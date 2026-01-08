@@ -10,11 +10,21 @@
 :root{--p:#0d6efd;--s:#28a745;--bg:#f4f6f8;--danger:#dc3545}
 body{margin:0;font-family:Tahom,a;background:var(--bg);overflow-x: hidden;}
 
-header{background:var(--p);color:#fff;padding:15px;text-align:center;font-size:20px;display:flex;justify-content:space-between;align-items:center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);}
+header{background:var(--p);color:#fff;padding:15px;text-align:center;font-size:20px;display:flex;justify-content:space-between;align-items:center;}
 header .title {flex-grow: 1; text-align: center;}
 header button {background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px;}
 
-.tabs{display:flex;background:#fff; border-bottom: 1px solid #ddd;}
+/* NEW style for calculator image icon to replace 🧮 */
+header button #calc-icon-img {
+    width: 24px; 
+    height: 24px;
+    vertical-align: middle;
+    filter: invert(100%); /* Makes a dark icon white on blue background */
+}
+/* END NEW style */
+
+
+.tabs{display:flex;background:#fff}
 .tabs button{flex:1;padding:12px;border:none;background:#fff}
 .tabs button.active{background:var(--p);color:#fff}
 .section{display:none;padding:15px}
@@ -181,7 +191,7 @@ input[type="file"]:before {
 <header>
     <button onclick="toggleSidebar()">☰</button> 
     <span class="title">ميزانيتك المالية الذكية</span>
-    <button onclick="openCalculatorModal()">🧮</button> </header>
+    <button onclick="openCalculatorModal()"><img src="calculator-icon.png" alt="آلة حاسبة" id="calc-icon-img"></button> </header>
 
 <div class="tabs">
 <button class="active" onclick="openTab('expenses')">💸 مصروفات</button>
@@ -1185,7 +1195,7 @@ function _renderDetailContent(o, type) {
         'الأقساط_المدفوعة': 'عدد الأقساط المدفوعة',
         'اسم_الجهة': 'اسم الشخص/الجهة', // NEW
         'المبلغ': 'المبلغ (قسط/فاتورة/إجمالي)',
-        'المبلغ_المدفوع': 'المحصل/المدفوع حتى الآن', 
+        'المبلغ_مدفوع': 'المحصل/المدفوع حتى الآن', 
         'المتبقي': 'المتبقي للتحصيل', 
         'المبلغ_الكلي_للحق': 'المبلغ الكلي للحق (الأصلي)', // NEW
         'الأقساط_المحصلة': 'عدد الأقساط المحصلة', // NEW
