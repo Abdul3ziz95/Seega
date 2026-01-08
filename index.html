@@ -7,15 +7,15 @@
 
 <style>
 /* ---------------------------------------------------- */
-/* 1. متغيرات الألوان الجديدة (أكثر هدوءًا وراحة للعين) */
+/* 1. متغيرات الألوان الجديدة (أزرق مبهج وواضح) */
 /* ---------------------------------------------------- */
 :root{
-    --p: #2a6f8b; /* Primary - أزرق غامق/هادئ */
-    --s: #46a67f; /* Success - أخضر هادئ */
-    --bg: #f7f9fb; /* Background - فاتح جداً */
-    --danger: #d9534f; /* Danger - أحمر هادئ */
-    --secondary-bg: #eef1f5; /* خلفية ثانوية للبطاقات/الحقول */
-    --border-color: #d1d5db; /* لون الإطار الهادئ */
+    --p: #0d6efd; /* Primary - أزرق واضح ومشرق */
+    --s: #28a745; /* Success - أخضر زاهي */
+    --bg: #f4f6f8; /* Background - فاتح جداً */
+    --danger: #dc3545; /* Danger - أحمر واضح */
+    --secondary-bg: #e9ecef; /* خلفية ثانوية للبطاقات/الحقول */
+    --border-color: #ced4da; /* لون الإطار القياسي */
 }
 
 body{
@@ -36,7 +36,7 @@ header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* ظل واضح */
     position: sticky;
     top: 0;
     z-index: 10;
@@ -54,6 +54,11 @@ header button {
     font-size: 24px; 
     cursor: pointer; 
     padding: 0 10px;
+    transition: opacity 0.2s;
+}
+
+header button:hover {
+    opacity: 0.8;
 }
 
 /* ---------------------------------------------------- */
@@ -62,9 +67,10 @@ header button {
 .tabs{
     display:flex;
     background:#fff;
-    border-bottom: 2px solid var(--border-color); /* فاصل خفيف */
+    border-bottom: 1px solid var(--border-color); 
     box-shadow: 0 2px 4px rgba(0,0,0,.05);
     margin-bottom: 5px;
+    padding-top: 5px; /* مسافة بسيطة من الأعلى */
 }
 
 .tabs button{
@@ -81,12 +87,14 @@ header button {
 
 .tabs button:hover {
     background: var(--secondary-bg);
+    color: #333;
 }
 
 .tabs button.active{
-    background:var(--secondary-bg);
+    background: var(--secondary-bg);
     color:var(--p);
     border-bottom: 3px solid var(--p);
+    box-shadow: 0 -2px 5px rgba(0,0,0,.05) inset;
 }
 
 .section{
@@ -102,7 +110,7 @@ header button {
     background:#fff;
     padding:20px;
     border-radius:12px;
-    box-shadow:0 3px 8px rgba(0,0,0,.08);
+    box-shadow:0 3px 8px rgba(0,0,0,.1);
     margin-bottom:15px;
 }
 
@@ -114,13 +122,14 @@ input, select{
     border-radius:8px;
     border:1px solid var(--border-color);
     box-sizing: border-box;
-    background: var(--secondary-bg);
+    background: #fff;
     color: #333;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background 0.2s;
 }
 
 input:focus, select:focus {
     border-color: var(--p);
+    background: var(--secondary-bg);
     outline: none;
 }
 
@@ -157,12 +166,12 @@ button.action{
     font-size:17px;
     font-weight: bold;
     margin-top: 10px;
-    box-shadow: 0 4px 6px rgba(70, 166, 127, 0.3);
+    box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
     transition: background 0.2s;
 }
 
 button.action:hover {
-    background: #39916d;
+    background: #1e7e34;
 }
 
 button.secondary{
@@ -178,7 +187,7 @@ button.secondary{
 }
 
 button.secondary:hover {
-    background: #e0e4e8;
+    background: #d4d8db;
 }
 
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 22px;border-radius:30px;display:none;z-index:100; box-shadow: 0 4px 12px rgba(0,0,0,.2)}
@@ -192,58 +201,33 @@ button.secondary:hover {
     border-bottom:1px solid var(--border-color);
     align-items: center;
     justify-content: space-between;
+    background: var(--p);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.modal header h3 { margin: 0; font-size: 18px; color: var(--p); }
+.modal header h3 { margin: 0; font-size: 18px; color: #fff; }
+.modal header button { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
 
 .modal-content{padding:15px;overflow:auto;flex:1}
 .list-item{
-    background:var(--secondary-bg);
+    background:#fff;
     padding:15px;
     border-radius:10px;
     margin-bottom:10px;
     cursor:pointer;
+    border: 1px solid var(--border-color);
     box-shadow:0 1px 3px rgba(0,0,0,.05);
     transition: background 0.2s;
 }
 
 .list-item:hover {
-    background: #e5e8ec;
+    background: var(--secondary-bg);
 }
 
 .detail p{margin:8px 0; font-size: 16px;}
 .detail p b { color: var(--p); }
-.detail img{width:100%;border-radius:10px;margin-top:15px;box-shadow: 0 2px 5px rgba(0,0,0,.15);}
+.detail img{width:100%;max-width: 400px; height: auto; border-radius:10px;margin-top:15px;box-shadow: 0 2px 5px rgba(0,0,0,.15);}
 
-/* **تعديل CSS لزر إرفاق الصورة الجديد** */
-.image-upload-container {
-    display: flex;
-    gap: 10px;
-    margin: 10px 0;
-}
-
-.image-upload-container label {
-    flex: 1;
-    padding: 12px;
-    text-align: center;
-    background: var(--secondary-bg);
-    border: 1px dashed var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    color: #777;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    font-weight: bold;
-    min-width: 0; 
-    transition: border-color 0.2s;
-}
-
-.image-upload-container label:hover {
-    border-color: var(--p);
-    color: var(--p);
-}
 
 .currency-symbol { 
     color: var(--s); 
@@ -263,7 +247,7 @@ button.secondary:hover {
     max-width: 80%;
     height: 100%;
     background: #fff;
-    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
     transform: translateX(100%); 
     transition: transform 0.3s ease-in-out;
     z-index: 2000; 
@@ -310,8 +294,8 @@ button.secondary:hover {
     background: var(--secondary-bg);
 }
 
-/* طبقة التغطية الشفافة خلف القائمة الجانبية */
-.sidebar-overlay {
+/* طبقة التغطية الشفافة العامة للمودال والقائمة الجانبية */
+.app-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -322,7 +306,7 @@ button.secondary:hover {
     z-index: 1500;
 }
 
-.sidebar-overlay.open {
+.app-overlay.open {
     display: block;
 }
 
@@ -334,14 +318,13 @@ button.secondary:hover {
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     padding: 20px 15px;
-    background: #fff;
+    background: #f4f6f8; /* خلفية خفيفة للآلة الحاسبة */
     border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .calculator-output {
     grid-column: 1 / -1;
-    background: var(--secondary-bg);
+    background: #fff;
     color: #222;
     font-size: 2.5em;
     padding: 10px 15px;
@@ -351,6 +334,7 @@ button.secondary:hover {
     min-height: 50px;
     overflow-x: auto;
     white-space: nowrap;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.1);
 }
 
 .calculator-output-secondary {
@@ -370,7 +354,7 @@ button.secondary:hover {
 }
 
 .calculator-button.number {
-    background: #e0e5eb;
+    background: #fff;
     color: #333;
 }
 
@@ -390,8 +374,36 @@ button.secondary:hover {
     color: white;
 }
 
-.calculator-button:hover {
-    opacity: 0.9;
+.calculator-button:active {
+    filter: brightness(0.85);
+}
+/* ---------------------------------------------------- */
+
+/* 4. تصميم زر اختيار الصورة الجديد */
+.image-upload-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+#imageOptionsPopup {
+    /* تم تعديل التنسيق ليكون متماشياً مع التصميم الجديد */
+    min-width: 180px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    transform-origin: top right;
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#imageOptionsPopup button {
+    font-weight: 500;
+    color: #333;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: right;
 }
 /* ---------------------------------------------------- */
 </style>
@@ -428,15 +440,21 @@ button.secondary:hover {
     <span class="calendar-icon">📅</span>
 </div>
 
-<div class="image-upload-container">
-    <label for="eImgCamera">📸 كاميرا</label>
-    <input id="eImgCamera" type="file" accept="image/*" capture="camera" style="display: none;">
+<div class="image-upload-wrapper">
+    <button id="uploadButton" class="secondary" onclick="showImageOptions(event)" style="margin-top: 10px; width: 100%; color: var(--p); border: 1px dashed var(--p); background: #fff;">
+        📷 إرفاق صورة الفاتورة
+    </button>
+
+    <div id="imageOptionsPopup" style="display:none; position:absolute; z-index: 1001; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; width: 200px;">
+        <div style="padding: 10px; text-align: right; color: var(--p); font-weight: bold; border-bottom: 1px solid var(--secondary-bg);">اختر المصدر:</div>
+        <button onclick="document.getElementById('eImgCamera').click(); hideImageOptions();" class="secondary" style="margin: 5px; width: calc(100% - 10px); background: #fff; border: none; text-align: right;">📸 كاميرا</button>
+        <button onclick="document.getElementById('eImgGallery').click(); hideImageOptions();" class="secondary" style="margin: 5px; width: calc(100% - 10px); background: #fff; border: none; text-align: right;">🖼️ معرض</button>
+    </div>
     
-    <label for="eImgGallery">🖼️ معرض</label>
+    <input id="eImgCamera" type="file" accept="image/*" capture="camera" style="display: none;">
     <input id="eImgGallery" type="file" accept="image/*" style="display: none;">
-    <input id="eImg" type="hidden"> 
 </div>
-<span id="imageStatus" style="font-size: 0.9em; color: var(--p); display: block; margin-top: -5px; margin-bottom: 5px;">لم يتم إرفاق صورة</span>
+<span id="imageStatus" style="font-size: 0.9em; color: var(--p); display: block; margin-top: 5px; margin-bottom: 5px;">لم يتم إرفاق صورة</span>
 
 <button class="action" onclick="addExpense()">حفظ</button>
 <button class="secondary" onclick="openLog('exp')">📂 السجل</button>
@@ -520,7 +538,7 @@ button.secondary:hover {
 
 <div class="modal" id="logModal">
 <header>
-<input id="search" placeholder="🔍 بحث" oninput="renderLog()">
+<input id="search" placeholder="🔍 بحث" oninput="renderLog()" style="flex-grow: 1; margin: 0; padding: 10px; border-radius: 6px; border: none; background: #fff; color: #333;">
 <button onclick="closeLog()">إغلاق</button>
 </header>
 <div class="modal-content" id="logContent"></div>
@@ -535,9 +553,7 @@ button.secondary:hover {
 
 <div class="toast" id="toast"></div>
 
-<div class="sidebar-overlay" onclick="closeCalculator()"></div>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="app-overlay" id="appOverlay" onclick="handleOverlayClick(event)"></div>
 
 <div class="sidebar" id="appSidebar">
     <div class="sidebar-header">
@@ -601,13 +617,13 @@ button.secondary:hover {
     </div>
 </div>
 
-<div class="modal" id="calculatorModal">
+<div class="modal" id="calculatorModal" style="max-width: 400px; margin: auto; height: auto; top: 50%; transform: translateY(-50%); position: absolute; left: 0; right: 0; border-radius: 12px; overflow: hidden; display: none;">
     <header>
         <h3>الآلة الحاسبة</h3>
         <button onclick="closeCalculator()">✖</button>
     </header>
-    <div class="modal-content" style="padding: 10px;">
-        <div class="calculator-output">
+    <div class="modal-content" style="padding: 0;">
+        <div class="calculator-output" style="margin: 10px 10px 0 10px;">
             <div id="calcSecondaryOutput" class="calculator-output-secondary">0</div>
             <div id="calcMainOutput">0</div>
         </div>
@@ -652,6 +668,7 @@ let db = { exp: [], rig: [], deb: [] };
 let IDB_connection = null; 
 
 let currentLog = "", editMode = null;
+let currentExpenseFile = null; // **متغير جديد لتتبع ملف الصورة المختار**
 
 // قائمة العملات العربية
 const ARABIC_CURRENCIES = [
@@ -708,68 +725,71 @@ loadCurrencyPreference();
 // 2. وظائف الأدوات المساعدة والملاحية
 // ===================================================
 
-// **إضافة Event Listeners لملفات الصور**
 document.addEventListener('DOMContentLoaded', () => {
-    // تحديث حالة الصورة عند اختيار ملف من الكاميرا أو المعرض
     const eImgCamera = document.getElementById('eImgCamera');
     const eImgGallery = document.getElementById('eImgGallery');
-    const eImgHidden = document.getElementById('eImg');
     const imageStatus = document.getElementById('imageStatus');
-
-    const updateImageStatus = (files) => {
-        if (files && files.length > 0) {
-            // تخزين الملف في الحقل المخفي (لاستخدامه في addExpense)
-            // ملاحظة: لا يمكن تعيين `files` مباشرة، ولكن يمكن الاحتفاظ بها في حقل الملف المخفي لتمريرها
-            // أفضل طريقة هي الإشارة إلى الملفات الجديدة من متغير خارجي أو الحقول نفسها
-            
-            // للحفاظ على اختيار الملف الجديد عند التبديل بين الكاميرا/المعرض:
-            if (eImgCamera.files.length > 0) {
-                 eImgHidden.files = eImgCamera.files;
-            } else if (eImgGallery.files.length > 0) {
-                 eImgHidden.files = eImgGallery.files;
-            } else {
-                 eImgHidden.files = null;
-            }
-
-            if(eImgHidden.files && eImgHidden.files.length > 0) {
-                imageStatus.textContent = `✅ صورة مرفقة: ${eImgHidden.files[0].name}`;
-                imageStatus.style.color = 'var(--s)';
-            } else {
-                imageStatus.textContent = 'لم يتم إرفاق صورة';
-                imageStatus.style.color = 'var(--p)';
-            }
-            
+    
+    // **منطق معالجة ملف الصورة المختار**
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        
+        if (file) {
+            currentExpenseFile = file;
+            imageStatus.textContent = `✅ صورة مرفقة: ${file.name}`;
+            imageStatus.style.color = 'var(--s)';
         } else {
-            eImgHidden.files = null;
-            imageStatus.textContent = 'لم يتم إرفاق صورة';
-            imageStatus.style.color = 'var(--p)';
+            // في حالة إلغاء اختيار الملف (كالضغط على إلغاء في نافذة اختيار الملف)
+            // نحتاج للتأكد من أننا لا نمسح صورة كانت مرفقة من مصدر آخر
+            if (currentExpenseFile && currentExpenseFile.name !== "صورة سابقة") { 
+                 currentExpenseFile = null;
+                 imageStatus.textContent = 'لم يتم إرفاق صورة';
+                 imageStatus.style.color = 'var(--p)';
+            }
         }
     };
 
-    if (eImgCamera) {
-        eImgCamera.addEventListener('change', (e) => {
-             // مسح اختيار المعرض لضمان اختيار واحد فقط
-            if (eImgGallery) eImgGallery.value = null; 
-            updateImageStatus(e.target.files);
-        });
-    }
-
-    if (eImgGallery) {
-        eImgGallery.addEventListener('change', (e) => {
-            // مسح اختيار الكاميرا لضمان اختيار واحد فقط
-            if (eImgCamera) eImgCamera.value = null; 
-            updateImageStatus(e.target.files);
-        });
-    }
+    if (eImgCamera) eImgCamera.addEventListener('change', handleFileChange);
+    if (eImgGallery) eImgGallery.addEventListener('change', handleFileChange);
     
-    // عند فتح تبويبة المصروفات للتعديل يجب تحديث الحالة
+    // **تحديث حالة الصورة عند فتح تبويبة المصروفات**
     document.querySelector('.tabs button[onclick="openTab(\'expenses\')"]').addEventListener('click', () => {
         if (!editMode || editMode.type !== 'exp') {
-             updateImageStatus(null);
+             // إعادة تعيين الحالة إذا لم نكن في وضع التعديل
+             currentExpenseFile = null;
+             imageStatus.textContent = 'لم يتم إرفاق صورة';
+             imageStatus.style.color = 'var(--p)';
         }
     });
-
+    
+    // إغلاق مربع خيارات الصورة عند الضغط خارجها
+    document.addEventListener('click', (e) => {
+        const popup = document.getElementById('imageOptionsPopup');
+        const button = document.getElementById('uploadButton');
+        if (popup.style.display === 'block' && !popup.contains(e.target) && e.target !== button) {
+             hideImageOptions();
+        }
+    });
 });
+
+// **وظائف مربع خيارات الصورة**
+function showImageOptions(event) {
+    event.stopPropagation();
+    const popup = document.getElementById('imageOptionsPopup');
+    const button = document.getElementById('uploadButton');
+    
+    // Positioning logic
+    const rect = button.getBoundingClientRect();
+    popup.style.top = `${rect.bottom + 5}px`;
+    // تحديد الموقع ليكون على الجانب الأيمن من الزر
+    popup.style.right = `${window.innerWidth - rect.right}px`; 
+    
+    popup.style.display = 'block';
+}
+
+function hideImageOptions() {
+    document.getElementById('imageOptionsPopup').style.display = 'none';
+}
 
 
 function formatAmount(input) {
@@ -848,15 +868,17 @@ function clearFields(keepExpenseImage = false) {
   // إعادة تعيين حقول الصورة
   const eImgCamera = document.getElementById('eImgCamera');
   const eImgGallery = document.getElementById('eImgGallery');
-  const eImgHidden = document.getElementById('eImg');
   const imageStatus = document.getElementById('imageStatus');
   
   if (eImgCamera) eImgCamera.value = null; 
   if (eImgGallery) eImgGallery.value = null; 
-  if (eImgHidden) eImgHidden.files = null; 
+  
   if (imageStatus) {
-      imageStatus.textContent = 'لم يتم إرفاق صورة';
-      imageStatus.style.color = 'var(--p)';
+      if (!keepExpenseImage) {
+          currentExpenseFile = null; 
+          imageStatus.textContent = 'لم يتم إرفاق صورة';
+          imageStatus.style.color = 'var(--p)';
+      }
   }
 
 
@@ -1123,7 +1145,8 @@ async function loadAllData() {
 
 function postSaveCleanup(isEditing, type) {
     editMode = null; 
-    clearFields(); 
+    clearFields();
+    currentExpenseFile = null; // **مسح مرجع الملف بعد الحفظ**
     updateStats();
     
     document.getElementById("detailModal").style.display = "none";
@@ -1145,9 +1168,8 @@ function postSaveCleanup(isEditing, type) {
 async function addExpense() { 
   if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات الأساسية");
   
-  const eImgHidden = document.getElementById('eImg');
-  // نستخدم الملفات الموجودة في الحقل المخفي، والتي تم تعيينها بواسطة Event Listeners
-  const fileToSave = eImgHidden.files && eImgHidden.files[0];
+  // **استخدام المتغير الجديد لتحديد الملف**
+  const fileToSave = currentExpenseFile;
   
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
@@ -1161,14 +1183,15 @@ async function addExpense() {
   
   if (isEditing) {
       data.id = oldData.id; 
-      // إذا كان الملف الجديد موجوداً، سيتم حفظه (العملية التالية)
-      // إذا لم يكن موجوداً، يجب أن نتحقق من الصورة القديمة (في حالة عدم اختيار صورة جديدة للتعديل)
-      if (!fileToSave) {
+      // إذا لم يتم اختيار ملف جديد، نحافظ على الصورة القديمة
+      if (!fileToSave || fileToSave.name === "صورة سابقة") { 
           data.صورة = oldData.صورة || null;
       } else {
            // سيتم تحديثها بالصورة الجديدة في الـ onload
            data.صورة = null; 
       }
+  } else {
+      data.صورة = null; 
   }
   
   const done = async () => {
@@ -1185,8 +1208,8 @@ async function addExpense() {
     }
   };
 
-  // إذا تم اختيار ملف جديد (لإضافة جديدة أو تعديل)، قم بتحويله إلى DataURL
-  if (fileToSave) {
+  // إذا تم اختيار ملف جديد (وليس صورة سابقة وهمية)، قم بتحويله
+  if (fileToSave && fileToSave.name !== "صورة سابقة") {
     const r = new FileReader();
     r.onload = () => { 
         data.صورة = r.result; // DataURL للصورة
@@ -1487,20 +1510,21 @@ function editTransaction() {
     eDesc.value = currentData.الوصف;
     eDate.value = currentData.التاريخ;
     
-    // تحديث حالة الصورة القديمة
+    // **منطق تحديث حالة الصورة الجديدة في وضع التعديل**
     const imageStatus = document.getElementById('imageStatus');
     if (currentData.صورة) {
+        currentExpenseFile = { name: "صورة سابقة", size: 0 }; // Placeholder object for status
         imageStatus.textContent = `✅ صورة سابقة مرفقة`;
         imageStatus.style.color = 'var(--s)';
-        // مسح حقول input file الجديدة لتجنب تضارب الإدخال
-        document.getElementById('eImgCamera').value = null;
-        document.getElementById('eImgGallery').value = null;
-        document.getElementById('eImg').files = null; 
     } else {
+        currentExpenseFile = null;
         imageStatus.textContent = 'لم يتم إرفاق صورة';
         imageStatus.style.color = 'var(--p)';
-        document.getElementById('eImg').files = null; 
     }
+    // مسح مدخلات الملفات لتسمح بإعادة اختيار الملف
+    document.getElementById('eImgCamera').value = null;
+    document.getElementById('eImgGallery').value = null;
+
   }
   
   if (editMode.type === "rig") {
@@ -1698,12 +1722,28 @@ function updateStats() {
 
 
 // ===================================================
-// 5. وظائف القائمة الجانبية (Sidebar Functions)
+// 5. وظائف القائمة الجانبية (Sidebar Functions) والـ Overlay
 // ===================================================
+
+// **دالة موحدة لمعالجة ضغطة الـ Overlay**
+function handleOverlayClick(event) {
+    const calculatorModal = document.getElementById('calculatorModal');
+    const appSidebar = document.getElementById('appSidebar');
+
+    if (calculatorModal.style.display === 'flex') {
+        // إذا كانت الآلة الحاسبة مفتوحة، أغلقها
+        if (event.target.id === 'appOverlay') { 
+            closeCalculator();
+        }
+    } else if (appSidebar.classList.contains('open')) {
+        // إذا كانت القائمة الجانبية مفتوحة، أغلقها
+        toggleSidebar();
+    }
+}
 
 function toggleSidebar() {
     const sidebar = document.getElementById('appSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
+    const overlay = document.getElementById('appOverlay');
     sidebar.classList.toggle('open');
     overlay.classList.toggle('open');
 }
@@ -1899,7 +1939,7 @@ function resetAllData() {
 let currentInput = '0';
 let previousInput = '';
 let operation = null;
-let computedResult = false; // لمتابعة ما إذا كانت النتيجة المحسوبة معروضة
+let computedResult = false; 
 
 const calcMainOutput = document.getElementById('calcMainOutput');
 const calcSecondaryOutput = document.getElementById('calcSecondaryOutput');
@@ -1967,7 +2007,7 @@ function calculatorCompute() {
     try {
         const formula = previousInput.replace(operation, operation === '/' ? '/' : operation === '*' ? '*' : operation) + ' ' + currentInput;
         // إزالة رموز العملة وأي رموز عربية قبل التقييم
-        const cleanFormula = formula.replace(/[^\d.+-/*]/g, '');
+        const cleanFormula = formula.replace(/[^0-9.+-/*]/g, '');
 
         let result = eval(cleanFormula);
         
@@ -2010,16 +2050,15 @@ function calculatorDelete() {
 
 function openCalculator() {
     const modal = document.getElementById('calculatorModal');
-    const overlay = document.getElementById('sidebarOverlay');
+    const overlay = document.getElementById('appOverlay'); // استخدام الـ Overlay الصحيح
     modal.style.display = 'flex';
-    // استخدام طبقة التغطية للقائمة الجانبية كطبقة عامة
     overlay.classList.add('open'); 
     calculatorClear();
 }
 
 function closeCalculator() {
     const modal = document.getElementById('calculatorModal');
-    const overlay = document.getElementById('sidebarOverlay');
+    const overlay = document.getElementById('appOverlay');
     modal.style.display = 'none';
     overlay.classList.remove('open');
 }
