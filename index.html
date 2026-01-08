@@ -940,7 +940,7 @@ async function loadAllData() {
     ]);
     db.exp = expData;
     db.rig = rigData;
-    db.deb = debData;
+    db.deb = balData; 
     db.bal = balData; 
     currentBalance = db.bal.amount || 0;
 }
@@ -1395,7 +1395,7 @@ async function addExpense() {
   if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
-  const oldData = isEditing ? db.exp[editMode.index] : {}; 
+  const oldData = isEditing ? db.exp.find(item => item.id === editMode.id) : {}; 
   const oldAmount = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
   
   const amount = parseAmount(eAmount.value);
@@ -1417,6 +1417,12 @@ async function addExpense() {
         await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
 
         toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
+        
+        // إذا كنا في وضع التعديل، يجب إغلاق التفاصيل والعودة إلى السجل
+        if (isEditing) {
+            _visualClose('detail');
+            _visualOpen('log', { logType: 'exp' });
+        }
         
         postSaveCleanup(isEditing, 'exp'); 
 
@@ -1444,7 +1450,7 @@ async function addExpense() {
   }
 }
 
-// ... (بقية دوال addRight و addDebt و editTransaction و deleteTransaction و updateStats و Export/Import/Reset) ...
+// ... (بقية دوال addRight و addDebt) ...
 
 async function addRight() {
   const rAmount = document.getElementById('rAmount');
@@ -1456,7 +1462,7 @@ async function addRight() {
   if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "rig";
-  const oldData = isEditing ? db.rig[editMode.index] : {};
+  const oldData = isEditing ? db.rig.find(item => item.id === editMode.id) : {};
   const totalAmount = parseAmount(rAmount.value);
   const rExpectedDate = document.getElementById('rExpectedDate');
   
@@ -1521,6 +1527,12 @@ async function addRight() {
 
       toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
       
+       // إذا كنا في وضع التعديل، يجب إغلاق التفاصيل والعودة إلى السجل
+       if (isEditing) {
+            _visualClose('detail');
+            _visualOpen('log', { logType: 'rig' });
+        }
+      
       postSaveCleanup(isEditing, 'rig');
 
   } catch (error) {
@@ -1541,7 +1553,7 @@ async function addDebt() {
   const isMasterLiability = (dType.value === 'قرض' || dType.value === 'دين شخصي');
   
   const isEditing = editMode && editMode.type === "deb";
-  const oldData = isEditing ? db.deb[editMode.index] : {};
+  const oldData = isEditing ? db.deb.find(item => item.id === editMode.id) : {};
   
   const data = isEditing ? { ...oldData } : {};
   data.clientId = isEditing ? oldData.clientId : `deb-${Date.now()}`; 
@@ -1623,6 +1635,12 @@ async function addDebt() {
 
       toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
       
+       // إذا كنا في وضع التعديل، يجب إغلاق التفاصيل والعودة إلى السجل
+       if (isEditing) {
+            _visualClose('detail');
+            _visualOpen('log', { logType: 'deb' });
+        }
+      
       postSaveCleanup(isEditing, 'deb');
 
   } catch (error) {
@@ -1632,50 +1650,61 @@ async function addDebt() {
 }
 
 
+// FIX: إزالة الـ setTimeout واستخدام _visualClose لفتح حقول التعديل فوراً
 function editTransaction() {
   if (!editMode) return;
   const currentData = db[editMode.type].find(item => item.id === editMode.id);
   
-  closeLayer('detail'); 
+  // 1. إخفاء مودال التفاصيل فوراً
+  _visualClose('detail'); 
+  
+  // 2. تحديث سجل التاريخ يدوياً (حذف حالة مودال التفاصيل)
+  if (historyStack.length > 0 && historyStack[historyStack.length - 1].layer === 'detail') {
+       historyStack.pop();
+       // إعادة تعيين حالة العنوان URL إلى الحالة السابقة
+       const previousState = historyStack[historyStack.length - 1];
+       history.replaceState(previousState, null, `#${previousState ? previousState.layer : 'main'}`);
+  }
 
-  setTimeout(() => {
+  // 3. فتح القسم الصحيح وتعبئة الحقول فوراً
+  const targetTab = editMode.type === 'exp' ? 'expenses' : (editMode.type === 'rig' ? 'rights' : 'debts');
+  openTab(targetTab, true); // true للحفاظ على وضع التعديل
+
+  // تعبئة حقول المصروفات
+  if (editMode.type === "exp") {
+    document.getElementById('eAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
+    document.getElementById('eType').value = currentData.الفئة;
+    document.getElementById('eDesc').value = currentData.الوصف;
+    document.getElementById('eDate').value = currentData.التاريخ;
+  }
+  
+  // تعبئة حقول الحقوق
+  if (editMode.type === "rig") {
+    document.getElementById('rType').value = currentData.النوع;
+    updateRightFields(currentData.النوع, currentData); 
     
-    openTab(editMode.type === 'exp' ? 'expenses' : (editMode.type === 'rig' ? 'rights' : 'debts'), true); 
-
-    if (editMode.type === "exp") {
-      document.getElementById('eAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
-      document.getElementById('eType').value = currentData.الفئة;
-      document.getElementById('eDesc').value = currentData.الوصف;
-      document.getElementById('eDate').value = currentData.التاريخ;
-      // الصورة لا يتم تحميلها مرة أخرى
-    }
+    document.getElementById('rAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
+    document.getElementById('rDesc').value = currentData.الوصف;
+    document.getElementById('rDate').value = currentData.التاريخ;
     
-    if (editMode.type === "rig") {
-      document.getElementById('rType').value = currentData.النوع;
-      updateRightFields(currentData.النوع, currentData); 
-      
-      document.getElementById('rAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
-      document.getElementById('rDesc').value = currentData.الوصف;
-      document.getElementById('rDate').value = currentData.التاريخ;
-      
-      if (currentData.النوع !== 'دين' && document.getElementById('rStatus')) {
-          document.getElementById('rStatus').value = currentData.الحالة === 'مدفوع بالكامل' ? 'كامل' : currentData.الحالة;
-      }
+    if (currentData.النوع !== 'دين' && document.getElementById('rStatus')) {
+        document.getElementById('rStatus').value = currentData.الحالة === 'مدفوع بالكامل' ? 'كامل' : currentData.الحالة;
     }
-    
-    if (editMode.type === "deb") {
-      document.getElementById('dType').value = currentData.النوع;
-      document.getElementById('dDesc').value = currentData.الوصف;
-      document.getElementById('dDate').value = currentData.التاريخ;
+  }
+  
+  // تعبئة حقول الالتزامات
+  if (editMode.type === "deb") {
+    document.getElementById('dType').value = currentData.النوع;
+    document.getElementById('dDesc').value = currentData.الوصف;
+    document.getElementById('dDate').value = currentData.التاريخ;
 
-      updateDebtFields(currentData.النوع, currentData); 
+    updateDebtFields(currentData.النوع, currentData); 
 
-      if (currentData.النوع !== 'قرض' && currentData.النوع !== 'دين شخصي') {
-          document.getElementById('dAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
-          document.getElementById('dStatus').value = currentData.الحالة;
-      }
+    if (currentData.النوع !== 'قرض' && currentData.النوع !== 'دين شخصي') {
+        document.getElementById('dAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
+        document.getElementById('dStatus').value = currentData.الحالة;
     }
-  }, 300); 
+  }
 }
 
 async function deleteTransaction() {
@@ -1703,7 +1732,8 @@ async function deleteTransaction() {
               // التراجع عن التغيير على الرصيد
               currentBalance -= oldNetChange;
               db.bal.amount = currentBalance; 
-              await saveData('bal', db.bal);
+              // لا نحتاج لـ await هنا، فقط لضمان حفظ حالة الرصيد
+              saveData('bal', db.bal); 
           }
       }
 
