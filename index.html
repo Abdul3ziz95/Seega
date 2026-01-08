@@ -587,7 +587,9 @@ input:checked + .slider:before { transform: translateX(20px); }
     <button class="secondary" onclick="showImageSourceModal()">
         <i class="fas fa-camera" style="margin-left: 5px;"></i> إرفاق صورة الفاتورة (اختياري)
     </button>
-    <span id="eImgName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
+    <div id="eImgDisplayContainer" style="font-size: 0.9em; text-align: right; margin-top: 5px; min-height: 1.2em;">
+        <span id="eImgName" style="color: var(--success); display: inline-block; margin-left: 10px;"></span>
+    </div>
     <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <button class="action" onclick="addExpense()">
@@ -940,7 +942,7 @@ async function loadAllData() {
     ]);
     db.exp = expData;
     db.rig = rigData;
-    db.deb = balData; 
+    db.deb = debData; // Fixed: was using balData here, should be debData
     db.bal = balData; 
     currentBalance = db.bal.amount || 0;
 }
@@ -1097,8 +1099,6 @@ function openCurrencyModal() { openLayer('currency'); }
 function openAboutModal() { openLayer('about'); }
 function showImageSourceModal() { openLayer('imageSource'); } // الوظيفة الجديدة
 
-// ... (باقي الدوال المساعدة مثل formatAmount, parseAmount, getFormattedAmount لم تتغير)
-
 function formatAmount(input) {
   let value = input.value.replace(/[^\d.]/g, ''); 
   const parts = value.split('.');
@@ -1178,6 +1178,28 @@ function toastMsg(m) {
 }
 
 
+function clearImageSelection(showToast = true) {
+    document.getElementById('eImgName').innerHTML = '';
+    document.getElementById('eImgCamera').value = null; 
+    document.getElementById('eImgGallery').value = null; 
+    document.getElementById('eImgDisplayContainer').setAttribute('data-img-status', 'cleared');
+    if (showToast) toastMsg("تم إلغاء اختيار الصورة.");
+}
+
+function updateFileName(input, displayId) {
+    const displayElement = document.getElementById(displayId);
+    if (input.files && input.files.length > 0) {
+        displayElement.innerHTML = `تم اختيار: ${input.files[0].name} 
+        <button onclick="clearImageSelection()" style="background: none; border: none; color: var(--danger); font-size: 1.1em; cursor: pointer; margin-right: 5px; padding: 0;">&times;</button>`;
+        document.getElementById('eImgDisplayContainer').setAttribute('data-img-status', 'selected');
+    } else {
+        // إذا تم إلغاء الاختيار من النافذة المنبثقة مباشرة، لا تعرض رسالة toast
+        if (document.getElementById('eImgDisplayContainer').getAttribute('data-img-status') !== 'cleared') {
+             clearImageSelection(false); 
+        }
+    }
+}
+
 function clearFields(keepExpenseImage = false) {
   const fields = ['eAmount', 'eDesc', 'eType', 'eDate', 
                   'rAmount', 'rDesc', 'rDate', 'rType', 'rStatus',
@@ -1188,9 +1210,7 @@ function clearFields(keepExpenseImage = false) {
   });
   
   // مسح حالة الصورة
-  document.getElementById('eImgName').textContent = '';
-  document.getElementById('eImgCamera').value = null; 
-  document.getElementById('eImgGallery').value = null; 
+  clearImageSelection(false); // تم تحديث هذه الدالة
   
   document.getElementById('rDynamicFields').innerHTML = '';
   document.getElementById('dDynamicFields').innerHTML = '';
@@ -1217,6 +1237,9 @@ function openTab(id, keepEditMode = false) {
         // لضمان تحميل الحقول الديناميكية الافتراضية عند التبديل
         if (id === 'rights') updateRightFields(document.getElementById('rType').value);
         if (id === 'debts') updateDebtFields(document.getElementById('dType').value);
+    } else {
+         // عند استخدام وضع التعديل، يجب مسح حقول الصورة أولاً (ستتم تعبئتها لاحقاً إذا كان هناك صورة)
+         clearImageSelection(false);
     }
     
     if(id === 'overview') updateStats();
@@ -1236,14 +1259,6 @@ function openGalleryInput() {
     closeLayer('imageSource');
 }
 
-function updateFileName(input, displayId) {
-    const displayElement = document.getElementById(displayId);
-    if (input.files && input.files.length > 0) {
-        displayElement.textContent = `تم اختيار: ${input.files[0].name}`;
-    } else {
-        displayElement.textContent = '';
-    }
-}
 
 // ---------------------------------------------
 // وظائف الرصيد (Balance)
@@ -1273,10 +1288,10 @@ async function processBalanceChange(amount, type, description, recordId = null, 
         netChange *= -1;
     }
     
-    // حساب التغير الصافي في الرصيد بسبب عملية التعديل/الإلغاء
+    // حساب التغير الصافي في الرصيد
     let effectiveChange = netChange;
     if (isEdit) {
-        // إذا كنا نعدل، نطرح التأثير القديم ونضيف التأثير الجديد
+        // نطرح التأثير القديم ونضيف التأثير الجديد. oldAmount يجب أن تكون قيمة التأثير الصافي القديم (سالبة أو موجبة)
         effectiveChange = netChange - oldAmount; 
     }
     
@@ -1409,6 +1424,10 @@ async function addExpense() {
   data.التاريخ = eDate.value; 
   data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
   
+  // التحقق من حالة الصورة
+  const imgStatus = document.getElementById('eImgDisplayContainer').getAttribute('data-img-status');
+  const isImageExplicitlyCleared = (imgStatus === 'cleared');
+  
   // دالة تُنفذ بعد قراءة الملف (أو فوراً إذا لم يكن هناك ملف)
   const done = async () => {
     try {
@@ -1441,11 +1460,17 @@ async function addExpense() {
     r.onerror = (error) => {
         toastMsg("فشل قراءة ملف الصورة.");
         console.error(error);
-        done(); // الاستمرار في الحفظ بدون الصورة
+        data.صورة = isEditing ? oldData.صورة : null; // الحفاظ على الصورة القديمة إذا فشلت القراءة
+        done(); 
     };
     r.readAsDataURL(selectedFile);
   } else {
-      data.صورة = isEditing ? oldData.صورة : null; // الحفاظ على الصورة القديمة عند التعديل أو مسحها إذا لا يوجد ملف جديد
+      if (isEditing && isImageExplicitlyCleared) {
+            data.صورة = null; // إزالة الصورة القديمة بناءً على اختيار المستخدم
+      } else {
+            // الحفاظ على الصورة القديمة عند التعديل وعدم المسح الصريح
+            data.صورة = isEditing ? oldData.صورة : null; 
+      }
       done(); 
   }
 }
@@ -1650,20 +1675,21 @@ async function addDebt() {
 }
 
 
-// FIX: إزالة الـ setTimeout واستخدام _visualClose لفتح حقول التعديل فوراً
 function editTransaction() {
   if (!editMode) return;
   const currentData = db[editMode.type].find(item => item.id === editMode.id);
   
-  // 1. إخفاء مودال التفاصيل فوراً
+  // 1. إغلاق مودال التفاصيل بصرياً
   _visualClose('detail'); 
   
   // 2. تحديث سجل التاريخ يدوياً (حذف حالة مودال التفاصيل)
   if (historyStack.length > 0 && historyStack[historyStack.length - 1].layer === 'detail') {
        historyStack.pop();
        // إعادة تعيين حالة العنوان URL إلى الحالة السابقة
-       const previousState = historyStack[historyStack.length - 1];
-       history.replaceState(previousState, null, `#${previousState ? previousState.layer : 'main'}`);
+       const previousState = historyStack[historyStack.length - 1]; 
+       
+       const newUrl = previousState && previousState.layer !== 'main' ? `#${previousState.layer}` : '#main';
+       history.replaceState(previousState || {layer: 'main'}, null, newUrl);
   }
 
   // 3. فتح القسم الصحيح وتعبئة الحقول فوراً
@@ -1676,6 +1702,12 @@ function editTransaction() {
     document.getElementById('eType').value = currentData.الفئة;
     document.getElementById('eDesc').value = currentData.الوصف;
     document.getElementById('eDate').value = currentData.التاريخ;
+    
+    // لإظهار حالة الصورة الحالية (إذا كانت موجودة)
+    if (currentData.صورة) {
+        document.getElementById('eImgName').innerHTML = `صورة مرفقة <button onclick="clearImageSelection()" style="background: none; border: none; color: var(--danger); font-size: 1.1em; cursor: pointer; margin-right: 5px; padding: 0;">&times;</button>`;
+        document.getElementById('eImgDisplayContainer').setAttribute('data-img-status', 'attached');
+    }
   }
   
   // تعبئة حقول الحقوق
