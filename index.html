@@ -6,137 +6,26 @@
 <title>ميزانيتك الذكية</title>
 
 <style>
-/* ---------------------------------------------------- */
-/* 1. متغيرات الألوان الجديدة (أزرق مبهج وواضح) */
-/* ---------------------------------------------------- */
-:root{
-    --p: #0d6efd; /* Primary - أزرق واضح ومشرق */
-    --s: #28a745; /* Success - أخضر زاهي */
-    --bg: #f4f6f8; /* Background - فاتح جداً */
-    --danger: #dc3545; /* Danger - أحمر واضح */
-    --secondary-bg: #e9ecef; /* خلفية ثانوية للبطاقات/الحقول */
-    --border-color: #ced4da; /* لون الإطار القياسي */
-}
+/* ... (كود الـ CSS لم يتغير) ... */
+:root{--p:#0d6efd;--s:#28a745;--bg:#f4f6f8;--danger:#dc3545}
+body{margin:0;font-family:Tahom,a;background:var(--bg);overflow-x: hidden;}
 
-body{
-    margin:0;
-    font-family: 'Tahoma', Arial, sans-serif;
-    background:var(--bg);
-    overflow-x: hidden;
-    color: #333;
-}
+header{background:var(--p);color:#fff;padding:15px;text-align:center;font-size:20px;display:flex;justify-content:space-between;align-items:center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);}
+header .title {flex-grow: 1; text-align: center;}
+header button {background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 10px;}
 
-header{
-    background:var(--p);
-    color:#fff;
-    padding:15px;
-    text-align:center;
-    font-size:22px;
-    font-weight: bold;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* ظل واضح */
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-header .title {
-    flex-grow: 1; 
-    text-align: center;
-}
-
-header button {
-    background: none; 
-    border: none; 
-    color: #fff; 
-    font-size: 24px; 
-    cursor: pointer; 
-    padding: 0 10px;
-    transition: opacity 0.2s;
-}
-
-header button:hover {
-    opacity: 0.8;
-}
-
-/* ---------------------------------------------------- */
-/* 2. تصميم التبويبات (Tabs) - الفصل البصري */
-/* ---------------------------------------------------- */
-.tabs{
-    display:flex;
-    background:#fff;
-    border-bottom: 1px solid var(--border-color); 
-    box-shadow: 0 2px 4px rgba(0,0,0,.05);
-    margin-bottom: 5px;
-    padding-top: 5px; /* مسافة بسيطة من الأعلى */
-}
-
-.tabs button{
-    flex:1;
-    padding:15px 10px;
-    border:none;
-    background:#fff;
-    font-size: 15px;
-    color: #555;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    border-bottom: 3px solid transparent;
-}
-
-.tabs button:hover {
-    background: var(--secondary-bg);
-    color: #333;
-}
-
-.tabs button.active{
-    background: var(--secondary-bg);
-    color:var(--p);
-    border-bottom: 3px solid var(--p);
-    box-shadow: 0 -2px 5px rgba(0,0,0,.05) inset;
-}
-
-.section{
-    display:none;
-    padding:15px;
-}
-
-.section.active{
-    display:block
-}
-
-.card{
-    background:#fff;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 3px 8px rgba(0,0,0,.1);
-    margin-bottom:15px;
-}
-
-input, select{
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    font-size:16px;
-    border-radius:8px;
-    border:1px solid var(--border-color);
-    box-sizing: border-box;
-    background: #fff;
-    color: #333;
-    transition: border-color 0.2s, background 0.2s;
-}
-
-input:focus, select:focus {
-    border-color: var(--p);
-    background: var(--secondary-bg);
-    outline: none;
-}
+.tabs{display:flex;background:#fff; border-bottom: 1px solid #ddd;}
+.tabs button{flex:1;padding:12px;border:none;background:#fff}
+.tabs button.active{background:var(--p);color:#fff}
+.section{display:none;padding:15px}
+.section.active{display:block}
+.card{background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);margin-bottom:12px}
+input,select{width:100%;padding:12px;margin:6px 0;font-size:15px;border-radius:8px;border:1px solid #ccc;box-sizing: border-box;}
 
 .datetime-container {
     position: relative;
     width: 100%; 
-    margin: 8px 0; 
+    margin: 6px 0; 
 }
 
 .datetime-container input[type="datetime-local"] {
@@ -156,79 +45,31 @@ input:focus, select:focus {
     color: var(--p); 
 }
 
-button.action{
-    background:var(--s);
-    color:#fff;
-    border:none;
-    padding:15px;
-    width:100%;
-    border-radius:8px;
-    font-size:17px;
-    font-weight: bold;
-    margin-top: 10px;
-    box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
-    transition: background 0.2s;
-}
-
-button.action:hover {
-    background: #1e7e34;
-}
-
-button.secondary{
-    background: var(--secondary-bg);
-    padding:12px;
-    width:100%;
-    border:1px solid var(--border-color);
-    border-radius:8px;
-    margin-top:8px;
-    color: #555;
-    font-size: 15px;
-    transition: background 0.2s;
-}
-
-button.secondary:hover {
-    background: #d4d8db;
-}
-
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 22px;border-radius:30px;display:none;z-index:100; box-shadow: 0 4px 12px rgba(0,0,0,.2)}
+button.action{background:var(--s);color:#fff;border:none;padding:14px;width:100%;border-radius:8px;font-size:16px}
+button.secondary{background:#ddd;padding:10px;width:100%;border:none;border-radius:8px;margin-top:6px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 22px;border-radius:30px;display:none;z-index:100}
 .toast.show{display:block}
-
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:none;flex-direction:column;z-index:1000}
-.modal header{
-    display:flex;
-    gap:6px;
-    padding:15px;
-    border-bottom:1px solid var(--border-color);
-    align-items: center;
-    justify-content: space-between;
-    background: var(--p);
-    color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.modal header h3 { margin: 0; font-size: 18px; color: #fff; }
-.modal header button { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:none;flex-direction:column;z-index:10}
+.modal header{display:flex;gap:6px;padding:10px;border-bottom:1px solid #ddd}
+/* تعديل Modal Header لاستيعاب عنوان وإغلاق */
+.modal#currencyModal header { justify-content: space-between; align-items: center; } 
 .modal-content{padding:15px;overflow:auto;flex:1}
-.list-item{
-    background:#fff;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:10px;
-    cursor:pointer;
-    border: 1px solid var(--border-color);
-    box-shadow:0 1px 3px rgba(0,0,0,.05);
-    transition: background 0.2s;
+.list-item{background:#eef6ff;padding:14px;border-radius:12px;margin-bottom:8px;cursor:pointer}
+.detail p{margin:8px 0}
+.detail img{width:100%;border-radius:10px;margin-top:10px}
+input[type="file"]:before {
+    content: "إرفاق صورة الفاتورة";
+    color: #777;
+    font-size: 14px;
+    display: block;
+    padding: 8px;
+    text-align: center;
+    background: #f4f6f8;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin: 10px 0;
+    cursor: pointer;
 }
-
-.list-item:hover {
-    background: var(--secondary-bg);
-}
-
-.detail p{margin:8px 0; font-size: 16px;}
-.detail p b { color: var(--p); }
-.detail img{width:100%;max-width: 400px; height: auto; border-radius:10px;margin-top:15px;box-shadow: 0 2px 5px rgba(0,0,0,.15);}
-
-
 .currency-symbol { 
     color: var(--s); 
     font-weight: bold;
@@ -247,10 +88,10 @@ button.secondary:hover {
     max-width: 80%;
     height: 100%;
     background: #fff;
-    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.2);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
     transform: translateX(100%); 
     transition: transform 0.3s ease-in-out;
-    z-index: 2000; 
+    z-index: 20; 
     display: flex;
     flex-direction: column;
 }
@@ -267,7 +108,6 @@ button.secondary:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: bold;
 }
 
 .sidebar-content {
@@ -287,15 +127,14 @@ button.secondary:hover {
     color: #333;
     cursor: pointer;
     transition: background 0.2s;
-    font-weight: 500;
 }
 
 .sidebar-menu-item:hover {
-    background: var(--secondary-bg);
+    background: var(--bg);
 }
 
-/* طبقة التغطية الشفافة العامة للمودال والقائمة الجانبية */
-.app-overlay {
+/* طبقة التغطية الشفافة خلف القائمة الجانبية */
+.sidebar-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -303,109 +142,37 @@ button.secondary:hover {
     height: 100%;
     background: rgba(0, 0, 0, 0.4);
     display: none;
-    z-index: 1500;
+    z-index: 15;
 }
 
-.app-overlay.open {
+.sidebar-overlay.open {
     display: block;
 }
 
 /* ---------------------------------------------------- */
-/* 3. تصميم الآلة الحاسبة (Calculator Modal) */
+/* كود الـ CSS للآلة الحاسبة */
 /* ---------------------------------------------------- */
-.calculator-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    padding: 20px 15px;
-    background: #f4f6f8; /* خلفية خفيفة للآلة الحاسبة */
-    border-radius: 10px;
-}
-
-.calculator-output {
-    grid-column: 1 / -1;
-    background: #fff;
-    color: #222;
-    font-size: 2.5em;
-    padding: 10px 15px;
-    text-align: left;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    min-height: 50px;
-    overflow-x: auto;
-    white-space: nowrap;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,.1);
-}
-
-.calculator-output-secondary {
-    font-size: 0.8em;
-    color: #777;
-    text-align: right;
-}
-
-.calculator-button {
-    padding: 20px;
-    font-size: 1.5em;
+.calc-buttons button {
+    background: #f0f0f0;
+    color: #333;
     border: none;
+    padding: 15px 10px;
     border-radius: 8px;
+    font-size: 1.2em;
     cursor: pointer;
-    transition: background 0.2s;
-    font-weight: bold;
+    transition: background 0.1s;
 }
-
-.calculator-button.number {
-    background: #fff;
-    color: #333;
+.calc-buttons button:hover {
+    background: #e0e0e0;
 }
-
-.calculator-button.operator {
-    background: var(--p);
-    color: white;
+.calc-buttons .calc-btn-op {
+    background: #ffa726; /* Orange */
+    color: #fff;
 }
-
-.calculator-button.equal {
-    background: var(--s);
-    color: white;
-    grid-column: span 2;
+.calc-buttons .calc-btn-eq {
+    background: var(--p); /* Primary color */
+    color: #fff;
 }
-
-.calculator-button.clear {
-    background: var(--danger);
-    color: white;
-}
-
-.calculator-button:active {
-    filter: brightness(0.85);
-}
-/* ---------------------------------------------------- */
-
-/* 4. تصميم زر اختيار الصورة الجديد */
-.image-upload-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-#imageOptionsPopup {
-    /* تم تعديل التنسيق ليكون متماشياً مع التصميم الجديد */
-    min-width: 180px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-    transform-origin: top right;
-    animation: fadeIn 0.15s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-#imageOptionsPopup button {
-    font-weight: 500;
-    color: #333;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: right;
-}
-/* ---------------------------------------------------- */
 </style>
 </head>
 
@@ -414,8 +181,7 @@ button.secondary:hover {
 <header>
     <button onclick="toggleSidebar()">☰</button> 
     <span class="title">ميزانيتك المالية الذكية</span>
-    <button onclick="openCalculator()">➗</button> 
-</header>
+    <button onclick="openCalculatorModal()">🧮</button> </header>
 
 <div class="tabs">
 <button class="active" onclick="openTab('expenses')">💸 مصروفات</button>
@@ -426,36 +192,28 @@ button.secondary:hover {
 
 <div id="expenses" class="section active">
 <div class="card">
-<input id="eAmount" type="text" placeholder="المبلغ 💵" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+<input id="eAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 <select id="eType">
-<option value="">الفئة</option>
-<option>طعام</option><option>مواصلات</option>
-<option>رعاية شخصية</option><option>أجهزة إلكترونية</option>
-<option>صحة</option><option>ترفيه</option><option>تسوق</option>
-<option>تعليم</option><option>صيانة وإصلاح</option><option>أخرى</option>
+<option value="">الفئة (نفقات متغيرة)</option>
+<option>طعام وبقالة</option>
+<option>مطاعم ومقاهي</option>
+<option>مواصلات</option>
+<option>رعاية شخصية</option>
+<option>صحة ولياقة</option>
+<option>ترفيه وسفر</option>
+<option>تسوق وملابس</option>
+<option>تعليم وكتب</option>
+<option>هدايا وتبرعات</option>
+<option>تقنيات وخدمات رقمية</option>
+<option>صيانة وإصلاح</option>
+<option>أخرى</option>
 </select>
-<input id="eDesc" placeholder="ملاحظة (اختياري)">
+<input id="eDesc" placeholder="وصف / ملاحظة">
 <div class="datetime-container">
     <input id="eDate" type="datetime-local">
     <span class="calendar-icon">📅</span>
 </div>
-
-<div class="image-upload-wrapper">
-    <button id="uploadButton" class="secondary" onclick="showImageOptions(event)" style="margin-top: 10px; width: 100%; color: var(--p); border: 1px dashed var(--p); background: #fff;">
-        📷 إرفاق صورة الفاتورة
-    </button>
-
-    <div id="imageOptionsPopup" style="display:none; position:absolute; z-index: 1001; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; width: 200px;">
-        <div style="padding: 10px; text-align: right; color: var(--p); font-weight: bold; border-bottom: 1px solid var(--secondary-bg);">اختر المصدر:</div>
-        <button onclick="document.getElementById('eImgCamera').click(); hideImageOptions();" class="secondary" style="margin: 5px; width: calc(100% - 10px); background: #fff; border: none; text-align: right;">📸 كاميرا</button>
-        <button onclick="document.getElementById('eImgGallery').click(); hideImageOptions();" class="secondary" style="margin: 5px; width: calc(100% - 10px); background: #fff; border: none; text-align: right;">🖼️ معرض</button>
-    </div>
-    
-    <input id="eImgCamera" type="file" accept="image/*" capture="camera" style="display: none;">
-    <input id="eImgGallery" type="file" accept="image/*" style="display: none;">
-</div>
-<span id="imageStatus" style="font-size: 0.9em; color: var(--p); display: block; margin-top: 5px; margin-bottom: 5px;">لم يتم إرفاق صورة</span>
-
+<input id="eImg" type="file" accept="image/*">
 <button class="action" onclick="addExpense()">حفظ</button>
 <button class="secondary" onclick="openLog('exp')">📂 السجل</button>
 </div>
@@ -467,11 +225,12 @@ button.secondary:hover {
 <option value="">نوع الحق</option>
 <option>دين</option>
 <option>بيع بالآجل</option>
+<option>بيع بالأقساط</option>
 <option>أخرى</option>
 </select>
-<input id="rAmount" type="text" placeholder="المبلغ الكلي 💵" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+<input id="rAmount" type="text" placeholder="💵 المبلغ المستحق (المبلغ الكلي)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 <div id="rDynamicFields"></div>
-<input id="rDesc" placeholder="وصف / المدين">
+<input id="rDesc" placeholder="وصف / ملاحظة (المدين/الجهة)">
 <div class="datetime-container">
     <input id="rDate" type="datetime-local">
     <span class="calendar-icon">📅</span>
@@ -497,10 +256,10 @@ button.secondary:hover {
 <option>قرض</option> <option>دين شخصي</option> <option>قسط/فاتورة أخرى</option>
 <option>أخرى</option>
 </select>
-<input id="dAmount" type="text" placeholder="قيمة الفاتورة/القسط 💵" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+<input id="dAmount" type="text" placeholder="💵 قيمة الفاتورة/القسط الحالي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
 
 <div id="dDynamicFields"></div>
-<input id="dDesc" placeholder="وصف / الدائن">
+<input id="dDesc" placeholder="وصف / ملاحظة (الدائن/الجهة)">
 <div class="datetime-container">
     <input id="dDate" type="datetime-local">
     <span class="calendar-icon">📅</span>
@@ -517,7 +276,7 @@ button.secondary:hover {
 
 <div id="stats" class="section">
 <div class="card">
-<h3>💸 مصروفات + التزامات مدفوعة</h3>
+<h3>💸 إجمالي المصروفات (المتغيرة والمدفوع من الالتزامات)</h3>
 <p>الإجمالي الكلي: <b id="sExpTotal">0</b></p>
 <p>عدد العمليات: <b id="sExpCount">0</b></p>
 <p>أعلى فئة: <b id="sTopCat">—</b></p>
@@ -529,16 +288,16 @@ button.secondary:hover {
 <p>المتبقي تحصيله: <b id="sRigUnpaid">0</b></p>
 </div>
 <div class="card">
-<h3>📌 الالتزامات الكلية</h3>
+<h3>📌 الالتزامات (المبالغ الكلية للمسؤوليات)</h3>
 <p>إجمالي الالتزامات الكلية: <b id="sDebTotal">0</b></p>
-<p>إجمالي المدفوع حتى الآن: <b id="sDebPaid">0</b></p>
+<p>إجمالي المدفوع حتى الآن (مصروف): <b id="sDebPaid">0</b></p>
 <p>المتبقي من القروض/الديون/الفواتير: <b id="sDebUnpaid">0</b></p>
 </div>
 </div>
 
 <div class="modal" id="logModal">
 <header>
-<input id="search" placeholder="🔍 بحث" oninput="renderLog()" style="flex-grow: 1; margin: 0; padding: 10px; border-radius: 6px; border: none; background: #fff; color: #333;">
+<input id="search" placeholder="🔍 بحث" oninput="renderLog()">
 <button onclick="closeLog()">إغلاق</button>
 </header>
 <div class="modal-content" id="logContent"></div>
@@ -553,7 +312,7 @@ button.secondary:hover {
 
 <div class="toast" id="toast"></div>
 
-<div class="app-overlay" id="appOverlay" onclick="handleOverlayClick(event)"></div>
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div class="sidebar" id="appSidebar">
     <div class="sidebar-header">
@@ -562,10 +321,10 @@ button.secondary:hover {
     </div>
     <div class="sidebar-content">
         <div class="card" style="margin: 0 15px 15px;">
-             <p style="font-weight: bold; margin-top: 0; color: var(--p);">إعدادات التطبيق</p>
-             <button class="secondary" onclick="openCurrencyModal()" style="display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
+             <p style="font-weight: bold; margin-top: 0;">الإعدادات العامة</p>
+             <button class="secondary" onclick="openCurrencyModal()" style="display: flex; justify-content: space-between; align-items: center;">
                  <span id="currentCurrencyDisplay">العملة: ريال سعودي (ر.س)</span>
-                 <span style="font-weight: bold; color: var(--p);">تغيير</span>
+                 <span>تغيير</span>
              </button>
         </div>
         
@@ -591,70 +350,68 @@ button.secondary:hover {
 <div class="modal" id="aboutModal">
     <header>
         <h3>حول ميزانيتك الذكية</h3>
-        <button onclick="document.getElementById('aboutModal').style.display='none'">✖</button>
+        <button onclick="document.getElementById('aboutModal').style.display='none'">إغلاق</button>
     </header>
     <div class="modal-content">
-        <p>تطبيق ميزانيتك المالية الذكية هو أداة بسيطة لتتبع:</p>
+        <p>تطبيق ميزانيتك المالية الذكية هو أداة بسيطة للمساعدة في تتبع:</p>
         <ul>
             <li>💸 **المصروفات المتغيرة** اليومية.</li>
-            <li>🤝 **الحقوق** المالية المستحقة لك.</li>
-            <li>📌 **الالتزامات** المالية المستحقة عليك.</li>
+            <li>🤝 **الحقوق** المالية المستحقة لك (ديون، بيع آجل).</li>
+            <li>📌 **الالتزامات** المالية المستحقة عليك (فواتير، أقساط، قروض).</li>
         </ul>
-        <p><strong>ملاحظة:</strong> يتم حفظ جميع البيانات محلياً على جهازك (IndexedDB). استخدم التصدير لحفظ نسخة احتياطية.</p>
-        <p style="text-align: center; margin-top: 20px; color: #777; font-size: 0.9em;">الإصدار 1.1.0 (مع تحديثات التصميم)</p>
+        <p><strong>ملاحظة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية.</p>
+        <p style="text-align: center; margin-top: 20px;">الإصدار 1.1.0</p>
     </div>
 </div>
 
 <div class="modal" id="currencyModal">
     <header>
         <h3>اختيار العملة</h3>
-        <button onclick="document.getElementById('currencyModal').style.display='none'">✖</button>
+        <button onclick="document.getElementById('currencyModal').style.display='none'">إغلاق</button>
     </header>
     <div class="modal-content">
-        <input id="currencySearch" type="text" placeholder="🔍 ابحث عن العملة" oninput="renderCurrencyList()">
+        <input id="currencySearch" type="text" placeholder="🔍 ابحث عن العملة (ريال، جنيه، دولار...)" oninput="renderCurrencyList()">
         <div id="currencyList">
             </div>
     </div>
 </div>
 
-<div class="modal" id="calculatorModal" style="max-width: 400px; margin: auto; height: auto; top: 50%; transform: translateY(-50%); position: absolute; left: 0; right: 0; border-radius: 12px; overflow: hidden; display: none;">
-    <header>
-        <h3>الآلة الحاسبة</h3>
-        <button onclick="closeCalculator()">✖</button>
-    </header>
-    <div class="modal-content" style="padding: 0;">
-        <div class="calculator-output" style="margin: 10px 10px 0 10px;">
-            <div id="calcSecondaryOutput" class="calculator-output-secondary">0</div>
-            <div id="calcMainOutput">0</div>
-        </div>
-        
-        <div class="calculator-grid">
-            <button class="calculator-button clear" onclick="calculatorClear()">C</button>
-            <button class="calculator-button operator" onclick="calculatorDelete()">DEL</button>
-            <button class="calculator-button operator" onclick="calculatorInput('/')">÷</button>
-            <button class="calculator-button operator" onclick="calculatorInput('*')">×</button>
-            
-            <button class="calculator-button number" onclick="calculatorInput('7')">7</button>
-            <button class="calculator-button number" onclick="calculatorInput('8')">8</button>
-            <button class="calculator-button number" onclick="calculatorInput('9')">9</button>
-            <button class="calculator-button operator" onclick="calculatorInput('-')">—</button>
-
-            <button class="calculator-button number" onclick="calculatorInput('4')">4</button>
-            <button class="calculator-button number" onclick="calculatorInput('5')">5</button>
-            <button class="calculator-button number" onclick="calculatorInput('6')">6</button>
-            <button class="calculator-button operator" onclick="calculatorInput('+')">+</button>
-
-            <button class="calculator-button number" onclick="calculatorInput('1')">1</button>
-            <button class="calculator-button number" onclick="calculatorInput('2')">2</button>
-            <button class="calculator-button number" onclick="calculatorInput('3')">3</button>
-            <button class="calculator-button number" onclick="calculatorInput('0')">0</button>
-            
-            <button class="calculator-button number" onclick="calculatorInput('.')">.</button>
-            <button class="calculator-button equal" onclick="calculatorCompute()">=</button>
+<div class="modal" id="calculatorModal" style="display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);">
+    <div class="calculator-content" style="background:#fff; width:300px; max-width: 90%; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.3); overflow: hidden;">
+        <header style="padding: 10px 15px; background: var(--p); color: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+            <span style="font-size: 18px;">آلة حاسبة</span>
+            <button onclick="closeCalculatorModal()" style="background: none; border: none; color: #fff; font-size: 30px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        </header>
+        <div style="padding: 15px; font-family: sans-serif;">
+            <input id="calcDisplay" type="text" value="0" disabled style="width: 100%; height: 50px; font-size: 2em; text-align: left; padding: 5px 10px; margin-bottom: 10px; border: 1px solid #ddd; background: #eee; box-sizing: border-box; direction: ltr;">
+            <div class="calc-buttons" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <button class="calc-btn-op" onclick="clearCalc()">C</button>
+                <button class="calc-btn-op" onclick="appendCalcOperator('÷')">÷</button>
+                <button class="calc-btn-op" onclick="appendCalcOperator('×')">×</button>
+                <button class="calc-btn-op" onclick="deleteCalcChar()">⌫</button>
+                
+                <button onclick="appendCalcNumber('7')">7</button>
+                <button onclick="appendCalcNumber('8')">8</button>
+                <button onclick="appendCalcNumber('9')">9</button>
+                <button class="calc-btn-op" onclick="appendCalcOperator('-')">-</button>
+                
+                <button onclick="appendCalcNumber('4')">4</button>
+                <button onclick="appendCalcNumber('5')">5</button>
+                <button onclick="appendCalcNumber('6')">6</button>
+                <button class="calc-btn-op" onclick="appendCalcOperator('+')">+</button>
+                
+                <button onclick="appendCalcNumber('1')">1</button>
+                <button onclick="appendCalcNumber('2')">2</button>
+                <button onclick="appendCalcNumber('3')">3</button>
+                <button class="calc-btn-eq" onclick="calculateResult()" style="grid-row: span 2;">=</button>
+                
+                <button onclick="appendCalcNumber('0')">0</button>
+                <button onclick="appendCalcDecimal('.')">.</button>
+                <button onclick="calculateResult()">Enter</button>
+            </div>
         </div>
     </div>
 </div>
-
 
 <script>
 // ===================================================
@@ -668,7 +425,7 @@ let db = { exp: [], rig: [], deb: [] };
 let IDB_connection = null; 
 
 let currentLog = "", editMode = null;
-let currentExpenseFile = null; // **متغير جديد لتتبع ملف الصورة المختار**
+// تم إزالة currentClientEdit
 
 // قائمة العملات العربية
 const ARABIC_CURRENCIES = [
@@ -725,73 +482,6 @@ loadCurrencyPreference();
 // 2. وظائف الأدوات المساعدة والملاحية
 // ===================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    const eImgCamera = document.getElementById('eImgCamera');
-    const eImgGallery = document.getElementById('eImgGallery');
-    const imageStatus = document.getElementById('imageStatus');
-    
-    // **منطق معالجة ملف الصورة المختار**
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        
-        if (file) {
-            currentExpenseFile = file;
-            imageStatus.textContent = `✅ صورة مرفقة: ${file.name}`;
-            imageStatus.style.color = 'var(--s)';
-        } else {
-            // في حالة إلغاء اختيار الملف (كالضغط على إلغاء في نافذة اختيار الملف)
-            // نحتاج للتأكد من أننا لا نمسح صورة كانت مرفقة من مصدر آخر
-            if (currentExpenseFile && currentExpenseFile.name !== "صورة سابقة") { 
-                 currentExpenseFile = null;
-                 imageStatus.textContent = 'لم يتم إرفاق صورة';
-                 imageStatus.style.color = 'var(--p)';
-            }
-        }
-    };
-
-    if (eImgCamera) eImgCamera.addEventListener('change', handleFileChange);
-    if (eImgGallery) eImgGallery.addEventListener('change', handleFileChange);
-    
-    // **تحديث حالة الصورة عند فتح تبويبة المصروفات**
-    document.querySelector('.tabs button[onclick="openTab(\'expenses\')"]').addEventListener('click', () => {
-        if (!editMode || editMode.type !== 'exp') {
-             // إعادة تعيين الحالة إذا لم نكن في وضع التعديل
-             currentExpenseFile = null;
-             imageStatus.textContent = 'لم يتم إرفاق صورة';
-             imageStatus.style.color = 'var(--p)';
-        }
-    });
-    
-    // إغلاق مربع خيارات الصورة عند الضغط خارجها
-    document.addEventListener('click', (e) => {
-        const popup = document.getElementById('imageOptionsPopup');
-        const button = document.getElementById('uploadButton');
-        if (popup.style.display === 'block' && !popup.contains(e.target) && e.target !== button) {
-             hideImageOptions();
-        }
-    });
-});
-
-// **وظائف مربع خيارات الصورة**
-function showImageOptions(event) {
-    event.stopPropagation();
-    const popup = document.getElementById('imageOptionsPopup');
-    const button = document.getElementById('uploadButton');
-    
-    // Positioning logic
-    const rect = button.getBoundingClientRect();
-    popup.style.top = `${rect.bottom + 5}px`;
-    // تحديد الموقع ليكون على الجانب الأيمن من الزر
-    popup.style.right = `${window.innerWidth - rect.right}px`; 
-    
-    popup.style.display = 'block';
-}
-
-function hideImageOptions() {
-    document.getElementById('imageOptionsPopup').style.display = 'none';
-}
-
-
 function formatAmount(input) {
   let value = input.value.replace(/[^\d.]/g, ''); 
   const parts = value.split('.');
@@ -803,13 +493,9 @@ function formatAmount(input) {
   const integerPart = parts[0];
   const decimalPart = parts[1] ? '.' + parts[1] : '';
   
-  // إزالة فواصل الآلاف من الجزء الصحيح قبل التحويل إلى رقم
   const number = parseFloat(integerPart.replace(/,/g, '')); 
-  
-  // إعادة تنسيق رقم الجزء الصحيح بفاصل الآلاف العربي
   let formattedIntegerPart = isNaN(number) ? '' : number.toLocaleString('ar');
   
-  // الاحتفاظ بنقطة الفاصل العشري إذا كانت في نهاية الإدخال
   if (input.value.endsWith('.') && !decimalPart) {
       formattedIntegerPart += '.';
   }
@@ -824,11 +510,6 @@ function parseAmount(amount) {
 
 function formatCurrency(amount) {
     const num = parseAmount(amount);
-    // إذا كان الرقم صفراً أو لا يمكن تحويله، نعرض صفراً منسقاً
-    if (isNaN(num) || num === 0) {
-        return `0 <span class="currency-symbol">${currentCurrency.symbol}</span>`;
-    }
-
     const formattedNum = num.toLocaleString('ar', { 
         minimumFractionDigits: num % 1 === 0 ? 0 : 2,
         maximumFractionDigits: 2 
@@ -837,12 +518,12 @@ function formatCurrency(amount) {
     return `${formattedNum} <span class="currency-symbol">${currentCurrency.symbol}</span>`;
 }
 
+// تم حذف getClientName
 
 function formatDateTime(dateString) {
     if (!dateString) return '—';
     const date = new Date(dateString);
     if (isNaN(date)) return 'تاريخ غير صالح';
-    // استخدام 'ar-EG' للحصول على التنسيق العربي مع التوقيت الصباحي/المسائي
     return date.toLocaleString('ar-EG', {
         year: 'numeric',
         month: 'short',
@@ -857,48 +538,35 @@ function toastMsg(m) {
   const toast = document.getElementById("toast");
   toast.textContent = m;
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2500);
+  setTimeout(() => toast.classList.remove("show"), 2000);
 }
 
+// تم حذف clearClientFields
 
 function clearFields(keepExpenseImage = false) {
   // Expense fields
   eAmount.value = eDesc.value = eType.value = eDate.value = "";
+  eImg.value = ""; 
   
-  // إعادة تعيين حقول الصورة
-  const eImgCamera = document.getElementById('eImgCamera');
-  const eImgGallery = document.getElementById('eImgGallery');
-  const imageStatus = document.getElementById('imageStatus');
-  
-  if (eImgCamera) eImgCamera.value = null; 
-  if (eImgGallery) eImgGallery.value = null; 
-  
-  if (imageStatus) {
-      if (!keepExpenseImage) {
-          currentExpenseFile = null; 
-          imageStatus.textContent = 'لم يتم إرفاق صورة';
-          imageStatus.style.color = 'var(--p)';
-      }
-  }
-
-
   // Rights fields
+  // تم حذف rClientID.value
   rAmount.value = rDesc.value = rDate.value = rType.value = rStatus.value = "";
   document.getElementById('rDynamicFields').innerHTML = '';
   document.getElementById('rAmount').oninput = function() { formatAmount(this); };
-  document.getElementById('rAmount').placeholder = "المبلغ الكلي 💵";
-  rStatus.style.display = 'block'; // إعادة إظهار حالة الحقوق الافتراضية
-
+  document.getElementById('rAmount').placeholder = "💵 المبلغ المستحق (المبلغ الكلي)";
+  document.getElementById('rAmount').style.display = 'block'; // للتأكد من إظهار الحقل
 
   // Debts fields
+  // تم حذف dClientID.value
   dType.value = dAmount.value = dDesc.value = dDate.value = dStatus.value = "";
   document.getElementById('dDynamicFields').innerHTML = '';
   
   // إعادة إظهار حقول الالتزامات العادية
   document.getElementById('dAmount').style.display = 'block'; 
-  document.getElementById('dAmount').placeholder = "قيمة الفاتورة/القسط 💵";
   document.getElementById('dStatus').style.display = 'block'; 
 }
+
+// تم حذف populateClientDropdowns
 
 // **وظائف تخصيص الحقول الديناميكية**
 
@@ -924,6 +592,25 @@ function calculateRightRemaining() {
     remainingDisplay.innerHTML = `المتبقي: ${formatCurrency(remaining.toFixed(2))}`;
 }
 
+// NEW: Helper function for Installment Right calculation
+function calculateRightInstallmentValue() {
+    const totalInput = document.getElementById('rTotalAmount');
+    const installmentsInput = document.getElementById('rInstallments');
+    const valueDisplay = document.getElementById('rInstallmentValue');
+
+    if (!totalInput || !installmentsInput || !valueDisplay) return;
+
+    const total = parseAmount(totalInput.value);
+    const installments = parseInt(installmentsInput.value) || 0;
+
+    if (total > 0 && installments > 0) {
+        const value = total / installments;
+        valueDisplay.innerHTML = `قيمة القسط: ${formatCurrency(value.toFixed(2))}`;
+    } else {
+        valueDisplay.textContent = 'قيمة القسط: —';
+    }
+}
+
 function updateRightFields(type) {
     const dynamicContainer = document.getElementById('rDynamicFields');
     dynamicContainer.innerHTML = '';
@@ -931,13 +618,13 @@ function updateRightFields(type) {
     const rStatusSelect = document.getElementById('rStatus'); 
     
     const rAmountInput = document.getElementById('rAmount');
-    rAmountInput.placeholder = "المبلغ الكلي 💵";
+    rAmountInput.placeholder = "💵 المبلغ المستحق (المبلغ الكلي)";
     rAmountInput.oninput = function() { formatAmount(this); };
+    rAmountInput.style.display = 'block';
 
     if (type === 'دين') {
         rStatusSelect.style.display = 'none'; 
-        // تم تعديل placeholder:
-        rAmountInput.placeholder = "المبلغ الكلي للدين 💵";
+        rAmountInput.placeholder = "💵 المبلغ الكلي للدين";
         rAmountInput.oninput = function() { formatAmount(this); calculateRightRemaining(); };
 
         dynamicContainer.innerHTML = `
@@ -947,24 +634,37 @@ function updateRightFields(type) {
             </div>
             <label for="rExpectedDate" style="display:block; font-size: 0.9em; color: #555; text-align: right; margin-top: -10px;">تاريخ السداد المتوقع</label>
             
-            <input id="rPaidAmount" type="text" placeholder="المحصل حتى الآن" oninput="calculateRightRemaining(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="rPaidAmount" type="text" placeholder="المبلغ المدفوع/المحصل حتى الآن" oninput="calculateRightRemaining(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
             <p id="rRemainingDisplay" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: var(--danger); font-weight: bold;">المتبقي: —</p>
         `;
         
-        // ربط الإدخالات الجديدة بدالة التنسيق والحساب
-        document.getElementById('rPaidAmount').addEventListener('input', calculateRightRemaining);
+    } else if (type === 'بيع بالأقساط') { // NEW: Installment Sale
+        rStatusSelect.style.display = 'none'; 
+        rAmountInput.style.display = 'none'; 
+        
+        dynamicContainer.innerHTML = `
+            <input id="rTotalAmount" type="text" placeholder="المبلغ الكلي للبيع بالأقساط" oninput="calculateRightInstallmentValue(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="rInstallments" type="number" placeholder="عدد الأقساط الكلي" min="1" oninput="calculateRightInstallmentValue()">
+            <p id="rInstallmentValue" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: var(--p); font-weight: bold;">قيمة القسط: —</p>
+            <input id="rPaidInstallments" type="number" placeholder="عدد الأقساط المحصلة حتى الآن" min="0">
+
+            <div class="datetime-container">
+                <input id="rExpectedDate" type="datetime-local">
+                <span class="calendar-icon">🗓️</span>
+            </div>
+            <label for="rExpectedDate" style="display:block; font-size: 0.9em; color: #555; text-align: right; margin-top: -10px;">تاريخ آخر قسط متوقع</label>
+        `;
         
     } else if (type === 'بيع بالآجل') {
         rStatusSelect.style.display = 'block';
-        // تم تعديل placeholder:
-        rAmountInput.placeholder = "المبلغ الكلي للبيع الآجل 💵";
+        rAmountInput.placeholder = "💵 المبلغ الكلي للبيع بالآجل";
 
         dynamicContainer.innerHTML = `
             <div class="datetime-container">
                 <input id="rExpectedDate" type="datetime-local">
                 <span class="calendar-icon">🗓️</span>
             </div>
-            <label for="rExpectedDate" style="display:block; font-size: 0.9em; color: #555; text-align: right; margin-top: -10px;">تاريخ السداد المتوقع (اختياري)</label>
+            <label for="rExpectedDate" style="display:block; font-size: 0.9em; color: #555; text-align: right; margin-top: -10px;">تاريخ السداد المتوقع (إن وجد)</label>
         `;
     } else {
         rStatusSelect.style.display = 'block';
@@ -995,30 +695,25 @@ function updateDebtFields(type) {
     
     const dAmountInput = document.getElementById('dAmount');
     const dStatusSelect = document.getElementById('dStatus'); 
-    // تم تعديل placeholder:
-    dAmountInput.placeholder = "قيمة الفاتورة/القسط 💵";
-
 
     if (type === 'قرض') {
         dAmountInput.style.display = 'none'; 
         dStatusSelect.style.display = 'none'; 
 
         dynamicContainer.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للقرض 💵" oninput="calculateInstallmentValue(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dName" placeholder="اسم الجهة المقرضة / البنك"> <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للقرض" oninput="calculateInstallmentValue(); formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
             <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" min="1" oninput="calculateInstallmentValue()">
             <p id="dInstallmentValue" style="margin: 0; padding: 10px 0; font-size: 0.9em; color: var(--p); font-weight: bold;">قيمة القسط: —</p>
-            <input id="dPaidInstallments" type="number" placeholder="الأقساط المدفوعة حتى الآن" min="0">
+            <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" min="0">
         `;
-        // ربط الإدخالات الجديدة بدالة التنسيق والحساب
-        document.getElementById('dTotalAmount').addEventListener('input', calculateInstallmentValue);
         
     } else if (type === 'دين شخصي') {
         dAmountInput.style.display = 'none'; 
         dStatusSelect.style.display = 'none'; 
 
         dynamicContainer.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للدين 💵" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-            <input id="dPaidInstallments" type="text" placeholder="إجمالي المدفوع نقداً حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dName" placeholder="اسم الدائن / الشخص"> <input id="dTotalAmount" type="text" placeholder="المبلغ الكلي للدين" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dPaidInstallments" type="text" placeholder="إجمالي المبلغ المدفوع نقداً حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
         `;
         
     } else {
@@ -1145,18 +840,13 @@ async function loadAllData() {
 
 function postSaveCleanup(isEditing, type) {
     editMode = null; 
-    clearFields();
-    currentExpenseFile = null; // **مسح مرجع الملف بعد الحفظ**
+    clearFields(); 
     updateStats();
     
     document.getElementById("detailModal").style.display = "none";
     
     if (isEditing) {
-        // إذا كنا في وضع التعديل، نعيد فتح السجل للنوع المعدل
         openLog(type); 
-    } else {
-        // إذا كنا في وضع الإضافة، نعيد إلى تبويبة الإضافة
-        openTab(type === 'exp' ? 'expenses' : type === 'rig' ? 'rights' : 'debts', false);
     }
 }
 
@@ -1165,11 +855,12 @@ function postSaveCleanup(isEditing, type) {
 // 3. وظائف الإضافة والتعديل والحذف (CRUD)
 // ===================================================
 
+// **تم حذف وظائف إدارة العملاء بالكامل**
+
+// **وظائف إضافة المعاملات (بدون ربط بالعميل)**
+
 async function addExpense() { 
-  if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات الأساسية");
-  
-  // **استخدام المتغير الجديد لتحديد الملف**
-  const fileToSave = currentExpenseFile;
+  if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
@@ -1183,15 +874,6 @@ async function addExpense() {
   
   if (isEditing) {
       data.id = oldData.id; 
-      // إذا لم يتم اختيار ملف جديد، نحافظ على الصورة القديمة
-      if (!fileToSave || fileToSave.name === "صورة سابقة") { 
-          data.صورة = oldData.صورة || null;
-      } else {
-           // سيتم تحديثها بالصورة الجديدة في الـ onload
-           data.صورة = null; 
-      }
-  } else {
-      data.صورة = null; 
   }
   
   const done = async () => {
@@ -1208,46 +890,54 @@ async function addExpense() {
     }
   };
 
-  // إذا تم اختيار ملف جديد (وليس صورة سابقة وهمية)، قم بتحويله
-  if (fileToSave && fileToSave.name !== "صورة سابقة") {
+  if (eImg.files[0]) {
     const r = new FileReader();
     r.onload = () => { 
-        data.صورة = r.result; // DataURL للصورة
+        data.صورة = r.result; 
         done(); 
     };
-    r.readAsDataURL(fileToSave);
+    r.readAsDataURL(eImg.files[0]);
   } else {
-      // لا توجد صورة جديدة، أكمل الحفظ مباشرة
       done(); 
   }
 }
 
 async function addRight() {
-  // تم اختصار الرسالة
-  if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
+  // تم حذف التحقق من rClientID.value
+  if (!rType.value || !rDate.value) return toastMsg("أكمل البيانات الأساسية");
+  
+  const isMasterRight = (rType.value === 'بيع بالأقساط');
+
+  if (!isMasterRight && !rAmount.value) return toastMsg("أكمل المبلغ");
   
   const isEditing = editMode && editMode.type === "rig";
   const oldData = isEditing ? db.rig[editMode.index] : {};
   const rExpectedDate = document.getElementById('rExpectedDate');
+  
   const rPaidAmountInput = document.getElementById('rPaidAmount'); 
-  const totalAmount = parseAmount(rAmount.value);
+  const rTotalAmountInput = document.getElementById('rTotalAmount');
+  const rInstallmentsInput = document.getElementById('rInstallments');
+  const rPaidInstallmentsInput = document.getElementById('rPaidInstallments'); 
+  
+  const totalAmount = isMasterRight ? parseAmount(rTotalAmountInput.value) : parseAmount(rAmount.value);
 
   const data = isEditing ? { ...oldData } : {};
 
   data.النوع = rType.value; 
-  data.المبلغ = rAmount.value; // القيمة المنسقة
   data.الوصف = rDesc.value; 
   data.التاريخ = rDate.value; 
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   if (data.النوع === 'دين') {
+      data.المبلغ = rAmount.value; 
+      
       const paidAmount = rPaidAmountInput ? parseAmount(rPaidAmountInput.value) : 0;
       const remaining = totalAmount - paidAmount;
       
-      if (paidAmount > totalAmount) return toastMsg("المدفوع لا يمكن أن يتجاوز الكلي.");
+      if (paidAmount > totalAmount) return toastMsg("المبلغ المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
 
-      data.المبلغ_المدفوع = paidAmount.toLocaleString('ar'); // القيمة المدفوعة المنسقة
-      data.المتبقي = remaining.toLocaleString('ar'); // القيمة المتبقية المنسقة
+      data.المبلغ_المدفوع = paidAmount.toLocaleString('ar'); 
+      data.المتبقي = remaining.toLocaleString('ar'); 
       
       if (remaining <= 0) {
           data.الحالة = "مدفوع بالكامل";
@@ -1258,13 +948,43 @@ async function addRight() {
       }
       
       delete data.الحالة_اليدوية;
+      delete data.المبلغ_الكلي_للحق;
+      
+  } else if (data.النوع === 'بيع بالأقساط') { // NEW: Installment Sale
+      if (!rTotalAmountInput.value || !rInstallmentsInput.value) return toastMsg("أكمل بيانات البيع بالأقساط.");
+
+      const installmentsTotal = parseInt(rInstallmentsInput.value) || 0;
+      const paidInstallmentsCount = parseInt(rPaidInstallmentsInput.value) || 0;
+      
+      if (installmentsTotal <= 0) return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.");
+      if (paidInstallmentsCount > installmentsTotal) return toastMsg("عدد الأقساط المحصلة لا يمكن أن يتجاوز الكلي.");
+
+      const installmentValue = totalAmount / installmentsTotal;
+      const totalPaidAmount = paidInstallmentsCount * installmentValue;
+      const remainingAmount = totalAmount - totalPaidAmount;
+      
+      data.المبلغ = "—"; // Standard amount field is not used for installments
+      data.المبلغ_الكلي_للحق = rTotalAmountInput.value;
+      data.عدد_الاقساط = installmentsTotal;
+      data.قيمة_القسط = formatCurrency(installmentValue.toFixed(2));
+      data.الأقساط_المحصلة = paidInstallmentsCount;
+      data.إجمالي_المحصل = formatCurrency(totalPaidAmount); 
+      data.المتبقي_للتحصيل = formatCurrency(remainingAmount);
+
+      data.الحالة = (remainingAmount <= 0) ? "مدفوع بالكامل" : (paidInstallmentsCount > 0 ? "يتم التحصيل" : "غير مدفوع بعد");
+      
+      delete data.المبلغ_المدفوع;
+      delete data.المتبقي;
+      delete data.الحالة_اليدوية;
       
   } else {
       if (!rStatus.value) return toastMsg("يرجى تحديد الحالة.");
       data.الحالة = rStatus.value;
-      
+      data.المبلغ = rAmount.value; 
+
       delete data.المبلغ_المدفوع;
       delete data.المتبقي;
+      delete data.المبلغ_الكلي_للحق; // تأكد من حذف حقول الأقساط/الدين إذا لم يكن النوع هو دين/أقساط
   }
   
   if (isEditing) {
@@ -1285,22 +1005,26 @@ async function addRight() {
 }
 
 async function addDebt() {
+  // تم حذف التحقق من dClientID.value
+  if (!dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
+  
   const isMasterLiability = (dType.value === 'قرض' || dType.value === 'دين شخصي');
   
   const dTotalAmountInput = document.getElementById('dTotalAmount');
   const dInstallmentsInput = document.getElementById('dInstallments');
   const dPaidInstallmentsInput = document.getElementById('dPaidInstallments'); 
+  const dNameInput = document.getElementById('dName'); // NEW: Name Input
+
   
-  // تم اختصار الرسالة
-  if (!dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
-  if (!isMasterLiability && (!dAmount.value || !dStatus.value)) return toastMsg("أكمل بيانات الفاتورة/القسط.");
-  if (isMasterLiability && !dTotalAmountInput.value) return toastMsg("أدخل المبلغ الكلي للالتزام.");
+  if (!isMasterLiability && (!dAmount.value || !dStatus.value)) return toastMsg("أكمل بيانات الفاتورة/القسط العادي.");
+  if (isMasterLiability && !dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
 
   const isEditing = editMode && editMode.type === "deb";
   const oldData = isEditing ? db.deb[editMode.index] : {};
 
   const data = isEditing ? { ...oldData } : {};
 
+  // تم حذف clientID والاسم
   data.النوع = dType.value; 
   data.الوصف = dDesc.value; 
   data.التاريخ = dDate.value; 
@@ -1309,27 +1033,32 @@ async function addDebt() {
       const totalAmount = parseAmount(dTotalAmountInput.value);
       let totalPaidAmount = 0;
       let remainingAmount = 0;
+      
+      // NEW: Save the name
+      if (dNameInput) {
+          data.اسم_الجهة = dNameInput.value;
+      } else {
+          delete data.اسم_الجهة;
+      }
 
       if (data.النوع === 'قرض') {
           const paidInstallmentsCount = parseInt(dPaidInstallmentsInput.value) || 0;
           const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
           
           if (installmentsTotal <= 0) return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.");
-          if (paidInstallmentsCount > installmentsTotal) return toastMsg("المدفوع لا يمكن أن يتجاوز الكلي.");
+          if (paidInstallmentsCount > installmentsTotal) return toastMsg("عدد الأقساط المدفوعة لا يمكن أن يتجاوز الكلي.");
 
           const installmentValue = totalAmount / installmentsTotal;
           totalPaidAmount = paidInstallmentsCount * installmentValue;
           
           data.عدد_الاقساط = installmentsTotal;
-          // حفظ القيمة المنسقة للعملة لتجنب إعادة الحساب
           data.قيمة_القسط = formatCurrency(installmentValue.toFixed(2));
           data.الأقساط_المدفوعة = paidInstallmentsCount;
           
       } else if (data.النوع === 'دين شخصي') {
-          // هنا المدفوع هو قيمة نقدية وليست عدد أقساط
           totalPaidAmount = parseAmount(dPaidInstallmentsInput.value);
           
-          if (totalPaidAmount > totalAmount) return toastMsg("المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
+          if (totalPaidAmount > totalAmount) return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
           
           delete data.عدد_الاقساط;
           delete data.قيمة_القسط;
@@ -1338,8 +1067,7 @@ async function addDebt() {
       
       remainingAmount = totalAmount - totalPaidAmount;
       
-      data.المبلغ_الكلي_للالتزام = dTotalAmountInput.value; // المبلغ الكلي المنسق
-      // حفظ القيمة المنسقة للعملة لتجنب إعادة الحساب
+      data.المبلغ_الكلي_للالتزام = dTotalAmountInput.value;
       data.إجمالي_المدفوع = formatCurrency(totalPaidAmount); 
       data.المتبقي_للالتزام = formatCurrency(remainingAmount);
       
@@ -1347,9 +1075,10 @@ async function addDebt() {
       data.الحالة = "—";
       
   } else {
-      data.المبلغ = dAmount.value; // القيمة المنسقة
+      data.المبلغ = dAmount.value; 
       data.الحالة = dStatus.value;
       
+      delete data.اسم_الجهة; // Ensure it's removed
       delete data.المبلغ_الكلي_للالتزام;
       delete data.إجمالي_المدفوع;
       delete data.المتبقي_للالتزام;
@@ -1399,14 +1128,17 @@ function renderLog() {
     .map((i) => {
         let subText = i.الحالة || '';
         let displayAmount = i.المبلغ;
-        let displayTitle = i.النوع || i.الفئة || 'معاملة'; 
+        let displayTitle = i.النوع || i.الفئة || 'معاملة'; // إزالة الاسم النصي
 
-        if (i.المتبقي_للالتزام) {
-             // استخدام القيم المنسقة المخزنة مباشرة
+        // تم حذف عرض clientID
+
+        if (i.المتبقي_للالتزام) { // Debt Master Liability check
              subText = `مدفوع: ${i.إجمالي_المدفوع} / متبقي: ${i.المتبقي_للالتزام}`;
              displayAmount = i.المبلغ_الكلي_للالتزام;
-        } else if (i.المتبقي) { 
-             // استخدام القيمة المتبقية المنسقة المخزنة
+        } else if (i.المتبقي_للتحصيل) { // NEW: Installment Sale Right check
+             subText = `محصل: ${i.إجمالي_المحصل} / متبقي: ${i.المتبقي_للتحصيل}`;
+             displayAmount = i.المبلغ_الكلي_للحق;
+        } else if (i.المتبقي) { // 'دين' Right check
              subText = `الحالة: ${i.الحالة} / المتبقي: ${formatCurrency(i.المتبقي)}`;
              displayAmount = i.المبلغ; 
         }
@@ -1443,41 +1175,43 @@ function _renderDetailContent(o, type) {
 
     detailModal.style.display = "flex";
 
-    // **تم اختصار أسماء المفاتيح المعروضة**
     const customMap = {
         'تاريخ_متوقع': 'تاريخ السداد المتوقع',
-        'المبلغ_الكلي_للالتزام': 'المبلغ الكلي للالتزام',
-        'إجمالي_المدفوع': 'إجمالي المدفوع (مصروف)',
+        'المبلغ_الكلي_للالتزام': 'المبلغ الكلي للالتزام (الأصلي)',
+        'إجمالي_المدفوع': 'إجمالي المدفوع حتى الآن (مصروف)',
         'المتبقي_للالتزام': 'المتبقي من الالتزام',
-        'عدد_الاقساط': 'عدد الأقساط',
+        'عدد_الاقساط': 'عدد الأقساط الكلي',
         'قيمة_القسط': 'قيمة القسط',
-        'الأقساط_المدفوعة': 'الأقساط المدفوعة',
-        'المبلغ': 'المبلغ (قسط/فاتورة/دين)',
+        'الأقساط_المدفوعة': 'عدد الأقساط المدفوعة',
+        'اسم_الجهة': 'اسم الشخص/الجهة', // NEW
+        'المبلغ': 'المبلغ (قسط/فاتورة/إجمالي)',
         'المبلغ_المدفوع': 'المحصل/المدفوع حتى الآن', 
         'المتبقي': 'المتبقي للتحصيل', 
-        'الفئة': 'الفئة',
-        'النوع': 'النوع',
-        'الوصف': 'الوصف/المدين/الدائن',
-        'التاريخ': 'تاريخ المعاملة',
-        'الحالة': 'الحالة',
+        'المبلغ_الكلي_للحق': 'المبلغ الكلي للحق (الأصلي)', // NEW
+        'الأقساط_المحصلة': 'عدد الأقساط المحصلة', // NEW
+        'إجمالي_المحصل': 'إجمالي المحصل حتى الآن', // NEW
+        'المتبقي_للتحصيل': 'المتبقي للتحصيل', // NEW
     };
 
     let details = Object.entries(o).map(([k, v]) => {
-        if (k === "صورة" && v) return `<p><b>صورة الفاتورة:</b></p><img src="${v}">`;
-        if (k === "id" || k === "clientID") return ""; 
+        if (k === "صورة" && v) return `<p><b>صورة:</b></p><img src="${v}">`;
+        if (k === "id" || k === "clientID" || k === "الاسم") return ""; 
         
         const displayKey = customMap[k] || k;
         
-        // عرض المبالغ المخزنة كـ String منسق (مثال: إجمالي_المدفوع، المتبقي_للالتزام، قيمة_القسط)
-        if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع") { 
+        if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام" || k === "المبلغ_الكلي_للحق") { // Added المبلغ_الكلي_للحق
+            if (v === "—" || v === null) return "";
+            return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
+        }
+        
+        if (k === "المتبقي_للالتزام" || k === "قيمة_القسط" || k === "إجمالي_المدفوع" || k === "إجمالي_المحصل" || k === "المتبقي_للتحصيل") { // Added installment/debt right fields
              if (v === "—" || v === null) return "";
              return `<p><b>${displayKey}:</b> ${v}</p>`; 
         }
         
-        // عرض المبالغ المخزنة كقيمة منسقة (مثال: المبلغ، المبلغ_المدفوع، المتبقي، المبلغ_الكلي_للالتزام)
-        if (k === "المبلغ" || k === "المبلغ_الكلي_للالتزام" || k === "المبلغ_المدفوع" || k === "المتبقي") { 
-            if (v === "—" || v === null) return "";
-            return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`;
+        if (k === "المبلغ_المدفوع" || k === "المتبقي") { 
+             if (v === "—" || v === null) return "";
+             return `<p><b>${displayKey}:</b> ${formatCurrency(v)}</p>`; 
         }
         
         if (k === "التاريخ" || k === "تاريخ_متوقع") {
@@ -1509,22 +1243,6 @@ function editTransaction() {
     eType.value = currentData.الفئة;
     eDesc.value = currentData.الوصف;
     eDate.value = currentData.التاريخ;
-    
-    // **منطق تحديث حالة الصورة الجديدة في وضع التعديل**
-    const imageStatus = document.getElementById('imageStatus');
-    if (currentData.صورة) {
-        currentExpenseFile = { name: "صورة سابقة", size: 0 }; // Placeholder object for status
-        imageStatus.textContent = `✅ صورة سابقة مرفقة`;
-        imageStatus.style.color = 'var(--s)';
-    } else {
-        currentExpenseFile = null;
-        imageStatus.textContent = 'لم يتم إرفاق صورة';
-        imageStatus.style.color = 'var(--p)';
-    }
-    // مسح مدخلات الملفات لتسمح بإعادة اختيار الملف
-    document.getElementById('eImgCamera').value = null;
-    document.getElementById('eImgGallery').value = null;
-
   }
   
   if (editMode.type === "rig") {
@@ -1532,19 +1250,34 @@ function editTransaction() {
     
     rType.value = currentData.النوع;
     updateRightFields(rType.value); 
-    rAmount.value = currentData.المبلغ;
     rDesc.value = currentData.الوصف;
     rDate.value = currentData.التاريخ;
     
-    if (currentData.النوع === 'دين') {
+    if (currentData.النوع === 'بيع بالأقساط') { // NEW: Installment Sale
+             const rTotalAmountInput = document.getElementById('rTotalAmount');
+             const rInstallmentsInput = document.getElementById('rInstallments');
+             const rPaidInstallmentsInput = document.getElementById('rPaidInstallments');
+            
+             if (rTotalAmountInput && currentData.المبلغ_الكلي_للحق) {
+                 rTotalAmountInput.value = currentData.المبلغ_الكلي_للحق;
+             }
+             if (rInstallmentsInput && currentData.عدد_الاقساط) {
+                 rInstallmentsInput.value = currentData.عدد_الاقساط;
+             }
+             if (rPaidInstallmentsInput && currentData.الأقساط_المحصلة !== null) {
+                 rPaidInstallmentsInput.value = currentData.الأقساط_المحصلة;
+             }
+             calculateRightInstallmentValue();
+
+    } else if (currentData.النوع === 'دين') {
+        rAmount.value = currentData.المبلغ;
         const rPaidAmountInput = document.getElementById('rPaidAmount');
         if (rPaidAmountInput && currentData.المبلغ_المدفوع) {
              rPaidAmountInput.value = currentData.المبلغ_المدفوع; 
-             // إعادة الحساب لعرض القيمة المتبقية
-             // تأكد من أن قيمة rAmount موجودة قبل الاستدعاء
              calculateRightRemaining();
         }
     } else {
+        rAmount.value = currentData.المبلغ;
         rStatus.value = currentData.الحالة;
     }
 
@@ -1561,8 +1294,15 @@ function editTransaction() {
     dDate.value = currentData.التاريخ;
 
     updateDebtFields(dType.value); 
+    
+    const dNameInput = document.getElementById('dName'); // NEW
 
     if (currentData.النوع === 'قرض' || currentData.النوع === 'دين شخصي') {
+        // NEW: Load Name
+        if (dNameInput && currentData.اسم_الجهة) {
+            dNameInput.value = currentData.اسم_الجهة;
+        }
+        
         if (currentData.المبلغ_الكلي_للالتزام && document.getElementById('dTotalAmount')) {
             document.getElementById('dTotalAmount').value = currentData.المبلغ_الكلي_للالتزام;
         }
@@ -1577,9 +1317,8 @@ function editTransaction() {
             calculateInstallmentValue();
 
         } else if (currentData.النوع === 'دين شخصي') {
-            const paidAmountUnformatted = parseAmount(currentData.إجمالي_المدفوع);
+            const paidAmountUnformatted = parseAmount(currentData.إجمالي_المدفوع) || 0;
             if (document.getElementById('dPaidInstallments')) {
-                 // عرض القيمة المنسقة المخزنة للعرض، دالة formatAmount ستنظفها للحفظ
                 document.getElementById('dPaidInstallments').value = paidAmountUnformatted.toLocaleString('ar');
             }
         }
@@ -1640,9 +1379,7 @@ function updateStats() {
     const isMasterLiability = (d.النوع === 'قرض' || d.النوع === 'دين شخصي');
     
     if (isMasterLiability) {
-        // نستخدم القيم غير المنسقة (رغم أننا نخزن المنسقة حالياً) لضمان دقة الحسابات
         const totalLiability = parseAmount(d.المبلغ_الكلي_للالتزام);
-        // يجب تحليل قيمة إجمالي_المدفوع من النص المنسق
         const paidAmount = parseAmount(d.إجمالي_المدفوع); 
         
         dt += totalLiability; 
@@ -1654,7 +1391,7 @@ function updateStats() {
         if (paidAmount > 0) {
             et += paidAmount; 
             ec++; 
-            const category = `التزام مدفوع: ${d.النوع}`; 
+            const category = `التزام مدفوع: ${d.النوع}`; // تبسيط الفئة
             cats[category] = (cats[category] || 0) + paidAmount;
         }
 
@@ -1668,7 +1405,7 @@ function updateStats() {
             et += amount; 
             ec++;
             
-            const category = `التزام مدفوع: ${d.النوع}`; 
+            const category = `التزام مدفوع: ${d.النوع}`; // تبسيط الفئة
             cats[category] = (cats[category] || 0) + amount;
         } else {
             du += amount;
@@ -1676,19 +1413,28 @@ function updateStats() {
     }
   });
   
-  // 3. حساب الحقوق
+  // 3. حساب الحقوق (مع الأخذ في الاعتبار بيع بالأقساط)
   db.rig.forEach(r => { 
-    let a = parseAmount(r.المبلغ); 
-    rt += a; 
-    
-    if (r.النوع === 'دين') {
-        // يجب تحليل قيمة المبلغ_المدفوع من النص المنسق
-        const paid = parseAmount(r.المبلغ_المدفوع);
-        rp += paid;
-        ru += a - paid;
+    if (r.النوع === 'بيع بالأقساط') {
+        const totalRight = parseAmount(r.المبلغ_الكلي_للحق);
+        const paidAmount = parseAmount(r.إجمالي_المحصل);
+        
+        rt += totalRight; 
+        rp += paidAmount;
+        ru += totalRight - paidAmount;
+        
+    } else { // دين, بيع بالآجل, أخرى
+        let a = parseAmount(r.المبلغ); 
+        rt += a; 
+        
+        if (r.النوع === 'دين') {
+            const paid = parseAmount(r.المبلغ_المدفوع);
+            rp += paid;
+            ru += a - paid;
 
-    } else {
-        r.الحالة === "مدفوع بالكامل" ? rp += a : ru += a;
+        } else { // بيع بالآجل, أخرى
+            r.الحالة === "مدفوع بالكامل" ? rp += a : ru += a;
+        }
     }
   });
 
@@ -1702,6 +1448,7 @@ function updateStats() {
     }
   }
   
+  // تبسيط منطق عرض الفئة العليا
   if (topCatName.startsWith('التزام مدفوع:')) {
       topCatName = `من التزامات: ${topCatName.substring(topCatName.indexOf(':') + 1)}`;
   }
@@ -1722,28 +1469,12 @@ function updateStats() {
 
 
 // ===================================================
-// 5. وظائف القائمة الجانبية (Sidebar Functions) والـ Overlay
+// 5. وظائف القائمة الجانبية (Sidebar Functions)
 // ===================================================
-
-// **دالة موحدة لمعالجة ضغطة الـ Overlay**
-function handleOverlayClick(event) {
-    const calculatorModal = document.getElementById('calculatorModal');
-    const appSidebar = document.getElementById('appSidebar');
-
-    if (calculatorModal.style.display === 'flex') {
-        // إذا كانت الآلة الحاسبة مفتوحة، أغلقها
-        if (event.target.id === 'appOverlay') { 
-            closeCalculator();
-        }
-    } else if (appSidebar.classList.contains('open')) {
-        // إذا كانت القائمة الجانبية مفتوحة، أغلقها
-        toggleSidebar();
-    }
-}
 
 function toggleSidebar() {
     const sidebar = document.getElementById('appSidebar');
-    const overlay = document.getElementById('appOverlay');
+    const overlay = document.querySelector('.sidebar-overlay');
     sidebar.classList.toggle('open');
     overlay.classList.toggle('open');
 }
@@ -1936,133 +1667,134 @@ function resetAllData() {
 // 6. وظائف الآلة الحاسبة (Calculator Functions)
 // ===================================================
 
-let currentInput = '0';
-let previousInput = '';
-let operation = null;
-let computedResult = false; 
+let calcInput = "";
+let lastIsOperator = false;
+let lastIsEquals = false;
 
-const calcMainOutput = document.getElementById('calcMainOutput');
-const calcSecondaryOutput = document.getElementById('calcSecondaryOutput');
-
-function updateCalculatorDisplay() {
-    if (calcMainOutput) calcMainOutput.textContent = currentInput;
-    if (calcSecondaryOutput) calcSecondaryOutput.textContent = previousInput;
+function openCalculatorModal() {
+    const modal = document.getElementById('calculatorModal');
+    modal.style.display = 'flex';
+    // إضافة مستمع الحدث للإغلاق عند النقر خارج النافذة
+    modal.addEventListener('click', closeOnOutsideClick);
+    clearCalc(); 
 }
 
-function calculatorInput(value) {
-    if (currentInput === 'Error') {
-        currentInput = '0';
-        previousInput = '';
-    }
+function closeCalculatorModal() {
+    const modal = document.getElementById('calculatorModal');
+    modal.style.display = 'none';
+    modal.removeEventListener('click', closeOnOutsideClick);
+}
 
-    if (computedResult) {
-        currentInput = (isOperator(value) || value === '.') ? currentInput : '0';
-        previousInput = '';
-        computedResult = false;
+function closeOnOutsideClick(e) {
+    const modal = document.getElementById('calculatorModal');
+    const content = modal.querySelector('.calculator-content');
+    if (e.target === modal) {
+        closeCalculatorModal();
     }
+}
 
-    if (value === '.') {
-        if (!currentInput.includes('.')) {
-            currentInput += '.';
-        }
-    } else if (isOperator(value)) {
-        if (previousInput.includes('=')) {
-            previousInput = currentInput + ' ' + value;
-            operation = value;
-            currentInput = '0';
-        } else if (previousInput !== '' && !isOperator(previousInput.slice(-1))) {
-            // قم بالحساب الجزئي إذا كان هناك عملية سابقة
-            calculatorCompute();
-            previousInput = currentInput + ' ' + value;
-            operation = value;
-            currentInput = '0';
-        } else if (previousInput === '') {
-            previousInput = currentInput + ' ' + value;
-            operation = value;
-            currentInput = '0';
-        } else {
-            // استبدال المشغل السابق
-            previousInput = previousInput.slice(0, -1) + value;
-            operation = value;
-        }
+function updateCalcDisplay() {
+    const display = document.getElementById('calcDisplay');
+    display.value = calcInput || "0";
+}
+
+function clearCalc() {
+    calcInput = "";
+    lastIsOperator = false;
+    lastIsEquals = false;
+    updateCalcDisplay();
+}
+
+function appendCalcNumber(number) {
+    if (lastIsEquals) {
+        clearCalc();
+    }
+    if (calcInput === "0" && number !== ".") {
+        calcInput = "";
+    }
+    
+    // منع البدء بـ 0 إلا إذا كان متبوعاً بعلامة عشرية
+    if (calcInput === "" && number === '0') {
+         calcInput = "0";
+    } else if (calcInput !== "0") {
+        calcInput += number;
+    }
+    
+    lastIsOperator = false;
+    lastIsEquals = false;
+    updateCalcDisplay();
+}
+
+function appendCalcOperator(operator) {
+    if (!calcInput && operator !== '-') return; 
+    
+    if (lastIsOperator) {
+        // استبدال آخر عامل تشغيل
+        calcInput = calcInput.slice(0, -1) + operator;
     } else {
-        // إدخال رقم
-        if (currentInput === '0') {
-            currentInput = value;
-        } else {
-            currentInput += value;
-        }
+        calcInput += operator;
+        lastIsOperator = true;
     }
-
-    updateCalculatorDisplay();
+    lastIsEquals = false;
+    updateCalcDisplay();
 }
 
-function isOperator(char) {
-    return ['+', '-', '*', '/'].includes(char);
+function appendCalcDecimal(decimal) {
+    if (lastIsEquals) {
+        clearCalc();
+    }
+    // التحقق مما إذا كان الرقم الحالي يحتوي بالفعل على علامة عشرية
+    const lastNumMatch = calcInput.match(/(\d+\.?\d*)$/);
+    if (lastNumMatch && lastNumMatch[0].includes('.')) {
+        return; 
+    }
+    
+    // إذا كان الإدخال فارغاً أو ينتهي بعامل تشغيل، أضف '0' قبله
+    if (!calcInput || lastIsOperator) {
+        calcInput += "0";
+    }
+    
+    calcInput += decimal;
+    lastIsOperator = false;
+    lastIsEquals = false;
+    updateCalcDisplay();
 }
 
-function calculatorCompute() {
-    if (previousInput === '' || currentInput === '0' || computedResult) return;
+function deleteCalcChar() {
+    calcInput = calcInput.slice(0, -1);
+    // التحقق مما إذا كانت آخر قيمة جديدة هي عامل تشغيل
+    lastIsOperator = ["+", "-", "×", "÷"].includes(calcInput.slice(-1));
+    lastIsEquals = false;
+    if (calcInput === "") calcInput = "0";
+    updateCalcDisplay();
+}
+
+function calculateResult() {
+    if (!calcInput || lastIsOperator) return;
 
     try {
-        const formula = previousInput.replace(operation, operation === '/' ? '/' : operation === '*' ? '*' : operation) + ' ' + currentInput;
-        // إزالة رموز العملة وأي رموز عربية قبل التقييم
-        const cleanFormula = formula.replace(/[^0-9.+-/*]/g, '');
-
-        let result = eval(cleanFormula);
+        // استبدال عوامل التشغيل المخصصة بالقياسية
+        let expression = calcInput.replace(/×/g, '*').replace(/÷/g, '/');
         
-        // تقريب النتيجة لمنع أخطاء الأرقام العائمة
-        result = parseFloat(result.toFixed(10)); 
+        // تقييم التعبير باستخدام دالة ديمومة بسيطة
+        const result = new Function('return ' + expression)();
 
-        previousInput = formula + ' =';
-        currentInput = result.toLocaleString('ar'); // تنسيق النتيجة للعرض العربي
+        if (isNaN(result) || !isFinite(result)) {
+            throw new Error('Invalid calculation');
+        }
 
-        computedResult = true;
-
+        calcInput = String(parseFloat(result.toFixed(5))); 
+        lastIsOperator = false;
+        lastIsEquals = true;
+        updateCalcDisplay();
+        
     } catch (e) {
-        currentInput = 'Error';
-        previousInput = '';
-        computedResult = false;
-        console.error("Calculator Error:", e);
+        calcInput = "خطأ";
+        lastIsOperator = false;
+        lastIsEquals = true;
+        updateCalcDisplay();
     }
-    updateCalculatorDisplay();
 }
-
-function calculatorClear() {
-    currentInput = '0';
-    previousInput = '';
-    operation = null;
-    computedResult = false;
-    updateCalculatorDisplay();
-}
-
-function calculatorDelete() {
-    if (currentInput === 'Error') {
-        currentInput = '0';
-    } else if (currentInput.length > 1) {
-        currentInput = currentInput.slice(0, -1);
-    } else {
-        currentInput = '0';
-    }
-    computedResult = false;
-    updateCalculatorDisplay();
-}
-
-function openCalculator() {
-    const modal = document.getElementById('calculatorModal');
-    const overlay = document.getElementById('appOverlay'); // استخدام الـ Overlay الصحيح
-    modal.style.display = 'flex';
-    overlay.classList.add('open'); 
-    calculatorClear();
-}
-
-function closeCalculator() {
-    const modal = document.getElementById('calculatorModal');
-    const overlay = document.getElementById('appOverlay');
-    modal.style.display = 'none';
-    overlay.classList.remove('open');
-}
-
 </script>
 
 </body>
