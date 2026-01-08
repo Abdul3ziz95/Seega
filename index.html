@@ -101,14 +101,19 @@ header button:hover { transform: scale(1.1); }
     background: var(--card-bg);
     border-bottom: 2px solid var(--border-color);
     box-shadow: var(--shadow-light);
-    overflow-x: auto; 
-    white-space: nowrap;
+    /* تم التعديل هنا: تثبيت الشريط */
+    position: sticky;
+    top: 56px; /* بعد رأس الصفحة الثابت */
+    z-index: 9; 
+    width: 100%;
+    overflow-x: hidden; /* منع التمرير الأفقي */
+    white-space: nowrap; 
 }
 .tabs button{
-    /* FIX: Allow buttons to take only required width instead of forcing equal distribution */
-    flex: 0 0 auto; 
+    /* تم التعديل هنا: توزيع المساحة بالتساوي */
+    flex: 1; 
     min-width: unset; 
-    padding: 15px 15px; /* Adjusted padding for better visual spacing */
+    padding: 15px 15px; 
     border:none;
     background: var(--card-bg);
     color: var(--text-dark);
