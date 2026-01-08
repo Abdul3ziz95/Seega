@@ -105,9 +105,10 @@ header button:hover { transform: scale(1.1); }
     white-space: nowrap;
 }
 .tabs button{
-    flex: 1 1 auto; 
-    min-width: 100px;
-    padding: 15px 10px;
+    /* FIX: Allow buttons to take only required width instead of forcing equal distribution */
+    flex: 0 0 auto; 
+    min-width: unset; 
+    padding: 15px 15px; /* Adjusted padding for better visual spacing */
     border:none;
     background: var(--card-bg);
     color: var(--text-dark);
@@ -1408,6 +1409,7 @@ async function addExpense() {
   data.التاريخ = eDate.value; 
   data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
   
+  // دالة تُنفذ بعد قراءة الملف (أو فوراً إذا لم يكن هناك ملف)
   const done = async () => {
     try {
         await saveData('exp', data); 
@@ -1427,11 +1429,17 @@ async function addExpense() {
   if (selectedFile) {
     const r = new FileReader();
     r.onload = () => { 
-        data.صورة = r.result; 
+        data.صورة = r.result; // إضافة الصورة كـ Base64
         done(); 
+    };
+    r.onerror = (error) => {
+        toastMsg("فشل قراءة ملف الصورة.");
+        console.error(error);
+        done(); // الاستمرار في الحفظ بدون الصورة
     };
     r.readAsDataURL(selectedFile);
   } else {
+      data.صورة = isEditing ? oldData.صورة : null; // الحفاظ على الصورة القديمة عند التعديل أو مسحها إذا لا يوجد ملف جديد
       done(); 
   }
 }
@@ -1507,6 +1515,8 @@ async function addRight() {
   try {
       await saveData('rig', data);
       
+      // عملية حسابية دقيقة: oldAmountCollected هنا هي القيمة التي كانت مضافة للرصيد سابقاً، وتعتبر موجبة
+      // يتم تمريرها إلى processBalanceChange كـ oldAmount
       await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountCollected);
 
       toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
@@ -1541,6 +1551,7 @@ async function addDebt() {
   data.التاريخ = dDate.value; 
   
   let amountPaid = 0; 
+  // oldAmountPaid يمثل القيمة التي كانت مخصومة من الرصيد سابقاً، ويتم تمريرها إلى processBalanceChange كقيمة سالبة لتعديل الرصيد
   let oldAmountPaid = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
   
   if (isMasterLiability) {
@@ -1564,7 +1575,7 @@ async function addDebt() {
           totalPaidAmount = paidInstallmentsCount * installmentValue;
           
           data.عدد_الاقساط = installmentsTotal;
-          data.قيمة_القسط = formatCurrency(installmentValue.toFixed(2));
+          data.قيمة_القسط = getFormattedAmount(installmentValue.toFixed(2));
           data.الأقساط_المدفوعة = paidInstallmentsCount;
           
       } else if (data.النوع === 'دين شخصي') {
@@ -1607,6 +1618,7 @@ async function addDebt() {
   try {
       await saveData('deb', data);
       
+      // عملية حسابية دقيقة: يتم تمرير amountPaid كقيمة موجبة إلى processBalanceChange، وسوف يتم ضربها في -1 لأن نوعها 'debt_payment'
       await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountPaid);
 
       toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
