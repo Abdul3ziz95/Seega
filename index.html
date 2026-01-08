@@ -133,7 +133,7 @@ body.dark-mode .tabs button.active {
 .card{
     background:var(--card-bg);
     padding: 20px;
-    border-radius: 15px;
+    border-radius: 1-5px;
     box-shadow: var(--shadow-light);
     margin-bottom: 15px;
     border-top: 5px solid var(--s); 
@@ -202,10 +202,6 @@ body.dark-mode .tabs button.active {
     box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
     border-color: var(--p);
-}
-#overview .balance-actions .action i {
-    font-size: 24px;
-    margin-bottom: 5px;
 }
 #overview .balance-actions .deposit i { color: var(--success); }
 #overview .balance-actions .withdraw i { color: var(--danger); }
@@ -596,7 +592,12 @@ input:checked + .slider:before { transform: translateX(20px); }
     <button class="secondary" onclick="showImageSourceModal()">
         <i class="fas fa-camera" style="margin-left: 5px;"></i> إرفاق صورة الفاتورة (اختياري)
     </button>
-    <span id="eImgName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
+    <div id="eImgStatusContainer" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 5px;">
+        <button id="eImgClearBtn" class="secondary" style="display: none; width: auto; padding: 5px 10px; margin: 0; background: var(--danger); color: var(--text-light);" onclick="clearExpenseImage()">
+            <i class="fas fa-times"></i> مسح
+        </button>
+        <span id="eImgName" style="font-size: 0.8em; color: var(--success); text-align: right; margin: 0;"></span>
+    </div>
     <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <button class="action" onclick="addExpense()">
@@ -785,7 +786,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p class="card" style="border-top: 3px solid var(--danger);">
             <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري.
         </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.1 (مطور ومثبت)</p>
+        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.2 (مطور ومثبت)</p>
     </div>
 </div>
 
@@ -1058,16 +1059,12 @@ window.onpopstate = (event) => {
     }
     
     if (historyStack.length === 0) {
-        if (confirm("هل تريد الخروج من التطبيق؟")) {
+        // إذا كنت لا تريد أن يتم سؤال المستخدم عن الخروج، قم بإزالة الشرط.
+        /* if (confirm("هل تريد الخروج من التطبيق؟")) {
              return;
         } else {
-            const mainState = { layer: 'main' };
-            historyStack.push(mainState);
-            history.pushState(mainState, null, `#main`);
-            for (const name in LAYERS) {
-                _visualClose(name, false); 
-            }
-        }
+             // ...
+        } */
     } else {
         const newTop = historyStack[historyStack.length - 1];
         _visualOpen(newTop.layer, newTop.data);
@@ -1075,6 +1072,11 @@ window.onpopstate = (event) => {
 };
 
 window.onload = () => {
+    // تحديث العملة من التخزين المحلي عند التحميل
+    const storedCode = localStorage.getItem('currencyCode') || 'SAR';
+    currentCurrency = ARABIC_CURRENCIES.find(c => c.code === storedCode);
+    document.getElementById('currentCurrencyDisplay').innerHTML = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
+
     if (history.state === null || history.state.layer === undefined) {
         history.replaceState({ layer: 'main' }, null, '#main');
         historyStack.push({ layer: 'main' });
@@ -1182,10 +1184,13 @@ function clearFields(keepExpenseImage = false) {
       if (el) el.value = "";
   });
   
-  // مسح حالة الصورة
+  // مسح حالة الصورة وزر المسح
   document.getElementById('eImgName').textContent = '';
   document.getElementById('eImgCamera').value = null; 
   document.getElementById('eImgGallery').value = null; 
+  const clearBtn = document.getElementById('eImgClearBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  localStorage.removeItem('clearImageFlag'); // مسح علم المسح بعد الحفظ/الإلغاء
   
   document.getElementById('rDynamicFields').innerHTML = '';
   document.getElementById('dDynamicFields').innerHTML = '';
@@ -1223,11 +1228,27 @@ function openGalleryInput() {
 
 function updateFileName(input, displayId) {
     const displayElement = document.getElementById(displayId);
+    const clearBtn = document.getElementById('eImgClearBtn');
+    localStorage.removeItem('clearImageFlag'); // إزالة العلم إذا تم اختيار ملف جديد
+
     if (input.files && input.files.length > 0) {
         displayElement.textContent = `تم اختيار: ${input.files[0].name}`;
+        if (clearBtn) clearBtn.style.display = 'inline-block';
     } else {
         displayElement.textContent = '';
+        if (clearBtn) clearBtn.style.display = 'none';
     }
+}
+
+function clearExpenseImage() {
+    document.getElementById('eImgName').textContent = 'تم مسح الصورة.';
+    document.getElementById('eImgCamera').value = null; 
+    document.getElementById('eImgGallery').value = null;
+    document.getElementById('eImgClearBtn').style.display = 'none';
+    
+    // وضع علم في التخزين المحلي لتحديد أن الصورة يجب أن تحذف عند الحفظ
+    localStorage.setItem('clearImageFlag', 'true'); 
+    toastMsg("تم مسح الصورة المرفقة. (احفظ المعاملة لتأكيد الحذف)");
 }
 
 // ---------------------------------------------
@@ -1352,6 +1373,7 @@ function postSaveCleanup(isEditing, type) {
     _visualClose('detail');
     
     if (isEditing) {
+        // يتم إعادة فتح السجل وتحديثه ليرى المستخدم النتيجة
         _visualOpen('log', { logType: type });
     }
 }
@@ -1388,10 +1410,18 @@ async function addExpense() {
   data.التاريخ = eDate.value; 
   data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
   
-  // إذا كان في وضع التعديل، تأكد من عدم مسح الصورة إذا لم يتم اختيار صورة جديدة
-  if (!isEditing || selectedFile) {
-       delete data.صورة;
+  // منطق حذف الصورة عند التعديل أو عدم الإرفاق
+  const shouldClearOldImage = localStorage.getItem('clearImageFlag') === 'true';
+
+  if (isEditing && shouldClearOldImage) {
+      // إذا كان وضع تعديل وتم الضغط على مسح، نحذف مفتاح الصورة
+      delete data.صورة;
+  } else if (!isEditing) {
+      // إذا كانت معاملة جديدة بدون صورة، نضمن عدم وجود المفتاح
+      delete data.صورة;
   }
+  // إذا كان وضع تعديل ولم يتم إرفاق ملف جديد ولم يتم الضغط على مسح، فسيتم الاحتفاظ بالصورة القديمة من oldData
+
   
   const done = async () => {
     try {
@@ -1412,7 +1442,7 @@ async function addExpense() {
   if (selectedFile) {
     const r = new FileReader();
     r.onload = () => { 
-        data.صورة = r.result; 
+        data.صورة = r.result; // إضافة بيانات الصورة الجديدة
         done(); 
     };
     r.readAsDataURL(selectedFile);
@@ -1669,7 +1699,18 @@ function editTransaction() {
       document.getElementById('eType').value = currentData.الفئة;
       document.getElementById('eDesc').value = currentData.الوصف;
       document.getElementById('eDate').value = currentData.التاريخ;
-      if(currentData.صورة) document.getElementById('eImgName').textContent = 'صورة مرفقة (لن يتم حذفها إلا بإرفاق صورة جديدة)';
+      
+      // منطق عرض حالة الصورة عند التعديل
+      const eImgName = document.getElementById('eImgName');
+      const eImgClearBtn = document.getElementById('eImgClearBtn');
+      if(currentData.صورة) {
+          eImgName.textContent = 'صورة مرفقة (لحذفها اضغط مسح)';
+          if (eImgClearBtn) eImgClearBtn.style.display = 'inline-block';
+      } else {
+          eImgName.textContent = '';
+          if (eImgClearBtn) eImgClearBtn.style.display = 'none';
+      }
+      
     }
     
     if (editMode.type === "rig") {
@@ -1744,7 +1785,7 @@ async function deleteTransaction() {
 }
 
 // ---------------------------------------------
-// وظائف العرض والتفاصيل (التي تم إصلاحها)
+// وظائف العرض والتفاصيل 
 // ---------------------------------------------
 
 function _renderDetailContent(o, type) {
@@ -1765,7 +1806,7 @@ function _renderDetailContent(o, type) {
     }
     html += `</div>`;
     
-    // **الجزء الخاص بعرض الصورة (إصلاح المشكلة)**
+    // **الجزء الخاص بعرض الصورة (المؤكد والفعال)**
     if (o.صورة && type === 'exp') {
         html += `<div class="card" style="border-top-color: var(--s);">
             <h3 style="color: var(--s); margin-top: 0;"><i class="fas fa-image" style="margin-left: 5px;"></i> صورة الفاتورة</h3>
