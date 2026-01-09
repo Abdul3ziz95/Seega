@@ -582,7 +582,8 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p><span>المحصل من الحقوق:</span> <b id="sRigPaid">0</b></p>
         <p><span>المدفوع من الالتزامات:</span> <b id="sDebPaid">0</b></p>
     </div>
-</div>
+    
+    </div>
 
 <div id="expenses" class="section">
     <div class="card">
@@ -1204,14 +1205,14 @@ function updateStats() {
     document.getElementById('sRigPaid').innerHTML = formatCurrency(totalRigCollected);
     document.getElementById('sDebPaid').innerHTML = formatCurrency(totalDebPaid);
     
-    // 2. تحديث الإجمالي التلقائي لصفحة المصروفات (مطلوب من المستخدم)
+    // 2. تحديث الإجمالي التلقائي لصفحة المصروفات 
     const expenseTotalsDiv = document.getElementById('expenseTotals');
     if (expenseTotalsDiv) {
         expenseTotalsDiv.style.display = totalExp > 0 ? 'block' : 'none';
         document.getElementById('expTotalDisplay').innerHTML = formatCurrency(totalExp);
     }
 
-    // 3. تحديث الإجمالي التلقائي لصفحة الحقوق (مطلوب من المستخدم)
+    // 3. تحديث الإجمالي التلقائي لصفحة الحقوق 
     const rightsTotalsDiv = document.getElementById('rightsTotals');
     if (rightsTotalsDiv) {
         rightsTotalsDiv.style.display = totalRig > 0 ? 'block' : 'none';
@@ -1220,7 +1221,7 @@ function updateStats() {
         document.getElementById('rigPendingDisplay').innerHTML = formatCurrency(totalRig - totalRigCollected);
     }
 
-    // 4. تحديث الإجمالي التلقائي لصفحة الالتزامات (مطلوب من المستخدم)
+    // 4. تحديث الإجمالي التلقائي لصفحة الالتزامات 
     const debtsTotalsDiv = document.getElementById('debtsTotals');
     if (debtsTotalsDiv) {
         debtsTotalsDiv.style.display = totalDeb > 0 ? 'block' : 'none';
@@ -1347,8 +1348,13 @@ async function addItemToStore(storeName, itemData, updateBalance = false) {
     }
 
     try {
-        await saveData(storeName, item);
-        // تم تصحيح: إضافة العنصر إلى المصفوفة المحلية لضمان ظهورها في السجل فوراً
+        // --- تعديل: استخدام IndexedDB لحفظ العنصر أولاً
+        const itemId = await saveData(storeName, item); 
+        
+        // --- تعديل: التأكد من تحديث ID العنصر إذا كان IndexedDB يستخدم AutoIncrement 
+        item.id = itemId;
+        
+        // --- تعديل: إضافة العنصر إلى المصفوفة المحلية لضمان ظهورها في السجل فوراً
         db[storeName].unshift(item); 
         
         // إعادة تعيين حقول النموذج
@@ -1729,7 +1735,8 @@ function openLog(storeName) {
 function renderLog() {
     const contentDiv = document.getElementById('logContent');
     const searchTerm = document.getElementById('search').value.toLowerCase().trim();
-    const data = db[currentStoreName]; // الاعتماد على البيانات المحلية التي تم تحديثها
+    // استخدام البيانات المحلية مباشرة، وهي محدثة بعد الإضافة/التعديل/الحذف
+    const data = db[currentStoreName]; 
     let filteredData = data;
 
     if (searchTerm) {
@@ -1750,6 +1757,7 @@ function renderLog() {
 }
 
 function showDetail(storeName, id) {
+    // يجب أن تبحث عن العنصر في المصفوفة المحلية المحدثة
     editMode = db[storeName].find(item => item.id == id);
     if (!editMode) return toastMsg("لم يتم العثور على المعاملة.");
 
@@ -1759,9 +1767,13 @@ function showDetail(storeName, id) {
     const imageHtml = editMode.image ? `<p><strong>صورة الفاتورة:</strong> <button class="secondary" onclick="toastMsg('عرض الصورة غير متاح في هذه النسخة')"><i class="fas fa-image"></i> ${editMode.imageName || 'عرض الصورة'}</button></p>` : '';
     const statusHtml = editMode.status ? `<p><strong>الحالة:</strong> ${editMode.status}</p>` : '';
     
+    // تحديد لون المبلغ حسب النوع والحالة
+    const isExpenseOrPaidDebt = (storeName === 'exp' || (storeName === 'deb' && editMode.status === 'مدفوع'));
+    const amountColor = isExpenseOrPaidDebt ? 'var(--danger)' : 'var(--success)';
+
     const content = `
-        <div class="card" style="border-top: 5px solid var(--p);">
-            <p><strong>المبلغ:</strong> <span style="font-weight: bold; color: ${storeName === 'exp' || editMode.status === 'مدفوع' ? 'var(--danger)' : 'var(--success)'};">${formatCurrency(editMode.amount, true)}</span></p>
+        <div class="card" style="border-top: 5px solid ${amountColor};">
+            <p><strong>المبلغ:</strong> <span style="font-weight: bold; color: ${amountColor};">${formatCurrency(editMode.amount, true)}</span></p>
             <p><strong>النوع/الفئة:</strong> ${editMode.type || 'غير محدد'}</p>
             <p><strong>الوصف/الملاحظة:</strong> ${editMode.description}</p>
             <p><strong>التاريخ والوقت:</strong> ${formatDate(editMode.date)}</p>
