@@ -873,8 +873,9 @@ function initDB() {
       IDB_connection = e.target.result;
       resolve(IDB_connection);
       loadAllData().then(() => {
-        updateStats(); 
-        updateBalanceDisplay();
+        // يجب أن تكون الدوال التالية معرفة في باقي السكربت لتجنب الأخطاء
+        if (typeof updateStats === 'function') updateStats(); 
+        if (typeof updateBalanceDisplay === 'function') updateBalanceDisplay();
       });
     };
   });
@@ -970,7 +971,8 @@ function _visualOpen(layerName, data = {}) {
         element.style.display = 'flex';
         if (layerName === 'log') {
             currentLog = data.logType;
-            renderLog();
+            // يجب أن تكون الدالة renderLog معرفة
+            if (typeof renderLog === 'function') renderLog();
         } else if (layerName === 'detail') {
             const o = db[data.logType].find(item => item.id === data.id);
             if (!o) return toastMsg("لم يتم العثور على المعاملة.");
@@ -986,9 +988,11 @@ function _visualOpen(layerName, data = {}) {
             document.getElementById('bDate').value = new Date().toISOString().slice(0, 16);
         } else if (layerName === 'currency') {
             document.getElementById('currencySearch').value = '';
-            renderCurrencyList();
+            // يجب أن تكون الدالة renderCurrencyList معرفة
+            if (typeof renderCurrencyList === 'function') renderCurrencyList();
         } else if (layerName === 'balanceLog') {
-            renderBalanceLog();
+            // يجب أن تكون الدالة renderBalanceLog معرفة
+            if (typeof renderBalanceLog === 'function') renderBalanceLog();
         }
     } else if (layer.type === 'menu') {
         element.classList.add('open');
@@ -1174,7 +1178,7 @@ function calculateRightStatus(total, paid) {
     let color = 'var(--text-dark)';
 
     if (total <= 0) {
-        status = 'لا يوجد مبلغ';
+        status = 'ادخل المبلغ'; // تم التعديل بناء على طلب المستخدم لتجنب رسالة 'لا يوجد مبلغ'
         color = '#999';
     } else if (remaining <= 0) {
         status = 'مدفوع بالكامل';
@@ -1236,7 +1240,7 @@ function updateRightFields(type) {
                 المتبقي= <b id="rRemainingDisplay">0.00</b> ${currentCurrency.symbol}
             </p>
             <p style="font-size: 0.9em; margin: 0 0 10px; text-align: right;">
-                الحالة: <b id="rStatusDisplay" style="color: var(--danger);">غير مدفوع بعد</b>
+                الحالة: <b id="rStatusDisplay" style="color: var(--danger);">ادخل المبلغ</b>
             </p>
         `;
         
@@ -1251,7 +1255,7 @@ function clearRightFields() {
     document.getElementById('rAmount').value = '';
     document.getElementById('rDesc').value = '';
     document.getElementById('rDate').value = new Date().toISOString().slice(0, 16);
-    document.getElementById('rImgName').textContent = '';
+    // تم حذف السطر الخاص بـ rImgName لمنع الأخطاء حيث أن العنصر غير موجود في HTML
     document.getElementById('rDynamicFields').innerHTML = ''; // Clear dynamic fields
     updateRightFields(document.getElementById('rType').value); // Re-render if type is selected
 }
@@ -1261,8 +1265,10 @@ async function addRight() {
     const rType = document.getElementById('rType').value;
     const rDesc = document.getElementById('rDesc').value;
     const rDate = document.getElementById('rDate').value;
-    const imgFileName = document.getElementById('rImgName').textContent.match(/\((.*?)\)/)?.[1] || null;
-    const imgFile = null; // Assuming image data handling is outside this snippet
+    
+    // تم إزالة المنطق الخاص بالصور لتجنب أخطاء Null التي تسببت في توقف التطبيق
+    const imgFileName = null; 
+    const imgFile = null; 
 
     if (!amount || !rType || !rDesc) return toastMsg("الرجاء إدخال المبلغ، النوع والوصف.");
     
@@ -1299,11 +1305,13 @@ async function addRight() {
 
     try {
         await saveData('rig', newRight);
-        updateStats();
+        // يجب أن تكون الدالة updateStats معرفة
+        if (typeof updateStats === 'function') updateStats();
         toastMsg(editMode ? "تم تعديل الحق بنجاح!" : "تم حفظ الحق بنجاح!");
         closeLayer('detail');
         clearRightFields();
-        renderLog();
+        // يجب أن تكون الدالة renderLog معرفة
+        if (typeof renderLog === 'function') renderLog();
     } catch (e) {
         toastMsg("فشل حفظ الحق: " + e.message);
     }
@@ -1323,7 +1331,7 @@ function calculateLoanStatus(total, totalInstallments, paidInstallments) {
         return {
             installmentValue: 0,
             remaining: total,
-            status: 'غير صالح للحساب',
+            status: 'ادخل المبلغ والأقساط', // تم التعديل بناء على طلب المستخدم لتجنب رسالة 'غير صالح للحساب'
             color: '#999'
         };
     }
@@ -1435,7 +1443,7 @@ function updateDebtFields(type) {
                 المتبقي = <b id="dRemainingDisplay">0.00</b> ${currentCurrency.symbol}
             </p>
             <p style="font-size: 0.9em; margin: 0 0 10px; text-align: right;">
-                الحالة: <b id="dStatusDisplay" style="color: var(--danger);">غير مدفوع بعد</b>
+                الحالة: <b id="dStatusDisplay" style="color: var(--danger);">ادخل المبلغ والأقساط</b>
             </p>
         `;
         
@@ -1454,7 +1462,7 @@ function updateDebtFields(type) {
                 المتبقي= <b id="dRemainingDisplay">0.00</b> ${currentCurrency.symbol}
             </p>
             <p style="font-size: 0.9em; margin: 0 0 10px; text-align: right;">
-                الحالة: <b id="dStatusDisplay" style="color: var(--danger);">غير مدفوع بعد</b>
+                الحالة: <b id="dStatusDisplay" style="color: var(--danger);">ادخل المبلغ</b>
             </p>
         `;
         
@@ -1510,6 +1518,10 @@ async function addDebt() {
         status = result.status;
         debtSpecificFields = { paidAmount: finalPaidAmount };
     } 
+    
+    // تم إزالة المنطق الخاص بالصور لتجنب أخطاء Null التي تسببت في توقف التطبيق
+    // const imgFileName = null; 
+    // const imgFile = null; 
 
     const newDebt = {
         id: editMode ? db.deb[editMode.index].id : Date.now(),
@@ -1519,6 +1531,7 @@ async function addDebt() {
         date: dDate,
         status: status, 
         ...debtSpecificFields 
+        // لا يوجد حقل 'img' هنا لعدم وجود عناصر إدخال الصور في قسم الالتزامات
     };
 
     if (editMode) {
@@ -1529,12 +1542,14 @@ async function addDebt() {
 
     try {
         await saveData('deb', newDebt);
-        updateStats();
+        // يجب أن تكون الدالة updateStats معرفة
+        if (typeof updateStats === 'function') updateStats();
         // دفع الالتزام (إذا كان المبلغ الكلي للالتزام/القرض مدفوع بالكامل) لا يؤثر على الرصيد مباشرة، يجب أن يكون هناك إجراء منفصل للدفع.
         toastMsg(editMode ? "تم تعديل الالتزام بنجاح!" : "تم حفظ الالتزام بنجاح!");
         closeLayer('detail');
         clearDebtFields();
-        renderLog();
+        // يجب أن تكون الدالة renderLog معرفة
+        if (typeof renderLog === 'function') renderLog();
     } catch (e) {
         toastMsg("فشل حفظ الالتزام: " + e.message);
     }
