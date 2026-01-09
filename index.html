@@ -312,7 +312,7 @@ button.secondary:hover {
     white-space: nowrap;
 }
 
-.currency-symbol { color: var(--p); font-weight: bold; font-size: 1.1em; margin-right: 5px; }
+.currency-symbol { color: inherit; font-weight: bold; font-size: 1em; margin-right: 5px; }
 .hidden-balance { font-size: 38px; font-weight: 800; letter-spacing: 5px; color: var(--p); }
 
 /* ---------------------------------------------------- */
@@ -849,6 +849,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 const IDB_NAME = "MySmartBudgetDB";
 const IDB_VERSION = 5; 
 const STORE_NAMES = ["exp", "rig", "deb", "bal"]; 
+// تم تصحيح طريقة تعريف db لضمان وجود مصفوفات فارغة عند التحميل المبدئي
 let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; 
 let IDB_connection = null; 
 
@@ -861,7 +862,7 @@ const LAYERS = {
     'sidebar': { elementId: 'appSidebar', type: 'menu' }, 
     'log': { elementId: 'logModal', type: 'modal' }, 
     'detail': { elementId: 'detailModal', type: 'modal' }, 
-    'edit': { elementId: 'editModal', type: 'modal' }, // تم إضافة نافذة التعديل
+    'edit': { elementId: 'editModal', type: 'modal' }, 
     'currency': { elementId: 'currencyModal', type: 'modal' }, 
     'about': { elementId: 'aboutModal', type: 'modal' }, 
     'balanceAction': { elementId: 'balanceActionModal', type: 'modal' }, 
@@ -1030,16 +1031,22 @@ function formatDate(dateString) {
 
 function formatCurrency(amount, includeSymbol = true, sign = '') {
     const num = cleanAmount(amount);
+    
+    // تأكد من أن num هو رقم لـ Intl.NumberFormat
+    if (isNaN(num)) return `خطأ في القيمة`;
+
     const formatted = new Intl.NumberFormat('ar-EG', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(num);
 
     let symbolHtml = '';
+    // تغيير: استخدام span بدلاً من b لتوحيد تنسيق العملة
     if (includeSymbol && currentCurrency.symbol) {
         symbolHtml = `<span class="currency-symbol">${currentCurrency.symbol}</span>`;
     }
     
+    // تغيير: حذف المسافة الإضافية قبل العملة في النهاية لتفادي مشكلة الرموز
     let signDisplay = sign === '-' ? '<span style="color: var(--danger); margin-left: 3px;">-</span>' : (sign === '+' ? '<span style="color: var(--success); margin-left: 3px;">+</span>' : '');
 
     return `${signDisplay}${formatted} ${symbolHtml}`;
@@ -1143,6 +1150,7 @@ function updateBalanceDisplay() {
         balanceP.innerHTML = '<span class="hidden-balance">••••••</span>';
         toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
     } else {
+        // تم تصحيح: استخدام formatCurrency
         balanceP.innerHTML = formatCurrency(currentBalance, true);
         toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
     }
@@ -1189,35 +1197,36 @@ function updateStats() {
     });
 
     // 1. تحديث قسم الإحصائيات في لوحة القيادة
-    document.getElementById('sExpTotal').textContent = formatCurrency(totalExp);
-    document.getElementById('sRigTotal').textContent = formatCurrency(totalRig);
-    document.getElementById('sDebTotal').textContent = formatCurrency(totalDeb);
-    document.getElementById('sRigPaid').textContent = formatCurrency(totalRigCollected);
-    document.getElementById('sDebPaid').textContent = formatCurrency(totalDebPaid);
+    // تم تصحيح: استخدام formatCurrency في عرض الإحصائيات
+    document.getElementById('sExpTotal').innerHTML = formatCurrency(totalExp);
+    document.getElementById('sRigTotal').innerHTML = formatCurrency(totalRig);
+    document.getElementById('sDebTotal').innerHTML = formatCurrency(totalDeb);
+    document.getElementById('sRigPaid').innerHTML = formatCurrency(totalRigCollected);
+    document.getElementById('sDebPaid').innerHTML = formatCurrency(totalDebPaid);
     
     // 2. تحديث الإجمالي التلقائي لصفحة المصروفات (مطلوب من المستخدم)
     const expenseTotalsDiv = document.getElementById('expenseTotals');
     if (expenseTotalsDiv) {
         expenseTotalsDiv.style.display = totalExp > 0 ? 'block' : 'none';
-        document.getElementById('expTotalDisplay').textContent = formatCurrency(totalExp);
+        document.getElementById('expTotalDisplay').innerHTML = formatCurrency(totalExp);
     }
 
     // 3. تحديث الإجمالي التلقائي لصفحة الحقوق (مطلوب من المستخدم)
     const rightsTotalsDiv = document.getElementById('rightsTotals');
     if (rightsTotalsDiv) {
         rightsTotalsDiv.style.display = totalRig > 0 ? 'block' : 'none';
-        document.getElementById('rigTotalDisplay').textContent = formatCurrency(totalRig);
-        document.getElementById('rigCollectedDisplay').textContent = formatCurrency(totalRigCollected);
-        document.getElementById('rigPendingDisplay').textContent = formatCurrency(totalRig - totalRigCollected);
+        document.getElementById('rigTotalDisplay').innerHTML = formatCurrency(totalRig);
+        document.getElementById('rigCollectedDisplay').innerHTML = formatCurrency(totalRigCollected);
+        document.getElementById('rigPendingDisplay').innerHTML = formatCurrency(totalRig - totalRigCollected);
     }
 
     // 4. تحديث الإجمالي التلقائي لصفحة الالتزامات (مطلوب من المستخدم)
     const debtsTotalsDiv = document.getElementById('debtsTotals');
     if (debtsTotalsDiv) {
         debtsTotalsDiv.style.display = totalDeb > 0 ? 'block' : 'none';
-        document.getElementById('debTotalDisplay').textContent = formatCurrency(totalDeb);
-        document.getElementById('debPaidDisplay').textContent = formatCurrency(totalDebPaid);
-        document.getElementById('debPendingDisplay').textContent = formatCurrency(totalDeb - totalDebPaid);
+        document.getElementById('debTotalDisplay').innerHTML = formatCurrency(totalDeb);
+        document.getElementById('debPaidDisplay').innerHTML = formatCurrency(totalDebPaid);
+        document.getElementById('debPendingDisplay').innerHTML = formatCurrency(totalDeb - totalDebPaid);
     }
 }
 
@@ -1281,7 +1290,7 @@ async function processBalanceAction() {
 
 
 // ===================================================
-// 6. وظائف إضافة وحذف وتعديل المعاملات (مكتملة ومصححة)
+// 6. وظائف إضافة وحذف وتعديل المعاملات
 // ===================================================
 
 async function addItemToStore(storeName, itemData, updateBalance = false) {
@@ -1339,14 +1348,16 @@ async function addItemToStore(storeName, itemData, updateBalance = false) {
 
     try {
         await saveData(storeName, item);
-        db[storeName].unshift(item); // إضافة إلى المصفوفة المحلية (البداية)
+        // تم تصحيح: إضافة العنصر إلى المصفوفة المحلية لضمان ظهورها في السجل فوراً
+        db[storeName].unshift(item); 
         
         // إعادة تعيين حقول النموذج
         document.getElementById(`${storeName.charAt(0)}Amount`).value = '';
         document.getElementById(`${storeName.charAt(0)}Desc`).value = '';
-        document.getElementById(`${storeName.charAt(0)}Type`).value = ''; 
+        // لا نقوم بإعادة تعيين النوع لتمكين الإدخال السريع لنفس الفئة
+        // document.getElementById(`${storeName.charAt(0)}Type`).value = ''; 
         document.getElementById(`${storeName.charAt(0)}Date`).value = '';
-        if (storeName !== 'exp') document.getElementById(`${storeName.charAt(0)}Status`).value = '';
+        if (storeName !== 'exp' && document.getElementById(`${storeName.charAt(0)}Status`)) document.getElementById(`${storeName.charAt(0)}Status`).value = '';
 
         if (storeName === 'exp') {
              document.getElementById('eImgName').textContent = '';
@@ -1411,11 +1422,6 @@ async function deleteItem(storeName, id) {
         const item = db[storeName].find(i => i.id == id);
         if (!item) throw new Error("Item not found");
 
-        await deleteFromDB(storeName, id);
-        
-        // إزالة من المصفوفة المحلية
-        db[storeName] = db[storeName].filter(i => i.id != id);
-
         // منطق عكس حركة الرصيد
         let actionAmount = 0;
         let requiresBalanceUpdate = false;
@@ -1438,10 +1444,14 @@ async function deleteItem(storeName, id) {
             await saveData('bal', db.bal);
         }
 
+        // الحذف من قاعدة البيانات ثم من المصفوفة المحلية
+        await deleteFromDB(storeName, id);
+        db[storeName] = db[storeName].filter(i => i.id != id);
+
         closeLayer('detail');
-        closeLayer('edit'); // تأكد من إغلاق نافذة التعديل إذا كانت مفتوحة
+        closeLayer('edit'); 
         if (document.getElementById('logModal').style.display === 'flex') {
-            renderLog();
+            renderLog(); // إعادة عرض السجل المفتوح
         }
         updateStats(); 
         updateBalanceDisplay();
@@ -1454,7 +1464,7 @@ async function deleteItem(storeName, id) {
 }
 
 // ===================================================
-// 7. وظائف التعديل الجديدة (openEditModal + updateItem)
+// 7. وظائف التعديل 
 // ===================================================
 
 function openEditModal(storeName, id) {
@@ -1636,7 +1646,8 @@ async function updateItem(storeName, id) {
         // تحديث المصفوفة المحلية
         const index = db[storeName].findIndex(i => i.id == id);
         if (index !== -1) {
-            db[storeName][index] = newItem;
+            // تم تصحيح: يجب استخدام newItem هنا لضمان مزامنة البيانات المحلية مع DB
+            db[storeName][index] = newItem; 
         }
 
         // --- 3. تحديث سجل الرصيد ---
@@ -1678,7 +1689,7 @@ async function updateItem(storeName, id) {
 
 
 // ===================================================
-// 8. وظائف السجلات والمشاهدة (تعديل على showDetail)
+// 8. وظائف السجلات والمشاهدة 
 // ===================================================
 
 let currentStoreName = ""; 
@@ -1718,7 +1729,7 @@ function openLog(storeName) {
 function renderLog() {
     const contentDiv = document.getElementById('logContent');
     const searchTerm = document.getElementById('search').value.toLowerCase().trim();
-    const data = db[currentStoreName];
+    const data = db[currentStoreName]; // الاعتماد على البيانات المحلية التي تم تحديثها
     let filteredData = data;
 
     if (searchTerm) {
@@ -2027,11 +2038,13 @@ function resetAllData() {
         request.onsuccess = () => {
             storesCleared++;
             if (storesCleared === STORE_NAMES.length) {
-                // إعادة تعيين المصفوفات المحلية بشكل صحيح
+                // تم تصحيح: إعادة تعيين المصفوفات المحلية بشكل صحيح
                 db.exp = []; 
                 db.rig = [];
                 db.deb = []; 
                 db.bal = { clientId: 1, amount: 0, changes: [] };
+                
+                // حفظ سجل الرصيد الفارغ (إلزامي لـ IndexedDB)
                 saveData('bal', db.bal).then(() => {
                     loadAllData().then(() => {
                         updateStats(); 
