@@ -26,8 +26,6 @@
     --input-bg: #fff;
     --border-color: #ddd;
     --tab-active-bg: #fff;
-    --toast-bg: #333; /* Default toast dark background */
-    --toast-text: #fff;
 }
 
 /* ---------------------------------------------------- */
@@ -48,8 +46,6 @@ body.dark-mode {
     --input-bg: #3c3c3c;
     --border-color: #555;
     --tab-active-bg: #2d2d2d;
-    --toast-bg: #e0e0e0; /* Dark mode toast light background */
-    --toast-text: #1f1f1f;
 }
 
 /* ---------------------------------------------------- */
@@ -110,7 +106,7 @@ header button:hover { transform: scale(1.1); }
 }
 .tabs button{
     flex: 1 1 auto; 
-    min-width: 0; 
+    min-width: 0; /* تم التعديل: للسماح للأزرار بالانكماش على الشاشات الصغيرة وتوزيعها بالتساوي */
     padding: 15px 10px;
     border:none;
     background: var(--card-bg);
@@ -217,7 +213,7 @@ body.dark-mode .tabs button.active {
 /* ---------------------------------------------------- */
 /* Form Elements & Inputs */
 /* ---------------------------------------------------- */
-input, select, .datetime-container input[type="datetime-local"], input[type="date"] {
+input, select, .datetime-container input[type="datetime-local"] {
     width: 100%;
     padding: 14px;
     margin: 8px 0;
@@ -229,17 +225,17 @@ input, select, .datetime-container input[type="datetime-local"], input[type="dat
     color: var(--text-dark);
     transition: all 0.3s;
 }
-input:focus, select:focus, .datetime-container input[type="datetime-local"]:focus, input[type="date"]:focus {
+input:focus, select:focus, .datetime-container input[type="datetime-local"]:focus {
     border-color: var(--s);
     box-shadow: 0 0 0 3px rgba(72, 202, 228, 0.2);
     outline: none;
 }
-body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode .datetime-container input[type="datetime-local"]:focus, body.dark-mode input[type="date"]:focus {
+body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode .datetime-container input[type="datetime-local"]:focus {
     box-shadow: 0 0 0 3px rgba(72, 202, 228, 0.3);
 }
 
 .datetime-container { position: relative; width: 100%; margin: 8px 0; }
-.datetime-container input[type="datetime-local"], .datetime-container input[type="date"] { margin: 0; padding-left: 40px; }
+.datetime-container input[type="datetime-local"] { margin: 0; padding-left: 40px; }
 
 .calendar-icon {
     position: absolute;
@@ -298,8 +294,8 @@ button.secondary:hover {
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--toast-bg); /* Use variable for compatibility */
-    color: var(--toast-text); /* Use variable for compatibility */
+    background: #333;
+    color: var(--text-light);
     padding: 12px 25px;
     border-radius: 30px;
     display:none;
@@ -307,13 +303,6 @@ button.secondary:hover {
     font-size: 15px;
     box-shadow: var(--shadow-hover);
     white-space: nowrap;
-    transition: background 0.3s, color 0.3s;
-    display: flex; 
-    align-items: center;
-    gap: 10px;
-}
-.toast i {
-    font-size: 1.2em;
 }
 
 .currency-symbol { color: var(--p); font-weight: bold; font-size: 1.1em; margin-right: 5px; }
@@ -386,6 +375,7 @@ button.secondary:hover {
     font-size: 17px;
     color: var(--text-dark);
 }
+/* ... (كود الـ switch لم يتغير) ... */
 .switch { position: relative; display: inline-block; width: 45px; height: 25px; }
 .switch input {opacity: 0; width: 0; height: 0;}
 .slider {
@@ -448,8 +438,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .sidebar-overlay.open { display: block; }
 
-/* Small Image/File Source Modal */
-#fileSourceModal {
+/* Small Image Source Modal */
+#imageSourceModal {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -466,12 +456,12 @@ input:checked + .slider:before { transform: translateX(20px); }
     flex-direction: column;
     align-items: center;
 }
-#fileSourceModal h3 {
+#imageSourceModal h3 {
     margin-top: 0;
     color: var(--p);
     text-align: center;
 }
-#fileSourceModal button {
+#imageSourceModal button {
     margin: 10px 0;
     padding: 15px;
     font-size: 16px;
@@ -481,7 +471,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 /* Toast Animation */
 .toast.show{
-    display:flex;
+    display:block;
     animation: fadeInOut 2.5s ease-in-out forwards;
 }
 
@@ -516,16 +506,6 @@ input:checked + .slider:before { transform: translateX(20px); }
     justify-content: space-between;
     align-items: center;
     margin-top: 5px;
-}
-
-/* Detail Modal Image/PDF Viewer */
-#detailContent img, #detailContent embed {
-    width: 100%; 
-    border-radius: 10px; 
-    margin-top: 10px; 
-    box-shadow: var(--shadow-light);
-    max-height: 400px; /* تحديد ارتفاع أقصى للملفات المرفقة */
-    object-fit: contain;
 }
 
 /* ---------------------------------------------------- */
@@ -613,14 +593,13 @@ input:checked + .slider:before { transform: translateX(20px); }
         <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
     </div>
     
-    <button class="secondary" onclick="showFileSourceModal()">
-        <i class="fas fa-paperclip" style="margin-left: 5px;"></i> إرفاق فاتورة (صورة/PDF) (اختياري)
+    <button class="secondary" onclick="showImageSourceModal()">
+        <i class="fas fa-camera" style="margin-left: 5px;"></i> إرفاق صورة الفاتورة (اختياري)
     </button>
-    <span id="eFileName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
-    <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eFileName', 'image')">
-    <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eFileName', 'image')">
-    <input type="file" id="ePdfFile" accept="application/pdf" style="display: none;" onchange="updateFileName(this, 'eFileName', 'pdf')">
-    <button class="action" id="saveExpenseBtn" onclick="addExpense()">
+    <span id="eImgName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
+    <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eImgName')">
+    <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eImgName')">
+    <button class="action" onclick="addExpense()">
         <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ المصروف
     </button>
     <button class="secondary" onclick="openLog('exp')">
@@ -650,7 +629,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     <option value="كامل">مدفوع بالكامل</option>
     <option value="غير مدفوع">غير مدفوع بعد</option>
     </select>
-    <button class="action" id="saveRightBtn" onclick="addRight()">
+    <button class="action" onclick="addRight()">
         <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ الحق
     </button>
     <button class="secondary" onclick="openLog('rig')">
@@ -684,7 +663,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     <option value="مدفوع">مدفوع</option>
     <option value="غير مدفوع">غير مدفوع</option>
     </select>
-    <button class="action" id="saveDebtBtn" onclick="addDebt()">
+    <button class="action" onclick="addDebt()">
         <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ الالتزام
     </button>
     <button class="secondary" onclick="openLog('deb')">
@@ -737,14 +716,13 @@ input:checked + .slider:before { transform: translateX(20px); }
         </div>
 </div>
 
-<div id="fileSourceModal">
-    <h3 style="margin-bottom: 20px;">اختيار مصدر الفاتورة/المستند</h3>
-    <button class="action" onclick="openCameraInput()"><i class="fas fa-camera" style="margin-left: 10px;"></i> التقاط صورة بالكاميرا</button>
-    <button class="secondary" onclick="openGalleryInput()"><i class="fas fa-images" style="margin-left: 10px;"></i> اختيار صورة من المعرض</button>
-    <button class="secondary" onclick="openPdfInput()"><i class="fas fa-file-pdf" style="margin-left: 10px;"></i> إرفاق مستند PDF</button>
-    <button class="secondary" style="background: none; border: none; color: var(--danger); margin-top: 10px;" onclick="closeLayer('fileSource')">إلغاء</button>
+<div id="imageSourceModal">
+    <h3 style="margin-bottom: 20px;">اختيار مصدر الصورة</h3>
+    <button class="action" onclick="openCameraInput()"><i class="fas fa-camera" style="margin-left: 10px;"></i> التقاط بالكاميرا</button>
+    <button class="secondary" onclick="openGalleryInput()"><i class="fas fa-images" style="margin-left: 10px;"></i> اختيار من المعرض</button>
+    <button class="secondary" style="background: none; border: none; color: var(--danger); margin-top: 10px;" onclick="closeLayer('imageSource')">إلغاء</button>
 </div>
-<div class="sidebar-overlay" id="fileSourceOverlay" style="z-index: 140; display: none;" onclick="closeLayer('fileSource')"></div>
+<div class="sidebar-overlay" id="imageSourceOverlay" style="z-index: 140; display: none;" onclick="closeLayer('imageSource')"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -807,7 +785,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p class="card" style="border-top: 3px solid var(--danger);">
             <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري.
         </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.2 (مطور ومثبت)</p>
+        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.1 (مطور ومثبت)</p>
     </div>
 </div>
 
@@ -829,9 +807,9 @@ input:checked + .slider:before { transform: translateX(20px); }
 // ===================================================
 
 const IDB_NAME = "MySmartBudgetDB";
-const IDB_VERSION = 5; 
+const IDB_VERSION = 4; // تم زيادة الإصدار لإعادة إنشاء الـ stores إذا لزم الأمر
 const STORE_NAMES = ["exp", "rig", "deb", "bal"]; 
-let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; 
+let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; // تهيئة أولية
 let IDB_connection = null; 
 
 // الحالة العالمية
@@ -848,7 +826,7 @@ const LAYERS = {
     'about': { elementId: 'aboutModal', type: 'modal' },
     'balanceAction': { elementId: 'balanceActionModal', type: 'modal' },
     'balanceLog': { elementId: 'balanceLogModal', type: 'modal' }, 
-    'fileSource': { elementId: 'fileSourceModal', type: 'menu' } // تم تغيير الاسم
+    'imageSource': { elementId: 'imageSourceModal', type: 'menu' } 
 };
 let historyStack = []; 
 
@@ -873,7 +851,7 @@ let currentCurrency = ARABIC_CURRENCIES.find(c => c.code === (localStorage.getIt
 function initDB() {
   return new Promise((resolve, reject) => {
     if (!window.indexedDB) {
-        toastMsg("المتصفح لا يدعم IndexedDB. لن يتم حفظ البيانات.", 'error');
+        toastMsg("المتصفح لا يدعم IndexedDB. لن يتم حفظ البيانات.");
         return reject(new Error("IndexedDB not supported."));
     }
 
@@ -953,10 +931,7 @@ function loadStoreData(storeName) {
             const result = e.target.result[0];
             return resolve(result || { clientId: 1, amount: 0, changes: [] });
         }
-        // ترتيب البيانات الأحدث أولاً
-        const data = e.target.result;
-        data.sort((a, b) => (b.id || 0) - (a.id || 0)); 
-        resolve(data);
+        resolve(e.target.result.reverse());
     };
     request.onerror = () => resolve(storeName === 'bal' ? { clientId: 1, amount: 0, changes: [] } : []);
   });
@@ -1015,7 +990,7 @@ function _visualOpen(layerName, data = {}) {
             renderLog();
         } else if (layerName === 'detail') {
             const o = db[data.logType].find(item => item.id === data.id);
-            if (!o) return toastMsg("لم يتم العثور على المعاملة.", 'error');
+            if (!o) return toastMsg("لم يتم العثور على المعاملة.");
             const index = db[data.logType].findIndex(item => item.id === data.id);
             editMode = { type: data.logType, index: index }; 
             _renderDetailContent(o, data.logType); 
@@ -1034,7 +1009,7 @@ function _visualOpen(layerName, data = {}) {
         }
     } else if (layer.type === 'menu') {
         element.classList.add('open');
-        const overlay = document.querySelector(layerName === 'fileSource' ? '#fileSourceOverlay' : '.sidebar-overlay');
+        const overlay = document.querySelector(layerName === 'imageSource' ? '#imageSourceOverlay' : '.sidebar-overlay');
         if (overlay) overlay.classList.add('open');
     }
 }
@@ -1052,7 +1027,7 @@ function _visualClose(layerName, clearEdit = true) {
         }
     } else if (layer.type === 'menu') {
         element.classList.remove('open');
-        const overlay = document.querySelector(layerName === 'fileSource' ? '#fileSourceOverlay' : '.sidebar-overlay');
+        const overlay = document.querySelector(layerName === 'imageSource' ? '#imageSourceOverlay' : '.sidebar-overlay');
         if (overlay) overlay.classList.remove('open');
     }
 }
@@ -1083,14 +1058,19 @@ window.onpopstate = (event) => {
     }
     
     if (historyStack.length === 0) {
-        // يمكنك إزالة تأكيد الخروج إذا كان مزعجاً
+        if (confirm("هل تريد الخروج من التطبيق؟")) {
+             return;
+        } else {
+            const mainState = { layer: 'main' };
+            historyStack.push(mainState);
+            history.pushState(mainState, null, `#main`);
+            for (const name in LAYERS) {
+                _visualClose(name, false); 
+            }
+        }
     } else {
         const newTop = historyStack[historyStack.length - 1];
-        if (newTop.layer === 'main') {
-            openTab('overview', false);
-        } else {
-            _visualOpen(newTop.layer, newTop.data);
-        }
+        _visualOpen(newTop.layer, newTop.data);
     }
 };
 
@@ -1110,15 +1090,9 @@ function openBalanceLogModal() { openLayer('balanceLog'); }
 function openBalanceActionModal(type) { openLayer('balanceAction', { actionType: type }); }
 function openLog(t) { openLayer('log', { logType: t }); }
 function showDetailById(id, type) { openLayer('detail', { logType: type, id: id }); }
-function openCurrencyModal() { 
-    closeLayer('sidebar'); // أغلق القائمة الجانبية أولاً
-    openLayer('currency'); 
-}
-function openAboutModal() { 
-    closeLayer('sidebar');
-    openLayer('about'); 
-}
-function showFileSourceModal() { openLayer('fileSource'); } 
+function openCurrencyModal() { openLayer('currency'); }
+function openAboutModal() { openLayer('about'); }
+function showImageSourceModal() { openLayer('imageSource'); } 
 
 function formatAmount(input) {
   let value = input.value.replace(/[^\d.]/g, ''); 
@@ -1134,7 +1108,7 @@ function formatAmount(input) {
   const number = parseFloat(integerPart.replace(/,/g, '')); 
   let formattedIntegerPart = isNaN(number) ? '' : number.toLocaleString('ar');
   
-  if (input.value.endsWith('.') && !decimalPart && input.value.length > 0) {
+  if (input.value.endsWith('.') && !decimalPart) {
       formattedIntegerPart += '.';
   }
 
@@ -1148,9 +1122,8 @@ function parseAmount(amount) {
 }
 
 function getFormattedAmount(num) {
-    const number = parseAmount(num);
-    const formattedNum = number.toLocaleString('ar', { 
-        minimumFractionDigits: number % 1 === 0 ? 0 : 2,
+    const formattedNum = num.toLocaleString('ar', { 
+        minimumFractionDigits: num % 1 === 0 ? 0 : 2,
         maximumFractionDigits: 2 
     });
     return formattedNum;
@@ -1189,50 +1162,33 @@ function formatDateTime(dateString) {
     });
 }
 
-function toastMsg(m, type = 'success') {
+function toastMsg(m) {
   const toast = document.getElementById("toast");
-  let icon = '';
-  
-  if (type === 'success') {
-      icon = '<i class="fas fa-check-circle" style="color: var(--success);"></i>';
-  } else if (type === 'error') {
-      icon = '<i class="fas fa-times-circle" style="color: var(--danger);"></i>';
-  } else if (type === 'info') {
-      icon = '<i class="fas fa-info-circle" style="color: var(--p);"></i>';
-  }
-  
-  toast.innerHTML = icon + m;
+  toast.textContent = m;
   toast.classList.add("show");
   toast.style.animation = 'none';
   toast.offsetHeight; 
   toast.style.animation = null; 
-  setTimeout(() => toast.classList.remove("show"), 3000);
+  setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
 
-function clearFields() {
+function clearFields(keepExpenseImage = false) {
   const fields = ['eAmount', 'eDesc', 'eType', 'eDate', 
                   'rAmount', 'rDesc', 'rDate', 'rType', 'rStatus',
                   'dType', 'dAmount', 'dDesc', 'dDate', 'dStatus'];
   fields.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.value = (el.tagName === 'SELECT') ? '' : '';
+      if (el) el.value = "";
   });
   
-  // مسح حالة الملف
-  document.getElementById('eFileName').textContent = '';
+  // مسح حالة الصورة
+  document.getElementById('eImgName').textContent = '';
   document.getElementById('eImgCamera').value = null; 
   document.getElementById('eImgGallery').value = null; 
-  document.getElementById('ePdfFile').value = null; 
   
   document.getElementById('rDynamicFields').innerHTML = '';
   document.getElementById('dDynamicFields').innerHTML = '';
-  
-  // ضبط التاريخ الافتراضي
-  const now = new Date().toISOString().slice(0, 16);
-  document.getElementById('eDate').value = now;
-  document.getElementById('rDate').value = now;
-  document.getElementById('dDate').value = now;
 }
 
 function openTab(id, keepEditMode = false) {
@@ -1243,7 +1199,6 @@ function openTab(id, keepEditMode = false) {
     const button = event && event.currentTarget || document.querySelector(`.tabs button[onclick*="${id}"]`);
     if(button) button.classList.add("active");
     
-    // إذا لم يكن وضع تعديل، قم بمسح الحقول
     if (!keepEditMode) { 
         editMode = null; 
         clearFields(); 
@@ -1253,49 +1208,26 @@ function openTab(id, keepEditMode = false) {
 }
 
 // ---------------------------------------------
-// وظائف إرفاق الملفات (Camera/Gallery/PDF)
+// وظائف إرفاق الصور الجديدة (Camera/Gallery)
 // ---------------------------------------------
 
 function openCameraInput() {
     document.getElementById('eImgCamera').click();
-    closeLayer('fileSource');
+    closeLayer('imageSource');
 }
 
 function openGalleryInput() {
     document.getElementById('eImgGallery').click();
-    closeLayer('fileSource');
+    closeLayer('imageSource');
 }
 
-function openPdfInput() {
-    document.getElementById('ePdfFile').click();
-    closeLayer('fileSource');
-}
-
-function updateFileName(input, displayId, fileType) {
+function updateFileName(input, displayId) {
     const displayElement = document.getElementById(displayId);
     if (input.files && input.files.length > 0) {
-        const fileName = input.files[0].name;
-        displayElement.textContent = `تم اختيار: ${fileName} (${fileType === 'pdf' ? 'PDF' : 'صورة'})`;
-        
-        // مسح قيمة المدخلات الأخرى لضمان اختيار ملف واحد فقط
-        if (input.id !== 'eImgCamera') document.getElementById('eImgCamera').value = null;
-        if (input.id !== 'eImgGallery') document.getElementById('eImgGallery').value = null;
-        if (input.id !== 'ePdfFile') document.getElementById('ePdfFile').value = null;
-        
+        displayElement.textContent = `تم اختيار: ${input.files[0].name}`;
     } else {
         displayElement.textContent = '';
     }
-}
-
-function getSelectedFile() {
-    const camera = document.getElementById('eImgCamera');
-    const gallery = document.getElementById('eImgGallery');
-    const pdf = document.getElementById('ePdfFile');
-    
-    if (camera.files && camera.files.length > 0) return camera.files[0];
-    if (gallery.files && gallery.files.length > 0) return gallery.files[0];
-    if (pdf.files && pdf.files.length > 0) return pdf.files[0];
-    return null;
 }
 
 // ---------------------------------------------
@@ -1315,28 +1247,24 @@ function updateBalanceDisplay() {
     }
 }
 
-async function processBalanceChange(amount, type, description, recordId, isEdit = false, oldAmount = 0) {
+async function processBalanceChange(amount, type, description, recordId = null, isEdit = false, oldAmount = 0) {
+    if (!recordId) recordId = `bal-${Date.now()}`;
     
     const changeAmount = parseAmount(amount);
-    if (changeAmount === 0 && !isEdit) return true; // لا يوجد تأثير على الرصيد
-    
-    // حساب التغيير الصافي لعملية الحفظ الحالية (إيداع موجب، خصم سالب)
     let netChange = changeAmount;
-    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw') {
+    
+    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw' || type === 'revert_expense_debt') {
         netChange *= -1;
     }
     
-    // إذا كنا في وضع التعديل، نحسب التغيير الفعلي (التغيير الجديد - التأثير القديم)
     let effectiveChange = netChange;
     if (isEdit) {
         effectiveChange = netChange - oldAmount; 
     }
     
-    // تحديث الرصيد
     currentBalance = parseAmount(currentBalance) + effectiveChange;
     db.bal.amount = currentBalance;
     
-    // إنشاء سجل حركة الرصيد
     const newChangeEntry = {
         id: recordId,
         التاريخ: new Date().toISOString().slice(0, 16),
@@ -1361,7 +1289,7 @@ async function processBalanceChange(amount, type, description, recordId, isEdit 
     } catch (e) {
         console.error('فشل حفظ الرصيد', e);
         currentBalance -= effectiveChange; 
-        toastMsg("فشل تحديث الرصيد.", 'error');
+        toastMsg("فشل تحديث الرصيد.");
         return false;
     }
 }
@@ -1369,13 +1297,14 @@ async function processBalanceChange(amount, type, description, recordId, isEdit 
 async function processBalanceAction() {
     const amount = document.getElementById('bAmount').value;
     const desc = document.getElementById('bDesc').value || (balanceActionType === 'deposit' ? 'إيداع عام' : 'سحب عام');
+    const date = document.getElementById('bDate').value;
     
-    if (!amount || parseAmount(amount) <= 0) return toastMsg("الرجاء إدخال مبلغ صحيح.", 'error');
+    if (!amount) return toastMsg("الرجاء إدخال المبلغ.");
 
     const success = await processBalanceChange(amount, balanceActionType, desc, `manual-${Date.now()}`);
     
     if (success) {
-        toastMsg(balanceActionType === 'deposit' ? "✅ تم الإيداع بنجاح" : "✅ تم السحب بنجاح");
+        toastMsg(balanceActionType === 'deposit' ? "تم الإيداع بنجاح" : "تم السحب بنجاح");
         closeLayer('balanceAction');
     }
 }
@@ -1412,27 +1341,19 @@ function renderBalanceLog() {
 }
 
 
-function postSaveCleanup(isEditing, type, message) {
+function postSaveCleanup(isEditing, type) {
     editMode = null; 
     clearFields(); 
-    
-    // تحديث البيانات والإحصائيات
     loadAllData().then(() => {
         updateStats();
         updateBalanceDisplay();
-        
-        toastMsg(message, 'success');
-        
-        _visualClose('detail');
-        
-        // العودة إلى السجل إذا كنا في وضع التعديل
-        if (isEditing) {
-            _visualOpen('log', { logType: type });
-        }
-    }).catch(e => {
-        toastMsg("حدث خطأ أثناء تحديث البيانات.", 'error');
-        console.error(e);
     });
+    
+    _visualClose('detail');
+    
+    if (isEditing) {
+        _visualOpen('log', { logType: type });
+    }
 }
 
 // ---------------------------------------------
@@ -1440,24 +1361,24 @@ function postSaveCleanup(isEditing, type, message) {
 // ---------------------------------------------
 
 async function addExpense() { 
-  const btn = document.getElementById('saveExpenseBtn');
-  btn.disabled = true;
-  
   const eAmount = document.getElementById('eAmount');
   const eType = document.getElementById('eType');
   const eDate = document.getElementById('eDate');
   const eDesc = document.getElementById('eDesc');
-  let selectedFile = getSelectedFile();
+  const eImgCamera = document.getElementById('eImgCamera');
+  const eImgGallery = document.getElementById('eImgGallery');
   
-  if (!eAmount.value || !eType.value || !eDate.value) { btn.disabled = false; return toastMsg("أكمل البيانات", 'error'); }
+  let selectedFile = (eImgCamera.files && eImgCamera.files.length > 0) ? eImgCamera.files[0] : 
+                     (eImgGallery.files && eImgGallery.files.length > 0) ? eImgGallery.files[0] : null;
+
+  if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
-  // قيمة التأثير القديم: المصروف يخصم، لذا القيمة القديمة دائما سالبة.
-  const oldAmountEffect = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
+  const oldAmount = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
   
   const amount = parseAmount(eAmount.value);
-  if (amount === 0) { btn.disabled = false; return toastMsg("المبلغ يجب أن يكون أكبر من صفر.", 'error'); }
+  if (amount === 0) return toastMsg("المبلغ يجب أن يكون أكبر من صفر.");
   
   const data = isEditing ? { ...oldData } : {}; 
 
@@ -1467,48 +1388,32 @@ async function addExpense() {
   data.التاريخ = eDate.value; 
   data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
   
-  // إذا تم اختيار ملف جديد، قم بإزالة المرفق القديم
-  if (selectedFile) {
-       data.ملف_مرفق = null;
-       data.نوع_المرفق = null;
-  } else if (!isEditing) {
-       // في حالة الإضافة الجديدة ولم يتم اختيار ملف
-       data.ملف_مرفق = null;
-       data.نوع_المرفق = null;
-  } // وإلا، احتفظ بالبيانات القديمة (إذا كان تعديل)
+  // إذا كان في وضع التعديل، تأكد من عدم مسح الصورة إذا لم يتم اختيار صورة جديدة
+  if (!isEditing || selectedFile) {
+       delete data.صورة;
+  }
   
   const done = async () => {
     try {
         await saveData('exp', data); 
         
-        // عملية حساب الرصيد (يتم تمرير القيمة الموجبة، ودالة processBalanceChange تقوم بخصمها)
-        const success = await processBalanceChange(
-            amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, 
-            isEditing, oldAmountEffect // القيمة التي يجب التراجع عنها (سالبة)
-        );
+        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
 
-        if (success) {
-            postSaveCleanup(isEditing, 'exp', isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
-        }
+        toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
+        
+        postSaveCleanup(isEditing, 'exp'); 
 
     } catch (error) {
-        toastMsg("فشل الحفظ. قد يكون الملف المرفق كبيراً جداً.", 'error');
+        toastMsg("فشل الحفظ. تحقق من Console.");
         console.error(error);
-    } finally {
-        btn.disabled = false;
     }
   };
 
   if (selectedFile) {
     const r = new FileReader();
     r.onload = () => { 
-        data.ملف_مرفق = r.result; 
-        data.نوع_المرفق = selectedFile.type;
+        data.صورة = r.result; 
         done(); 
-    };
-    r.onerror = () => {
-        toastMsg("فشل قراءة الملف.", 'error');
-        btn.disabled = false;
     };
     r.readAsDataURL(selectedFile);
   } else {
@@ -1517,16 +1422,13 @@ async function addExpense() {
 }
 
 async function addRight() {
-  const btn = document.getElementById('saveRightBtn');
-  btn.disabled = true;
-  
   const rAmount = document.getElementById('rAmount');
   const rType = document.getElementById('rType');
   const rDate = document.getElementById('rDate');
   const rDesc = document.getElementById('rDesc');
   const rStatus = document.getElementById('rStatus');
 
-  if (!rAmount.value || !rType.value || !rDate.value) { btn.disabled = false; return toastMsg("أكمل البيانات", 'error'); }
+  if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
   
   const isEditing = editMode && editMode.type === "rig";
   const oldData = isEditing ? db.rig[editMode.index] : {};
@@ -1543,17 +1445,15 @@ async function addRight() {
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   let amountCollected = 0; 
-  // القيمة القديمة المضافة للرصيد (موجبة)
-  const oldAmountEffect = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
+  let oldAmountCollected = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
   
   if (data.النوع === 'دين') {
       const rPaidAmountInput = document.getElementById('rPaidAmount');
       const paidAmount = rPaidAmountInput ? parseAmount(rPaidAmountInput.value) : 0;
-      
-      if (paidAmount > totalAmount) { btn.disabled = false; return toastMsg("المبلغ المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.", 'error'); }
-
       const remaining = totalAmount - paidAmount;
       
+      if (paidAmount > totalAmount) return toastMsg("المبلغ المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
+
       data.المبلغ_المدفوع = getFormattedAmount(paidAmount); 
       data.المتبقي = getFormattedAmount(remaining); 
       
@@ -1568,10 +1468,14 @@ async function addRight() {
       delete data.الحالة_اليدوية;
       
   } else { // بيع آجل أو أخرى
-      if (!rStatus.value) { btn.disabled = false; return toastMsg("يرجى تحديد الحالة.", 'error'); }
+      if (!rStatus.value) return toastMsg("يرجى تحديد الحالة.");
       data.الحالة = rStatus.value === 'كامل' ? 'مدفوع بالكامل' : 'غير مدفوع بعد';
       
-      amountCollected = (rStatus.value === 'كامل') ? totalAmount : 0;
+      if (rStatus.value === 'كامل') {
+          amountCollected = totalAmount;
+      } else {
+          amountCollected = 0;
+      }
       
       delete data.المبلغ_المدفوع;
       delete data.المتبقي;
@@ -1579,24 +1483,22 @@ async function addRight() {
   
   data.المبلغ_المضاف_للرصيد = amountCollected; 
   
+  if (isEditing) {
+      data.id = oldData.id;
+  }
+  
   try {
       await saveData('rig', data);
       
-      // عملية حساب الرصيد (المحصل موجب)
-      const success = await processBalanceChange(
-          amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, 
-          isEditing, oldAmountEffect
-      );
+      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountCollected);
 
-      if (success) {
-          postSaveCleanup(isEditing, 'rig', isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
-      }
+      toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
+      
+      postSaveCleanup(isEditing, 'rig');
 
   } catch (error) {
-      toastMsg("فشل الحفظ. تحقق من Console.", 'error');
+      toastMsg("فشل الحفظ. تحقق من Console.");
       console.error(error);
-  } finally {
-      btn.disabled = false;
   }
 }
 
@@ -1604,13 +1506,9 @@ function updateRightFields(type, currentData = null) {
     const dynamicFields = document.getElementById('rDynamicFields');
     dynamicFields.innerHTML = '';
     
-    // قيمة المبلغ المدفوع في حالة التعديل
-    const currentPaidAmount = currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_المدفوع).toLocaleString('ar') : '';
-    const currentExpectedDate = currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع : '';
-    
     if (type === 'دين') {
         dynamicFields.innerHTML = `
-            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentPaidAmount}">
+            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_مدفوع).toLocaleString('ar') : ''}">
         `;
         document.getElementById('rStatus').style.display = 'none';
         document.getElementById('rStatus').value = ''; 
@@ -1619,26 +1517,18 @@ function updateRightFields(type, currentData = null) {
     }
     
     // إضافة حقل التاريخ المتوقع لجميع الأنواع
-    const expectedDateHtml = `
-        <div class="datetime-container" style="margin-top: 15px;">
-           <input id="rExpectedDate" type="date" value="${currentExpectedDate}">
-           <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-        </div>
-        `;
+    const expectedDateHtml = `<input id="rExpectedDate" type="date" placeholder="تاريخ التحصيل المتوقع" value="${currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع : ''}">`;
     dynamicFields.innerHTML += expectedDateHtml;
 }
 
 async function addDebt() {
-  const btn = document.getElementById('saveDebtBtn');
-  btn.disabled = true;
-  
   const dType = document.getElementById('dType');
   const dDate = document.getElementById('dDate');
   const dAmount = document.getElementById('dAmount');
   const dStatus = document.getElementById('dStatus');
   const dDesc = document.getElementById('dDesc');
 
-  if (!dType.value || !dDate.value) { btn.disabled = false; return toastMsg("أكمل البيانات الأساسية", 'error'); }
+  if (!dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
   
   const isMasterLiability = (dType.value === 'قرض' || dType.value === 'دين شخصي');
   
@@ -1653,25 +1543,24 @@ async function addDebt() {
   data.التاريخ = dDate.value; 
   
   let amountPaid = 0; 
-  // القيمة القديمة المخصومة من الرصيد (سالبه)
-  const oldAmountEffect = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
+  let oldAmountPaid = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
   
   if (isMasterLiability) {
       const dTotalAmountInput = document.getElementById('dTotalAmount');
       const dInstallmentsInput = document.getElementById('dInstallments');
       const dPaidInfoInput = document.getElementById(dType.value === 'قرض' ? 'dPaidInstallments' : 'dPaidAmount'); 
 
-      if (!dTotalAmountInput || !dTotalAmountInput.value) { btn.disabled = false; return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.", 'error'); }
+      if (!dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
       
       const totalAmount = parseAmount(dTotalAmountInput.value);
       let totalPaidAmount = 0;
 
       if (data.النوع === 'قرض') {
-          const paidInstallmentsCount = parseInt(dPaidInfoInput ? dPaidInfoInput.value : 0) || 0;
-          const installmentsTotal = parseInt(dInstallmentsInput ? dInstallmentsInput.value : 0) || 0;
+          const paidInstallmentsCount = parseInt(dPaidInfoInput.value) || 0;
+          const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
           
-          if (installmentsTotal <= 0) { btn.disabled = false; return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.", 'error'); }
-          if (paidInstallmentsCount > installmentsTotal) { btn.disabled = false; return toastMsg("عدد الأقساط المدفوعة لا يمكن أن يتجاوز الكلي.", 'error'); }
+          if (installmentsTotal <= 0) return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.");
+          if (paidInstallmentsCount > installmentsTotal) return toastMsg("عدد الأقساط المدفوعة لا يمكن أن يتجاوز الكلي.");
 
           const installmentValue = totalAmount / installmentsTotal;
           totalPaidAmount = paidInstallmentsCount * installmentValue;
@@ -1681,9 +1570,9 @@ async function addDebt() {
           data.الأقساط_المدفوعة = paidInstallmentsCount;
           
       } else if (data.النوع === 'دين شخصي') {
-          totalPaidAmount = parseAmount(dPaidInfoInput ? dPaidInfoInput.value : 0);
+          totalPaidAmount = parseAmount(dPaidInfoInput.value);
           
-          if (totalPaidAmount > totalAmount) { btn.disabled = false; return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.", 'error'); }
+          if (totalPaidAmount > totalAmount) return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
       }
       
       const remainingAmount = totalAmount - totalPaidAmount;
@@ -1698,43 +1587,42 @@ async function addDebt() {
       amountPaid = totalPaidAmount; 
       
   } else {
-      if (!dAmount.value || !dStatus.value) { btn.disabled = false; return toastMsg("أكمل بيانات الفاتورة/القسط العادي.", 'error'); }
+      if (!dAmount.value || !dStatus.value) return toastMsg("أكمل بيانات الفاتورة/القسط العادي.");
 
       const amountValue = parseAmount(dAmount.value);
       data.المبلغ = getFormattedAmount(amountValue); 
       data.الحالة = dStatus.value;
       
-      amountPaid = (data.الحالة === 'مدفوع') ? amountValue : 0;
+      if (data.الحالة === 'مدفوع') {
+          amountPaid = amountValue;
+      } else {
+          amountPaid = 0;
+      }
       
       // مسح حقول الالتزامات الكبرى إذا تم التغيير لنوع عادي
       delete data.المبلغ_الكلي_للالتزام;
       delete data.إجمالي_المدفوع;
       delete data.المتبقي_للالتزام;
-      delete data.عدد_الاقساط;
-      delete data.قيمة_القسط;
-      delete data.الأقساط_المدفوعة;
   }
   
   data.المبلغ_المخصوم_للرصيد = amountPaid; 
   
+  if (isEditing) {
+      data.id = oldData.id;
+  }
+  
   try {
       await saveData('deb', data);
       
-      // عملية حساب الرصيد (يتم تمرير القيمة الموجبة، ودالة processBalanceChange تقوم بخصمها)
-      const success = await processBalanceChange(
-          amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, 
-          isEditing, oldAmountEffect
-      );
+      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountPaid);
 
-      if (success) {
-          postSaveCleanup(isEditing, 'deb', isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
-      }
+      toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
+      
+      postSaveCleanup(isEditing, 'deb');
 
   } catch (error) {
-      toastMsg("فشل الحفظ. تحقق من Console.", 'error');
+      toastMsg("فشل الحفظ. تحقق من Console.");
       console.error(error);
-  } finally {
-      btn.disabled = false;
   }
 }
 
@@ -1749,21 +1637,14 @@ function updateDebtFields(type, currentData = null) {
         statusSelect.style.display = 'none';
         amountInput.value = '';
         statusSelect.value = '';
-        
-        // جلب قيم التعديل
-        const currentTotal = currentData && currentData.المبلغ_الكلي_للالتزام ? parseAmount(currentData.المبلغ_الكلي_للالتزام).toLocaleString('ar') : '';
-        const currentInstallments = currentData && currentData.عدد_الاقساط ? currentData.عدد_الاقساط : '';
-        const currentPaidInstallments = currentData && currentData.الأقساط_المدفوعة ? currentData.الأقساط_المدفوعة : '';
-        const currentPaidAmount = currentData && currentData.إجمالي_المدفوع ? parseAmount(currentData.إجمالي_المدفوع).toLocaleString('ar') : '';
-
 
         dynamicFields.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentTotal}">
+            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_الكلي_للالتزام ? parseAmount(currentData.المبلغ_الكلي_للالتزام).toLocaleString('ar') : ''}">
             ${type === 'قرض' ? `
-                <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" value="${currentInstallments}">
-                <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" value="${currentPaidInstallments}">
+                <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" value="${currentData && currentData.عدد_الاقساط ? currentData.عدد_الاقساط : ''}">
+                <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" value="${currentData && currentData.الأقساط_المدفوعة ? currentData.الأقساط_المدفوعة : ''}">
             ` : `
-                <input id="dPaidAmount" type="text" placeholder="إجمالي المبلغ المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentPaidAmount}">
+                <input id="dPaidAmount" type="text" placeholder="إجمالي المبلغ المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.إجمالي_المدفوع ? parseAmount(currentData.إجمالي_المدفوع).toLocaleString('ar') : ''}">
             `}
         `;
     } else {
@@ -1788,12 +1669,12 @@ function editTransaction() {
       document.getElementById('eType').value = currentData.الفئة;
       document.getElementById('eDesc').value = currentData.الوصف;
       document.getElementById('eDate').value = currentData.التاريخ;
-      if(currentData.ملف_مرفق) document.getElementById('eFileName').textContent = 'ملف مرفق (لن يتم حذفه إلا بإرفاق ملف جديد)';
+      if(currentData.صورة) document.getElementById('eImgName').textContent = 'صورة مرفقة (لن يتم حذفها إلا بإرفاق صورة جديدة)';
     }
     
     if (editMode.type === "rig") {
       document.getElementById('rType').value = currentData.النوع;
-      updateRightFields(currentData.النوع, currentData); // إعادة بناء الحقول الديناميكية بالبيانات القديمة
+      updateRightFields(currentData.النوع, currentData); 
       
       document.getElementById('rAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
       document.getElementById('rDesc').value = currentData.الوصف;
@@ -1809,7 +1690,7 @@ function editTransaction() {
       document.getElementById('dDesc').value = currentData.الوصف;
       document.getElementById('dDate').value = currentData.التاريخ;
 
-      updateDebtFields(currentData.النوع, currentData); // إعادة بناء الحقول الديناميكية بالبيانات القديمة
+      updateDebtFields(currentData.النوع, currentData); 
 
       if (currentData.النوع !== 'قرض' && currentData.النوع !== 'دين شخصي') {
           document.getElementById('dAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
@@ -1840,7 +1721,6 @@ async function deleteTransaction() {
                   db.bal.changes.splice(balIndex, 1);
               }
               
-              // التراجع عن التأثير (نقوم بإضافة عكس القيمة الصافية)
               currentBalance -= oldNetChange;
               db.bal.amount = currentBalance; 
               await saveData('bal', db.bal);
@@ -1849,7 +1729,7 @@ async function deleteTransaction() {
 
       editMode = null; 
       await loadAllData(); 
-      toastMsg("✅ تم الحذف بنجاح");
+      toastMsg("تم الحذف بنجاح");
       
       updateStats();
       updateBalanceDisplay();
@@ -1858,7 +1738,7 @@ async function deleteTransaction() {
       closeLayer('log'); 
       
   } catch (error) {
-      toastMsg("فشل الحذف.", 'error');
+      toastMsg("فشل الحذف.");
       console.error(error);
   }
 }
@@ -1873,8 +1753,9 @@ function _renderDetailContent(o, type) {
     html += `<h3 style="color: var(--p); margin-top: 0;"><i class="fas fa-info-circle" style="margin-left: 5px;"></i> التفاصيل</h3>`;
     
     for (const [key, value] of Object.entries(o)) {
-        if (key === 'id' || key === 'clientId' || key === 'ملف_مرفق' || key === 'نوع_المرفق') continue;
+        if (key === 'id' || key === 'clientId' || key === 'صورة') continue;
         
+        // Skip null/undefined/empty string values, except for important fields
         if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '' && key !== 'الوصف')) continue;
         
         const isAmountField = key.includes('المبلغ') || key.includes('المدفوع') || key.includes('المتبقي') || key.includes('القسط');
@@ -1884,24 +1765,11 @@ function _renderDetailContent(o, type) {
     }
     html += `</div>`;
     
-    // **الجزء الخاص بعرض الملف المرفق**
-    if (o.ملف_مرفق && type === 'exp') {
-        const isImage = o.نوع_المرفق && o.نوع_المرفق.startsWith('image');
-        const isPdf = o.نوع_المرفق && o.نوع_المرفق.includes('pdf');
-        
-        let fileDisplayHtml = '';
-        if (isImage) {
-            fileDisplayHtml = `<img src="${o.ملف_مرفق}" alt="صورة الفاتورة">`;
-        } else if (isPdf) {
-             fileDisplayHtml = `<embed src="${o.ملف_مرفق}" type="application/pdf" width="100%" height="400px" />
-                                 <p style="text-align: center; margin-top: 10px;">يمكنك حفظ الملف بالنقر على زر التنزيل في العارض أعلاه.</p>`;
-        } else {
-             fileDisplayHtml = `<p>نوع الملف غير مدعوم للعرض المباشر.</p>`;
-        }
-        
+    // **الجزء الخاص بعرض الصورة (إصلاح المشكلة)**
+    if (o.صورة && type === 'exp') {
         html += `<div class="card" style="border-top-color: var(--s);">
-            <h3 style="color: var(--s); margin-top: 0;"><i class="fas ${isPdf ? 'fa-file-pdf' : 'fa-image'}" style="margin-left: 5px;"></i> المرفق</h3>
-            ${fileDisplayHtml}
+            <h3 style="color: var(--s); margin-top: 0;"><i class="fas fa-image" style="margin-left: 5px;"></i> صورة الفاتورة</h3>
+            <img src="${o.صورة}" alt="صورة الفاتورة" style="width: 100%; border-radius: 10px; margin-top: 10px; box-shadow: var(--shadow-light);">
         </div>`;
     }
     
@@ -1970,13 +1838,13 @@ function renderLog() {
             }
             
             // إضافة أيقونة الكاميرا إذا كانت هناك صورة مرفقة
-            const fileIcon = i.ملف_مرفق ? (i.نوع_المرفق.includes('pdf') ? '<i class="fas fa-file-pdf" style="margin-left: 5px; color: var(--p);"></i>' : '<i class="fas fa-camera" style="margin-left: 5px; color: var(--p);"></i>') : '';
+            const imageIcon = i.صورة ? '<i class="fas fa-camera" style="margin-left: 5px; color: var(--p);"></i>' : '';
 
 
             return `
                 <div class="list-item" style="border-right-color: ${borderColor};" onclick="showDetailById(${i.id}, '${logType}')">
                     <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>${fileIcon} ${description}</span> 
+                        <span>${imageIcon} ${description}</span> 
                         <span style="color: ${amountColor};">${amountDisplay}</span>
                     </div>
                     <div class="details">
@@ -2012,11 +1880,11 @@ function updateStats() {
     });
 
     // تحديث ملخص الإحصائيات في لوحة القيادة
-    document.getElementById('sExpTotal').innerHTML = formatCurrency(expTotal, expTotal > 0);
+    document.getElementById('sExpTotal').innerHTML = formatCurrency(expTotal, true);
     document.getElementById('sRigTotal').innerHTML = formatCurrency(rigTotal, rigTotal > 0);
     document.getElementById('sDebTotal').innerHTML = formatCurrency(debTotal, debTotal > 0);
-    document.getElementById('sRigPaid').innerHTML = formatCurrency(rigPaid, rigPaid > 0);
-    document.getElementById('sDebPaid').innerHTML = formatCurrency(debPaid, debPaid > 0);
+    document.getElementById('sRigPaid').innerHTML = formatCurrency(rigPaid, true);
+    document.getElementById('sDebPaid').innerHTML = formatCurrency(debPaid, false);
 }
 
 // ---------------------------------------------
@@ -2049,7 +1917,7 @@ function setCurrency(code) {
         updateBalanceDisplay();
         updateStats(); 
         closeLayer('currency');
-        toastMsg(`تم تعيين العملة إلى ${selected.name}`, 'info');
+        toastMsg(`تم تعيين العملة إلى ${selected.name}`);
     }
 }
 
@@ -2064,21 +1932,19 @@ async function addDataToStore(storeName, dataArray) {
                 store.put(item).onsuccess = resolve;
             });
         } else {
-            await new Promise((resolve, reject) => {
+            await new Promise(resolve => {
                 const dataToSave = { ...item };
                 delete dataToSave.id; 
                 dataToSave.clientId = item.clientId || `${storeName}-${Date.now()}`;
                 
-                const request = store.add(dataToSave);
-                request.onsuccess = resolve;
-                request.onerror = reject;
+                store.add(dataToSave).onsuccess = resolve;
             });
         }
     }
 }
 
 function exportData() {
-    if (!IDB_connection) return toastMsg("لا يمكن الاتصال بقاعدة البيانات.", 'error');
+    if (!IDB_connection) return toastMsg("لا يمكن الاتصال بقاعدة البيانات.");
 
     const dataToExport = {
         exp: db.exp,
@@ -2097,24 +1963,20 @@ function exportData() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toastMsg("✅ تم تصدير البيانات بنجاح!");
+    toastMsg("تم تصدير البيانات بنجاح!");
 }
 
 async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!confirm("تحذير: هل أنت متأكد من استيراد البيانات؟ هذا سيضيف المعاملات إلى بياناتك الحالية.")) {
-        event.target.value = null; 
-        return;
-    }
+    if (!confirm("تحذير: هل أنت متأكد من استيراد البيانات؟ هذا سيضيف المعاملات إلى بياناتك الحالية.")) return;
     
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
             const importedData = JSON.parse(e.target.result);
             
-            // التعامل مع سجل الرصيد بشكل خاص
             if (importedData.bal && Array.isArray(importedData.bal.changes)) {
                  importedData.bal.clientId = 1; 
                  await addDataToStore('bal', [importedData.bal]);
@@ -2129,10 +1991,10 @@ async function importData(event) {
             await loadAllData(); 
             updateStats();
             updateBalanceDisplay();
-            toastMsg("✅ تم استيراد البيانات وتحديثها بنجاح!");
+            toastMsg("تم استيراد البيانات وتحديثها بنجاح!");
 
         } catch (error) {
-            toastMsg("فشل الاستيراد. تأكد من أن الملف بصيغة JSON صحيحة.", 'error');
+            toastMsg("فشل الاستيراد. تأكد من أن الملف بصيغة JSON صحيحة.");
             console.error("Import Error:", error);
         } finally {
             event.target.value = null; 
@@ -2149,7 +2011,7 @@ function confirmResetData() {
 }
 
 function resetAllData() {
-     if (!IDB_connection) return toastMsg("لا يمكن الاتصال بقاعدة البيانات.", 'error');
+     if (!IDB_connection) return toastMsg("لا يمكن الاتصال بقاعدة البيانات.");
 
     const transaction = IDB_connection.transaction(STORE_NAMES, "readwrite");
     let storesCleared = 0;
@@ -2167,13 +2029,13 @@ function resetAllData() {
                     loadAllData().then(() => {
                         updateStats(); 
                         updateBalanceDisplay();
-                        toastMsg("🗑️ تم حذف جميع البيانات بنجاح!");
+                        toastMsg("تم حذف جميع البيانات بنجاح!");
                     });
                 });
             }
         };
 
-        request.onerror = () => toastMsg("فشل حذف البيانات.", 'error');
+        request.onerror = () => toastMsg("فشل حذف البيانات.");
     });
 }
 </script>
