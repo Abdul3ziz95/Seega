@@ -1990,25 +1990,71 @@ function _renderDetailContent(o, type) {
     const content = document.getElementById("detailContent");
     let html = '';
     
+    // العناصر التي نريد استثناءها من العرض الافتراضي
+    const EXCLUDED_KEYS = [
+        'id', 'clientId', 'صورة', 'المبلغ_المخصوم_للرصيد', 'المبلغ_المضاف_للرصيد', 
+        'النوع', 'المبلغ', 'قيمة_القسط' 
+    ];
+
     html += `<p style="text-align: center; font-size: 1.2em; font-weight: bold; color: var(--p);">${o.النوع || o.الفئة}</p>`;
     
-    // عرض جميع الخصائص ما عدا الداخلية والخاصة بالصورة
-    for (const key in o) {
-        if (o.hasOwnProperty(key) && key !== 'id' && key !== 'clientId' && key !== 'صورة' && key !== 'المبلغ_المخصوم_للرصيد' && key !== 'المبلغ_المضاف_للرصيد') {
-             let value = o[key];
-             
-             if(key.includes('تاريخ')) value = formatDateTime(value);
-             else if(key.includes('المبلغ') || key.includes('المتبقي') || key.includes('المدفوع') || key.includes('القسط')) value = formatCurrency(value);
-             
-             if(value === '—') continue; 
-             
-             html += `<div class="calc-result" style="border-bottom: 1px solid var(--border-color); padding: 8px 0;">
-                        <span>${key}:</span> 
-                        <span style="font-weight: bold; color: var(--text-dark);">${value}</span>
-                      </div>`;
-        }
+    let displayOrder = [];
+
+    if (type === 'deb' && (o.النوع === 'قرض' || o.النوع === 'دين شخصي')) {
+        // الترتيب المحاسبي لـ 'قرض' و 'دين شخصي'
+        displayOrder = [
+            { key: 'الوصف', label: 'اسم الجهة/الدائن' },
+            { key: 'التاريخ', label: 'تاريخ بدء الالتزام' },
+            { key: 'المبلغ_الكلي_للالتزام', label: 'المبلغ الكلي للالتزام' },
+            { key: 'عدد_الاقساط', label: 'عدد الأقساط الكلي', skipIfMissing: true },
+            { key: 'قيمة_القسط', label: 'قيمة القسط الشهري', skipIfMissing: true },
+            { key: 'الأقساط_المدفوعة', label: 'عدد الأقساط المدفوعة', skipIfMissing: true },
+            { key: 'إجمالي_المدفوع', label: 'إجمالي المبلغ المدفوع' },
+            { key: 'المتبقي_للالتزام', label: 'المبلغ المتبقي للسداد' },
+            { key: 'الحالة', label: 'الحالة' }
+        ];
+    } else {
+        // الترتيب الافتراضي للمصروفات/الحقوق/التزامات العادية
+        displayOrder = [
+             { key: 'الوصف', label: 'الوصف / ملاحظة' },
+             { key: 'التاريخ', label: 'التاريخ' },
+             { key: 'المبلغ', label: 'المبلغ' },
+             { key: 'الفئة', label: 'الفئة', skipIfMissing: true },
+             { key: 'المبلغ_المدفوع', label: 'المحصل حتى الآن', skipIfMissing: true },
+             { key: 'المتبقي', label: 'المتبقي', skipIfMissing: true },
+             { key: 'الحالة', label: 'الحالة', skipIfMissing: true }
+        ];
     }
-    
+
+    // عرض الخصائص بالترتيب الجديد
+    displayOrder.forEach(item => {
+        const key = item.key;
+        const label = item.label;
+
+        if (o.hasOwnProperty(key)) {
+            let value = o[key];
+
+            // تخطي الحقول إذا كانت مطلوبة في التخطي
+            if (item.skipIfMissing && (value === undefined || value === null || value === '—' || String(value).trim() === '')) return;
+
+            if (key.includes('تاريخ')) value = formatDateTime(value);
+            else if (key.includes('المبلغ') || key.includes('المتبقي') || key.includes('المدفوع') || key.includes('القسط')) value = formatCurrency(value);
+            
+            if (key === 'الوصف' && (o.النوع === 'قرض' || o.النوع === 'دين شخصي')) {
+                 // عرض الوصف كاسم الجهة/الدائن
+                 html += `<div class="calc-result" style="border-bottom: 1px solid var(--border-color); padding: 8px 0;">
+                            <span>${label}:</span> 
+                            <span style="font-weight: bold; color: var(--text-dark);">${value}</span>
+                          </div>`;
+            } else {
+                 html += `<div class="calc-result" style="border-bottom: 1px solid var(--border-color); padding: 8px 0;">
+                            <span>${label}:</span> 
+                            <span style="font-weight: bold; color: var(--text-dark);">${value}</span>
+                          </div>`;
+            }
+        }
+    });
+
     // عرض الصورة
     if(o.صورة) {
          html += `<h4 style="margin-top: 20px; color: var(--s);">صورة الفاتورة:</h4>
@@ -2199,6 +2245,8 @@ function updateDebtFields(type, currentData = null) {
     const dynamicFields = document.getElementById('dDynamicFields');
     const dAmount = document.getElementById('dAmount');
     const dStatus = document.getElementById('dStatus');
+    const dDesc = document.getElementById('dDesc'); // للوصول لحقل الوصف
+
     dynamicFields.innerHTML = '';
     dAmount.style.display = 'block';
     dStatus.style.display = 'block';
@@ -2206,6 +2254,11 @@ function updateDebtFields(type, currentData = null) {
     if (type === 'قرض' || type === 'دين شخصي') {
         dAmount.style.display = 'none';
         dStatus.style.display = 'none';
+        
+        // **تحديث مكان حقل الوصف/الجهة عند اختيار القرض/الدين الشخصي**
+        if (dDesc) {
+            dDesc.placeholder = type === 'قرض' ? '🏢 اسم الجهة/البنك (لتفاصيل المعاملة)' : '👤 اسم الشخص/الجهة (لتفاصيل المعاملة)';
+        }
         
         let dynamicInputs = `
             <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" 
@@ -2256,6 +2309,10 @@ function updateDebtFields(type, currentData = null) {
         }
         
     } else {
+         // إعادة placeholder الوصف إلى القيمة الافتراضية للفواتير
+        if (dDesc) {
+             dDesc.placeholder = '🏢 وصف / ملاحظة (الدائن/الجهة)';
+        }
         // فاتورة/قسط عادي - نضمن عدم وجود حقول الدين والقرض القديمة
         dAmount.style.display = 'block';
         dStatus.style.display = 'block';
