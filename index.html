@@ -371,7 +371,7 @@ button.secondary:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0px; /* Adjusted padding */
+    padding: 15px 0px; 
     font-size: 17px;
     color: var(--text-dark);
 }
@@ -437,37 +437,6 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .sidebar-overlay.open { display: block; }
 
-/* Small Image Source Modal */
-#imageSourceModal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    max-width: 350px;
-    height: auto;
-    background: var(--card-bg);
-    border-radius: 15px;
-    box-shadow: var(--shadow-hover);
-    padding: 20px;
-    z-index: 150;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-}
-#imageSourceModal h3 {
-    margin-top: 0;
-    color: var(--p);
-    text-align: center;
-}
-#imageSourceModal button {
-    margin: 10px 0;
-    padding: 15px;
-    font-size: 16px;
-    border-radius: 10px;
-    width: 100%;
-}
-
 /* Toast Animation */
 .toast.show{
     display:block;
@@ -481,7 +450,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     100% { opacity: 0; }
 }
 
-/* List Item */
+/* List Item & Truncation FIX */
 .list-item{
     background: var(--card-bg);
     padding: 16px;
@@ -492,6 +461,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border-right: 5px solid var(--s); 
     color: var(--text-dark);
+    overflow: hidden; /* Ensure list item itself respects boundaries */
 }
 .list-item:hover {
     background: color-mix(in srgb, var(--card-bg) 95%, #999);
@@ -506,6 +476,19 @@ input:checked + .slider:before { transform: translateX(20px); }
     align-items: center;
     margin-top: 5px;
 }
+/* Ensure text inside spans/divs within list-item doesn't overflow */
+.list-item > div > * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+/* Allow flex items to shrink but use ellipsis when content is too long */
+.list-item .details span:first-child, .list-item .details span:last-child {
+    flex-shrink: 1;
+    min-width: 0; 
+}
+
 
 /* ---------------------------------------------------- */
 /* Responsive Fix for Tabs (Small Screens) */
@@ -592,11 +575,10 @@ input:checked + .slider:before { transform: translateX(20px); }
         <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
     </div>
     
-    <button class="secondary" onclick="showImageSourceModal()">
-        <i class="fas fa-camera" style="margin-left: 5px;"></i> إرفاق صورة الفاتورة (اختياري)
+    <button class="secondary" onclick="document.getElementById('eImgGallery').click()">
+        <i class="fas fa-images" style="margin-left: 5px;"></i> إرفاق صورة من المعرض
     </button>
     <span id="eImgName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
-    <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <button class="action" onclick="addExpense()">
         <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ المصروف
@@ -723,14 +705,6 @@ input:checked + .slider:before { transform: translateX(20px); }
         </div>
 </div>
 
-<div id="imageSourceModal">
-    <h3 style="margin-bottom: 20px;">اختيار مصدر الصورة</h3>
-    <button class="action" onclick="openCameraInput()"><i class="fas fa-camera" style="margin-left: 10px;"></i> التقاط بالكاميرا</button>
-    <button class="secondary" onclick="openGalleryInput()"><i class="fas fa-images" style="margin-left: 10px;"></i> اختيار من المعرض</button>
-    <button class="secondary" style="background: none; border: none; color: var(--danger); margin-top: 10px;" onclick="closeLayer('imageSource')">إلغاء</button>
-</div>
-<div class="sidebar-overlay" id="imageSourceOverlay" style="z-index: 140; display: none;" onclick="closeLayer('imageSource')"></div>
-
 <div class="toast" id="toast"></div>
 
 <div class="sidebar-overlay" onclick="closeLayer('sidebar')"></div>
@@ -792,7 +766,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p class="card" style="border-top: 3px solid var(--danger);">
             <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري.
         </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.1 (مطور ومثبت)</p>
+        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.2 (مطور ومثبت)</p>
     </div>
 </div>
 
@@ -819,13 +793,13 @@ const STORE_NAMES = ["exp", "rig", "deb", "bal"];
 let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; 
 let IDB_connection = null; 
 
+// إدارة حالة التكرار
+const RECURRING_DEBT_KEY = 'recurringDebtData';
+
 // الحالة العالمية
 let currentLog = "", editMode = null, balanceActionType = null;
 let currentBalance = 0; 
 let balanceHidden = localStorage.getItem('balanceHidden') === 'true'; 
-
-// إدارة حالة التكرار (جديد)
-const RECURRING_DEBT_KEY = 'recurringDebtData';
 
 // إدارة حالة التنقل
 const LAYERS = {
@@ -835,8 +809,7 @@ const LAYERS = {
     'currency': { elementId: 'currencyModal', type: 'modal' },
     'about': { elementId: 'aboutModal', type: 'modal' },
     'balanceAction': { elementId: 'balanceActionModal', type: 'modal' },
-    'balanceLog': { elementId: 'balanceLogModal', type: 'modal' }, 
-    'imageSource': { elementId: 'imageSourceModal', type: 'menu' } 
+    'balanceLog': { elementId: 'balanceLogModal', type: 'modal' }
 };
 let historyStack = []; 
 
@@ -961,7 +934,7 @@ async function loadAllData() {
     db.bal = balData;
     currentBalance = db.bal.amount || 0;
     
-    loadRecurringDebtPreference(false); // NEW: Load recurring preference on startup
+    loadRecurringDebtPreference(false); 
 }
 
 // ===================================================
@@ -1022,7 +995,7 @@ function _visualOpen(layerName, data = {}) {
         }
     } else if (layer.type === 'menu') {
         element.classList.add('open');
-        const overlay = document.querySelector(layerName === 'imageSource' ? '#imageSourceOverlay' : '.sidebar-overlay');
+        const overlay = document.querySelector('.sidebar-overlay');
         if (overlay) overlay.classList.add('open');
     }
 }
@@ -1040,7 +1013,7 @@ function _visualClose(layerName, clearEdit = true) {
         }
     } else if (layer.type === 'menu') {
         element.classList.remove('open');
-        const overlay = document.querySelector(layerName === 'imageSource' ? '#imageSourceOverlay' : '.sidebar-overlay');
+        const overlay = document.querySelector('.sidebar-overlay');
         if (overlay) overlay.classList.remove('open');
     }
 }
@@ -1118,9 +1091,7 @@ function openCurrencyModal() {
 function openAboutModal() {
     openLayer('about');
 }
-function showImageSourceModal() {
-    openLayer('imageSource');
-}
+// Removed showImageSourceModal
 
 function formatAmount(input) {
     let value = input.value.replace(/[^\d.]/g, '');
@@ -1148,13 +1119,11 @@ function formatCurrency(amount) {
     const number = parseFloat(amount);
     if (isNaN(number)) return `0.00 <span class="currency-symbol">${currentCurrency.symbol}</span>`;
 
-    // استخدام toLocaleString للتنسيق العربي مع الحفاظ على الفواصل
     const formattedAmount = number.toLocaleString('ar', { 
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
     });
     
-    // تحديد لون النص (أخضر للموجب، أحمر للسالب)
     const color = number >= 0 ? 'var(--success)' : 'var(--danger)';
     
     return `<span style="color: ${color};">${formattedAmount}</span> <span class="currency-symbol">${currentCurrency.symbol}</span>`;
@@ -1162,10 +1131,8 @@ function formatCurrency(amount) {
 
 function formatToNumber(formattedString) {
     if (!formattedString) return 0;
-    // إزالة الفواصل والرموز غير الضرورية، واستبدال الفاصل العشري العربي (إن وجد) بالفاصل الإنجليزي
-    let cleanString = String(formattedString).replace(/[^0-9٫.]/g, ''); // Allow . and ٫
-    cleanString = cleanString.replace('٫', '.'); // Replace Arabic decimal separator with dot
-    // Remove thousand separators
+    let cleanString = String(formattedString).replace(/[^0-9٫.]/g, ''); 
+    cleanString = cleanString.replace('٫', '.'); 
     cleanString = cleanString.replace(/(\d),(\d)/g, '$1$2'); 
     return parseFloat(cleanString) || 0;
 }
@@ -1207,7 +1174,6 @@ function updateStats() {
 
 function updateCurrencyDisplay() {
     document.getElementById('currentCurrencyDisplay').textContent = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
-    // إعادة تحديث جميع الأرقام في الواجهة
     updateBalanceDisplay();
     updateStats();
     if (document.getElementById('logModal').style.display === 'flex') renderLog();
@@ -1253,7 +1219,7 @@ function loadRecurringDebtPreference(prefill = true) {
         toggle.checked = !!data.isRecurring;
     }
     
-    if (data.isRecurring && prefill) {
+    if (data.isRecurring && data.type !== 'قرض' && prefill) { // Exclude loan from prefill
         prefillDebtForm(data);
     }
     return data;
@@ -1267,36 +1233,27 @@ function handleRecurringToggle() {
     localStorage.setItem(RECURRING_DEBT_KEY, JSON.stringify(data));
     
     if (toggle.checked) {
-        // Try to prefill if there is saved data
         prefillDebtForm(data); 
-        toastMsg("تم تفعيل خاصية التكرار. سيتم تعبئة الحقول تلقائيًا.");
+        toastMsg("تم تفعيل خاصية التكرار. سيتم تعبئة حقول الفواتير تلقائيًا.");
     } else {
         toastMsg("تم إلغاء خاصية التكرار.");
     }
 }
 
 function prefillDebtForm(data) {
-    if (!data.isRecurring || !data.type) return; 
+    if (!data.isRecurring || !data.type || data.type === 'قرض') return; 
 
-    // Reset Form first
     resetForm('debt', false); 
     
-    // Set form fields from saved data
     document.getElementById('dType').value = data.type || '';
     
-    // Update fields structure based on type (for installment types)
     updateDebtFields(data.type); 
     
-    // Set values after updateDebtFields
     if (data.amount) document.getElementById('dAmount').value = data.amount.toLocaleString('ar');
     if (data.desc) document.getElementById('dDesc').value = data.desc || '';
     
-    // Set date to today
     document.getElementById('dDate').value = new Date().toISOString().slice(0, 16);
-    // Set status to unpaid (default for a new recurring payment)
     document.getElementById('dStatus').value = 'غير مدفوع';
-
-    // Update the toggle state (already handled by loadRecurringDebtPreference)
 
     toastMsg("تم تعبئة نموذج الالتزامات بقيم آخر معاملة مكررة.");
 }
@@ -1334,6 +1291,12 @@ async function processBalanceAction() {
     const amountVal = formatToNumber(document.getElementById('bAmount').value);
     const desc = document.getElementById('bDesc').value;
     const date = document.getElementById('bDate').value;
+    
+    // Check if this is a payment action (not default deposit/withdraw)
+    if (paymentData.id) {
+        await processPayment();
+        return;
+    }
 
     if (!amountVal || amountVal <= 0) {
         return toastMsg("الرجاء إدخال مبلغ صحيح");
@@ -1382,14 +1345,14 @@ async function addExpense() {
         const oldExpense = db.exp[editMode.index];
         const oldAmount = oldExpense.amount;
         
-        // 1. عكس الحركة المالية القديمة: إعادة المبلغ القديم إلى الرصيد
+        // 1. عكس الحركة المالية القديمة
         updateBalance(oldAmount, `إلغاء مصروف سابق (تعديل)`, expense.date, 'expense_edit_reverse');
 
         // 2. تحديث بيانات المصروف
         db.exp[editMode.index] = { ...expense, id: oldExpense.id };
         await saveData('exp', db.exp[editMode.index]);
 
-        // 3. تطبيق الحركة المالية الجديدة: خصم المبلغ الجديد
+        // 3. تطبيق الحركة المالية الجديدة
         updateBalance(-expense.amount, `تعديل مصروف`, expense.date, 'expense_edit');
 
         toastMsg("تم تعديل المصروف بنجاح!");
@@ -1425,34 +1388,31 @@ async function addRight() {
     const right = {
         id: editMode ? db.rig[editMode.index].id : Date.now(),
         type: type,
-        amount: totalAmount, // المبلغ الكلي المستحق
-        paid: 0, // سيتم تحديثه في الخطوات التالية
-        currentPayment: isInstallment ? amount : (status === 'كامل' ? amount : 0), 
+        amount: totalAmount, 
+        paid: 0, 
+        currentPayment: isInstallment ? 0 : (status === 'كامل' ? amount : 0), // currentPayment used for last payment amount in detail view
         desc: desc,
         date: date || new Date().toISOString().slice(0, 16),
         status: status,
         isInstallment: isInstallment
     };
     
-    // حساب المبلغ الذي يجب إضافته/خصمه من الرصيد
     let balanceChange = 0;
     
     if (editMode && editMode.type === 'rig') {
         const oldRight = db.rig[editMode.index];
         const oldPaid = oldRight.paid;
         
-        // 1. عكس الحركة المالية للتعديل: خصم ما تم إضافته سابقاً
         updateBalance(-oldPaid, `إلغاء حق سابق (تعديل)`, right.date, 'right_edit_reverse');
         
         // 2. تحديد المبلغ المدفوع الجديد الذي سيتم حفظه
-        // إذا كان قسط، المبلغ المدفوع الكلي هو ما أدخله المستخدم في حقل rPaid
         right.paid = isInstallment ? paid : (status === 'كامل' ? amount : 0);
         
         // 3. تحديث الكائن في DB
         db.rig[editMode.index] = right;
         await saveData('rig', db.rig[editMode.index]);
 
-        // 4. تطبيق الحركة المالية الجديدة: إضافة المبلغ الجديد المدفوع بالكامل أو جزئياً
+        // 4. تطبيق الحركة المالية الجديدة
         balanceChange = right.paid;
         updateBalance(balanceChange, `تعديل حق مستحق`, right.date, 'right_edit');
         toastMsg("تم تعديل الحق بنجاح!");
@@ -1460,7 +1420,6 @@ async function addRight() {
     } else {
         
         // 1. تحديد المبلغ المدفوع الذي سيتم حفظه
-        // للمدخل الجديد، المبلغ المدفوع هو المبلغ المخصص لهذه المعاملة
         if (isInstallment) {
              right.paid = paid;
         } else {
@@ -1470,7 +1429,7 @@ async function addRight() {
         db.rig.unshift(right);
         await saveData('rig', right);
 
-        // 2. إضافة المبلغ المدفوع فعلياً إلى الرصيد (balanceChange هو المبلغ المدفوع)
+        // 2. إضافة المبلغ المدفوع فعلياً إلى الرصيد
         balanceChange = right.paid;
         if (balanceChange > 0) {
             updateBalance(balanceChange, `تحصيل حق: ${type}`, right.date, 'right_paid');
@@ -1485,15 +1444,39 @@ async function addRight() {
 
 async function addDebt() {
     const type = document.getElementById('dType').value;
-    const amount = formatToNumber(document.getElementById('dAmount').value);
-    const paid = formatToNumber(document.getElementById('dPaid')?.value) || 0;
+    const amount = formatToNumber(document.getElementById('dAmount').value); // Invoice value for non-loan
     const desc = document.getElementById('dDesc').value;
     const date = document.getElementById('dDate').value;
     const status = document.getElementById('dStatus').value;
-    const totalAmount = formatToNumber(document.getElementById('dTotalAmount')?.value) || amount; 
-    const isInstallment = document.getElementById('dTotalAmount') ? true : false;
-    const isRecurringToggleOn = document.getElementById('dRecurringToggle').checked; // NEW
+    const isRecurringToggleOn = document.getElementById('dRecurringToggle').checked; 
 
+    const isLoan = (type === 'قرض');
+    
+    let totalAmount, paidAmount, currentPayment, installmentsCount, paidInstallmentsCount;
+
+    if (isLoan) {
+        totalAmount = formatToNumber(document.getElementById('dTotalAmount').value);
+        installmentsCount = parseInt(document.getElementById('dInstallmentsCount').value) || 0;
+        paidInstallmentsCount = parseInt(document.getElementById('dPaidInstallmentsCount').value) || 0;
+        
+        let installmentValue = 0;
+        if (totalAmount > 0 && installmentsCount > 0) {
+            installmentValue = totalAmount / installmentsCount;
+        } else if (totalAmount > 0 || installmentsCount > 0) {
+            return toastMsg("الرجاء إدخال المبلغ الكلي وعدد الأقساط بشكل صحيح للقرض.");
+        }
+
+        paidAmount = paidInstallmentsCount * installmentValue;
+        currentPayment = installmentValue; // For detail view
+        
+    } else {
+        // Standard debt/invoice
+        totalAmount = amount; 
+        paidAmount = (status === 'مدفوع') ? amount : 0;
+        currentPayment = paidAmount;
+    }
+
+    // Validation
     if (!totalAmount || totalAmount <= 0 || !type || !status) {
         return toastMsg("الرجاء ملء حقول المبلغ الكلي والنوع والحالة");
     }
@@ -1501,34 +1484,35 @@ async function addDebt() {
     const debt = {
         id: editMode ? db.deb[editMode.index].id : Date.now(),
         type: type,
-        amount: totalAmount, // المبلغ الكلي للالتزام (في حالة القسط/القرض) أو قيمة الفاتورة
-        paid: 0,       // سيتم تحديثه في الخطوات التالية
-        currentPayment: isInstallment ? amount : (status === 'مدفوع' ? amount : 0), 
+        amount: totalAmount, 
+        paid: 0,       
+        currentPayment: currentPayment, 
         desc: desc,
         date: date || new Date().toISOString().slice(0, 16),
         status: status,
-        isInstallment: isInstallment,
-        isRecurring: isRecurringToggleOn // NEW
+        isInstallment: isLoan, 
+        isRecurring: isRecurringToggleOn,
+        installmentsCount: isLoan ? installmentsCount : undefined,
+        paidInstallmentsCount: isLoan ? paidInstallmentsCount : undefined
     };
     
-    // حساب المبلغ الذي يجب إضافته/خصمه من الرصيد
     let balanceChange = 0; 
 
     if (editMode && editMode.type === 'deb') {
         const oldDebt = db.deb[editMode.index];
         const oldPaid = oldDebt.paid;
         
-        // 1. عكس الحركة المالية للتعديل: إعادة ما تم خصمه سابقاً إلى الرصيد
+        // 1. عكس الحركة المالية للتعديل
         updateBalance(oldPaid, `إلغاء التزام سابق (تعديل)`, debt.date, 'debt_edit_reverse');
         
         // 2. تحديد المبلغ المدفوع الجديد الذي سيتم حفظه
-        debt.paid = isInstallment ? paid : (status === 'مدفوع' ? amount : 0);
+        debt.paid = paidAmount; 
         
         // 3. تحديث الكائن في DB
         db.deb[editMode.index] = debt;
         await saveData('deb', db.deb[editMode.index]);
         
-        // 4. تطبيق الحركة المالية الجديدة: خصم المبلغ الجديد المدفوع بالكامل أو جزئياً
+        // 4. تطبيق الحركة المالية الجديدة
         balanceChange = -debt.paid; 
         updateBalance(balanceChange, `تعديل التزام مستحق`, debt.date, 'debt_edit');
         toastMsg("تم تعديل الالتزام بنجاح!");
@@ -1536,11 +1520,7 @@ async function addDebt() {
     } else {
         
         // 1. تحديد المبلغ المدفوع الذي سيتم حفظه
-        if (isInstallment) {
-             debt.paid = paid;
-        } else {
-            debt.paid = (status === 'مدفوع') ? amount : 0;
-        }
+        debt.paid = paidAmount; 
 
         db.deb.unshift(debt);
         await saveData('deb', debt);
@@ -1553,12 +1533,12 @@ async function addDebt() {
         toastMsg("تم حفظ الالتزام بنجاح!");
     }
     
-    // NEW: Save recurring data if toggle is ON
-    if (isRecurringToggleOn) {
+    // Save recurring data if toggle is ON (exclude loans from recurring save)
+    if (isRecurringToggleOn && !isLoan) {
         const recurringData = {
             isRecurring: true,
             type: type,
-            amount: amount, // The current payment amount/invoice value
+            amount: amount, 
             desc: desc
         };
         localStorage.setItem(RECURRING_DEBT_KEY, JSON.stringify(recurringData));
@@ -1582,13 +1562,13 @@ async function deleteItem(id, type) {
     let desc = '';
 
     if (type === 'exp') {
-        balanceEffect = item.amount; // إضافة المبلغ إلى الرصيد (عكس المصروف)
+        balanceEffect = item.amount; 
         desc = `حذف مصروف (${item.type})`;
     } else if (type === 'rig') {
-        balanceEffect = -item.paid; // خصم المبلغ المدفوع من الرصيد (لأنه كان قد أضيف)
+        balanceEffect = -item.paid; 
         desc = `حذف حق محصل (${item.type})`;
     } else if (type === 'deb') {
-        balanceEffect = item.paid; // إضافة المبلغ إلى الرصيد (لأنه كان قد خُصم)
+        balanceEffect = item.paid; 
         desc = `حذف التزام مدفوع (${item.type})`;
     }
 
@@ -1603,7 +1583,7 @@ async function deleteItem(id, type) {
     updateStats();
     toastMsg("تم حذف المعاملة بنجاح.");
     closeLayer('detail');
-    renderLog(); // إعادة عرض السجل بعد الحذف
+    renderLog(); 
 }
 
 // ===================================================
@@ -1621,19 +1601,19 @@ function openTab(tabName) {
     document.getElementById(tabName).classList.add('active');
     document.querySelector(`.tabs button[onclick="openTab('${tabName}')"]`).classList.add('active');
     
-    // NEW: Handle Recurring Prefill on Debts Tab Switch
     if (tabName === 'debts') {
         loadRecurringDebtPreference(true);
     }
 }
 
 function renderLog() {
-    const logType = currentLog; // exp, rig, deb
+    const logType = currentLog; 
     const container = document.getElementById('logContent');
     const searchTerm = document.getElementById('search').value.toLowerCase();
     
     let logData = db[logType].filter(item => {
-        const searchString = `${item.type} ${item.desc} ${item.amount} ${item.status || ''}`.toLowerCase();
+        // Exclude 'desc' from search, but keep type/amount/status
+        const searchString = `${item.type} ${item.amount} ${item.status || ''}`.toLowerCase();
         return searchString.includes(searchTerm);
     });
 
@@ -1644,40 +1624,44 @@ function renderLog() {
 
     container.innerHTML = logData.map(item => {
         let title = '';
-        let subtitle = '';
         let color = '';
         let statusText = '';
         let icon = '';
 
         if (logType === 'exp') {
             title = item.type;
-            subtitle = item.desc || 'مصروف عام';
             color = 'var(--danger)';
+            icon = 'fas fa-money-bill-wave';
         } else if (logType === 'rig') {
             title = item.type;
-            subtitle = item.desc || 'جهة دائنة';
             color = 'var(--success)';
             icon = 'fas fa-check-circle';
-            statusText = item.status || '';
+            
             if (item.isInstallment) {
                  statusText = `المدفوع: ${formatCurrency(item.paid).replace(/<\/?span[^>]*>/g, '')}`;
             } else if (item.status === 'كامل') {
                  statusText = `تم التحصيل`;
             } else if (item.status === 'غير مدفوع') {
                  statusText = `مستحق`;
+            } else {
+                 statusText = `حالة: ${item.status}`;
             }
+
         } else if (logType === 'deb') {
             title = item.type;
-            subtitle = item.desc || 'جهة مستحقة';
             color = 'var(--danger)';
-            icon = (item.isRecurring && item.status !== 'مدفوع') ? 'fas fa-redo-alt' : 'fas fa-file-invoice'; // NEW icon for recurring
-            statusText = item.status || '';
-            if (item.isInstallment) {
+            icon = (item.isRecurring && item.status !== 'مدفوع') ? 'fas fa-redo-alt' : 'fas fa-file-invoice'; 
+            
+            if (item.type === 'قرض') {
+                statusText = `المدفوع: ${item.paidInstallmentsCount || 0} قسط`;
+            } else if (item.isInstallment) { // other installment types
                  statusText = `المدفوع: ${formatCurrency(item.paid).replace(/<\/?span[^>]*>/g, '')}`;
             } else if (item.status === 'مدفوع') {
                  statusText = `تم الدفع`;
             } else if (item.status === 'غير مدفوع') {
                  statusText = `مستحق الدفع`;
+            } else {
+                 statusText = `حالة: ${item.status}`;
             }
         }
         
@@ -1691,8 +1675,7 @@ function renderLog() {
                 </div>
                 <div class="details">
                     <span>${new Date(item.date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                    <span style="font-size: 1em; color: var(--text-dark);">${subtitle}</span>
-                </div>
+                    </div>
                 ${statusText ? `<div style="text-align: right; font-size: 0.9em; color: #999; margin-top: 5px;">الحالة: ${statusText}</div>` : ''}
             </div>
         `;
@@ -1702,7 +1685,7 @@ function renderLog() {
 
 function renderBalanceLog() {
     const container = document.getElementById('balanceLogContent');
-    const logData = db.bal.changes.slice().reverse(); // عرض الأحدث أولاً
+    const logData = db.bal.changes.slice().reverse(); 
 
     if (logData.length === 0) {
         container.innerHTML = `<p style="text-align: center; margin-top: 50px; color: #999;">لا توجد حركات رصيد لعرضها.</p>`;
@@ -1710,7 +1693,7 @@ function renderBalanceLog() {
     }
 
     container.innerHTML = logData.map(change => {
-        let color = 'var(--s)'; // لون افتراضي للحركات العامة
+        let color = 'var(--s)'; 
         let icon = 'fas fa-exchange-alt';
         
         if (change.type.includes('deposit') || change.type.includes('right_paid')) {
@@ -1768,7 +1751,7 @@ function _renderDetailContent(item, type) {
             <p><strong><i class="fas fa-handshake" style="color: var(--p); margin-left: 5px;"></i> نوع الحق:</strong> ${item.type}</p>
             <p><strong><i class="fas fa-file-invoice-dollar" style="color: var(--p); margin-left: 5px;"></i> المبلغ الكلي المستحق:</strong> ${formatCurrency(item.amount).replace(/<\/?span[^>]*>/g, '')}</p>
             <p><strong><i class="fas fa-coins" style="color: var(--success); margin-left: 5px;"></i> المبلغ المحصّل:</strong> ${formatCurrency(item.paid).replace(/<\/?span[^>]*>/g, '')}</p>
-            ${isInstallment ? `<p><strong><i class="fas fa-money-check-alt" style="color: var(--p); margin-left: 5px;"></i> آخر دفعة:</strong> ${formatCurrency(item.currentPayment).replace(/<\/?span[^>]*>/g, '')}</p>` : ''}
+            ${isInstallment ? `<p><strong><i class="fas fa-money-check-alt" style="color: var(--p); margin-left: 5px;"></i> آخر دفعة تم تسجيلها:</strong> ${formatCurrency(item.currentPayment).replace(/<\/?span[^>]*>/g, '')}</p>` : ''}
             <p><strong><i class="fas fa-check-circle" style="color: var(--p); margin-left: 5px;"></i> الحالة:</strong> ${item.status}</p>
             <p><strong><i class="fas fa-calendar-alt" style="color: var(--p); margin-left: 5px;"></i> تاريخ التسجيل:</strong> ${date}</p>
             <p><strong><i class="fas fa-user" style="color: var(--p); margin-left: 5px;"></i> الوصف/المدين:</strong> ${item.desc || 'لا يوجد'}</p>
@@ -1780,21 +1763,56 @@ function _renderDetailContent(item, type) {
             </button>
         `;
     } else if (type === 'deb') {
+        const isLoan = (item.type === 'قرض');
         const isInstallment = item.isInstallment || false;
-        details = `
-            <p><strong><i class="fas fa-receipt" style="color: var(--p); margin-left: 5px;"></i> نوع الالتزام:</strong> ${item.type}</p>
-            <p><strong><i class="fas fa-file-invoice-dollar" style="color: var(--p); margin-left: 5px;"></i> المبلغ الكلي للالتزام:</strong> ${formatCurrency(item.amount).replace(/<\/?span[^>]*>/g, '')}</p>
-            <p><strong><i class="fas fa-coins" style="color: var(--danger); margin-left: 5px;"></i> المبلغ المدفوع:</strong> ${formatCurrency(item.paid).replace(/<\/?span[^>]*>/g, '')}</p>
-            ${isInstallment ? `<p><strong><i class="fas fa-money-check-alt" style="color: var(--p); margin-left: 5px;"></i> آخر دفعة:</strong> ${formatCurrency(item.currentPayment).replace(/<\/?span[^>]*>/g, '')}</p>` : ''}
-            <p><strong><i class="fas fa-check-circle" style="color: var(--p); margin-left: 5px;"></i> الحالة:</strong> ${item.status}</p>
-            ${item.isRecurring ? `<p style="font-weight: bold; color: var(--success);"><i class="fas fa-redo-alt" style="margin-left: 5px;"></i> معاملة مكررة</p>` : ''} <p><strong><i class="fas fa-calendar-alt" style="color: var(--p); margin-left: 5px;"></i> تاريخ التسجيل:</strong> ${date}</p>
-            <p><strong><i class="fas fa-building" style="color: var(--p); margin-left: 5px;"></i> الوصف/الجهة:</strong> ${item.desc || 'لا يوجد'}</p>
-        `;
+        
+        let remainingDisplay = '';
+        let buttonDisplay = '';
+        
+        if (isLoan) {
+            const remainingInstallments = (item.installmentsCount || 0) - (item.paidInstallmentsCount || 0);
+            const installmentValueDisplay = (item.installmentsCount > 0) ? formatCurrency(item.amount / item.installmentsCount).replace(/<\/?span[^>]*>/g, '') : 'غير محدد';
+            
+            remainingDisplay = `<p style="font-weight: bold; color: var(--danger);"><i class="fas fa-undo" style="margin-left: 5px;"></i> الأقساط المتبقية: ${remainingInstallments} قسط</p>`;
+            buttonDisplay = ``;
+            
+            details = `
+                <p><strong><i class="fas fa-receipt" style="color: var(--p); margin-left: 5px;"></i> نوع الالتزام:</strong> ${item.type}</p>
+                <p><strong><i class="fas fa-file-invoice-dollar" style="color: var(--p); margin-left: 5px;"></i> المبلغ الكلي:</strong> ${formatCurrency(item.amount).replace(/<\/?span[^>]*>/g, '')}</p>
+                
+                <p><strong><i class="fas fa-list-ol" style="color: var(--p); margin-left: 5px;"></i> عدد الأقساط الكلي:</strong> ${item.installmentsCount || 0} قسط</p>
+                <p><strong><i class="fas fa-check-double" style="color: var(--success); margin-left: 5px;"></i> الأقساط المدفوعة:</strong> ${item.paidInstallmentsCount || 0} قسط</p>
+                <p><strong><i class="fas fa-money-check-alt" style="color: var(--p); margin-left: 5px;"></i> قيمة القسط (تقدير):</strong> ${installmentValueDisplay}</p>
+                ${remainingDisplay} 
+                <p><strong><i class="fas fa-check-circle" style="color: var(--p); margin-left: 5px;"></i> الحالة:</strong> ${item.status}</p>
+                ${item.isRecurring ? `<p style="font-weight: bold; color: var(--success);"><i class="fas fa-redo-alt" style="margin-left: 5px;"></i> معاملة مكررة</p>` : ''}
+                <p><strong><i class="fas fa-calendar-alt" style="color: var(--p); margin-left: 5px;"></i> تاريخ التسجيل:</strong> ${date}</p>
+                <p><strong><i class="fas fa-building" style="color: var(--p); margin-left: 5px;"></i> الوصف/الجهة:</strong> ${item.desc || 'لا يوجد'}</p>
+            `;
+            
+        } else {
+            // Standard Debt
+            const currentPaymentDisplay = item.currentPayment > 0 ? formatCurrency(item.currentPayment).replace(/<\/?span[^>]*>/g, '') : 'لا يوجد';
+            buttonDisplay = `
+                <button class="secondary" onclick="openPaymentModal(${item.id}, 'deb')" style="margin-top: 10px; background: var(--danger); color: var(--text-light); border-color: var(--danger);">
+                    <i class="fas fa-money-bill-wave" style="margin-left: 5px;"></i> دفع قسط/فاتورة جديدة
+                </button>
+            `;
+            details = `
+                <p><strong><i class="fas fa-receipt" style="color: var(--p); margin-left: 5px;"></i> نوع الالتزام:</strong> ${item.type}</p>
+                <p><strong><i class="fas fa-file-invoice-dollar" style="color: var(--p); margin-left: 5px;"></i> المبلغ الكلي للالتزام/الفاتورة:</strong> ${formatCurrency(item.amount).replace(/<\/?span[^>]*>/g, '')}</p>
+                <p><strong><i class="fas fa-coins" style="color: var(--danger); margin-left: 5px;"></i> المبلغ المدفوع:</strong> ${formatCurrency(item.paid).replace(/<\/?span[^>]*>/g, '')}</p>
+                ${isInstallment ? `<p><strong><i class="fas fa-money-check-alt" style="color: var(--p); margin-left: 5px;"></i> آخر دفعة:</strong> ${currentPaymentDisplay}</p>` : ''}
+                <p><strong><i class="fas fa-check-circle" style="color: var(--p); margin-left: 5px;"></i> الحالة:</strong> ${item.status}</p>
+                ${item.isRecurring ? `<p style="font-weight: bold; color: var(--success);"><i class="fas fa-redo-alt" style="margin-left: 5px;"></i> معاملة مكررة</p>` : ''} 
+                <p><strong><i class="fas fa-calendar-alt" style="color: var(--p); margin-left: 5px;"></i> تاريخ التسجيل:</strong> ${date}</p>
+                <p><strong><i class="fas fa-building" style="color: var(--p); margin-left: 5px;"></i> الوصف/الجهة:</strong> ${item.desc || 'لا يوجد'}</p>
+            `;
+        }
+        
         actionButton = `
             <button class="action" onclick="editItem(${item.id}, 'deb')"><i class="fas fa-edit" style="margin-left: 5px;"></i> تعديل الالتزام</button>
-            <button class="secondary" onclick="openPaymentModal(${item.id}, 'deb')" style="margin-top: 10px; background: var(--danger); color: var(--text-light); border-color: var(--danger);">
-                <i class="fas fa-money-bill-wave" style="margin-left: 5px;"></i> دفع قسط/فاتورة جديدة
-            </button>
+            ${buttonDisplay}
         `;
     }
     
@@ -1821,11 +1839,11 @@ function resetForm(type, clearRecurringToggle = true) {
         document.getElementById('eDate').value = new Date().toISOString().slice(0, 16);
         document.getElementById('eImgName').textContent = '';
         document.getElementById('eImgName').dataset.base64 = '';
-        document.getElementById('eImgCamera').value = '';
         document.getElementById('eImgGallery').value = '';
     } else if (type === 'right') {
         document.getElementById('rType').value = '';
         document.getElementById('rAmount').value = '';
+        document.getElementById('rAmount').style.display = 'block';
         document.getElementById('rDesc').value = '';
         document.getElementById('rDate').value = new Date().toISOString().slice(0, 16);
         document.getElementById('rStatus').value = '';
@@ -1833,13 +1851,14 @@ function resetForm(type, clearRecurringToggle = true) {
     } else if (type === 'debt') {
         document.getElementById('dType').value = '';
         document.getElementById('dAmount').value = '';
+        document.getElementById('dAmount').style.display = 'block';
         document.getElementById('dDesc').value = '';
         document.getElementById('dDate').value = new Date().toISOString().slice(0, 16);
         document.getElementById('dStatus').value = '';
         document.getElementById('dDynamicFields').innerHTML = '';
         if (clearRecurringToggle) {
              document.getElementById('dRecurringToggle').checked = false;
-             handleRecurringToggle(); // NEW: Update localStorage state
+             handleRecurringToggle(); 
         }
     }
 }
@@ -1872,6 +1891,9 @@ function editItem(id, type) {
         if (item.isInstallment) {
             document.getElementById('rTotalAmount').value = item.amount.toLocaleString('ar');
             document.getElementById('rPaid').value = item.paid.toLocaleString('ar');
+            document.getElementById('rAmount').style.display = 'none';
+        } else {
+             document.getElementById('rAmount').value = item.amount.toLocaleString('ar');
         }
         toastMsg("أنت في وضع تعديل الحقوق.");
     } else if (type === 'deb') {
@@ -1880,13 +1902,23 @@ function editItem(id, type) {
         document.getElementById('dDesc').value = item.desc;
         document.getElementById('dDate').value = item.date;
         document.getElementById('dStatus').value = item.status;
-        document.getElementById('dAmount').value = item.currentPayment.toLocaleString('ar');
-        if (item.isInstallment) {
+        
+        if (item.type === 'قرض') {
             document.getElementById('dTotalAmount').value = item.amount.toLocaleString('ar');
-            document.getElementById('dPaid').value = item.paid.toLocaleString('ar');
+            document.getElementById('dInstallmentsCount').value = item.installmentsCount || '';
+            document.getElementById('dPaidInstallmentsCount').value = item.paidInstallmentsCount || '';
+            updateLoanCalculations();
+            document.getElementById('dAmount').style.display = 'none';
+        } else {
+            document.getElementById('dAmount').value = item.amount.toLocaleString('ar');
+            if (item.isInstallment) {
+                 document.getElementById('dTotalAmount').value = item.amount.toLocaleString('ar');
+                 document.getElementById('dPaid').value = item.paid.toLocaleString('ar');
+                 document.getElementById('dAmount').style.display = 'none';
+            }
         }
-        document.getElementById('dRecurringToggle').checked = item.isRecurring || false; // NEW
-        // Note: No need to call handleRecurringToggle() here as we are loading existing data, not toggling a preference.
+        
+        document.getElementById('dRecurringToggle').checked = item.isRecurring || false; 
         toastMsg("أنت في وضع تعديل الالتزامات.");
     }
 }
@@ -1900,17 +1932,18 @@ function updateRightFields(type, options = {}) {
     if (isInstallmentType && !options.edit) {
         container.innerHTML = `
             <input id="rTotalAmount" type="text" placeholder="💵 المبلغ الكلي للحق" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-            <input id="rPaid" type="text" placeholder="💰 المبلغ المحصّل حتى الآن (أول دفعة)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="rPaid" type="text" placeholder="💰 المبلغ المحصّل حتى الآن (قيمة صفر للإدخال الجديد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
         `;
-         document.getElementById('rAmount').placeholder = '💰 قيمة الدفعة الحالية (يتم تسجيلها كـ Paid)';
+        document.getElementById('rAmount').style.display = 'none'; // Hide the original Amount field for installment types
     } else if (isInstallmentType && options.edit && options.item.isInstallment) {
          container.innerHTML = `
             <input id="rTotalAmount" type="text" placeholder="💵 المبلغ الكلي للحق" value="${options.item.amount.toLocaleString('ar')}" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
             <input id="rPaid" type="text" placeholder="💰 المبلغ المحصّل حتى الآن (القيمة الكلية بعد التعديل)" value="${options.item.paid.toLocaleString('ar')}" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
         `;
-        document.getElementById('rAmount').placeholder = '💰 قيمة آخر دفعة (للعرض فقط)';
+        document.getElementById('rAmount').style.display = 'none'; // Hide the original Amount field for installment types
     } else {
         document.getElementById('rAmount').placeholder = '💵 المبلغ المستحق (المبلغ الكلي)';
+        document.getElementById('rAmount').style.display = 'block'; // Show for non-installment types
     }
 }
 
@@ -1918,24 +1951,74 @@ function updateDebtFields(type, options = {}) {
     const container = document.getElementById('dDynamicFields');
     container.innerHTML = '';
     
-    const isInstallmentType = (type === 'قرض' || type === 'دين شخصي');
+    const isLoan = (type === 'قرض');
+    
+    document.getElementById('dAmount').style.display = 'block';
+    document.getElementById('dAmount').placeholder = '💵 قيمة الفاتورة/القسط الحالي';
 
-    if (isInstallmentType && !options.edit) {
+    if (isLoan) {
+        document.getElementById('dAmount').style.display = 'none'; // Hide the payment/invoice field
+
         container.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-            <input id="dPaid" type="text" placeholder="💰 المبلغ المدفوع حتى الآن (أول دفعة)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للقرض" 
+                   oninput="formatAmount(this); updateLoanCalculations()" pattern="[0-9]*" inputmode="decimal" 
+                   value="${options.edit ? options.item.amount.toLocaleString('ar') : ''}">
+            
+            <input id="dInstallmentsCount" type="text" placeholder="🔢 عدد الأقساط الكلي" 
+                   oninput="updateLoanCalculations()" pattern="[0-9]*" inputmode="numeric"
+                   value="${options.edit ? options.item.installmentsCount || '' : ''}">
+            
+            <p id="dInstallmentValueDisplay" style="text-align: right; margin-top: -5px; font-size: 0.9em; color: var(--p); font-weight: bold;"></p>
+
+            <input id="dPaidInstallmentsCount" type="text" placeholder="✅ عدد الأقساط المدفوع" 
+                   oninput="updateLoanCalculations()" pattern="[0-9]*" inputmode="numeric"
+                   value="${options.edit ? options.item.paidInstallmentsCount || '' : ''}">
+                   
+            <p id="dRemainingInstallmentsDisplay" style="text-align: right; margin-top: -5px; font-size: 0.9em; color: var(--danger); font-weight: bold;"></p>
         `;
-         document.getElementById('dAmount').placeholder = '💰 قيمة القسط/الدفعة الحالية (يتم تسجيلها كـ Paid)';
-    } else if (isInstallmentType && options.edit && options.item.isInstallment) {
+        if (options.edit) updateLoanCalculations();
+        
+    } else if (type === 'دين شخصي' || type === 'قسط/فاتورة أخرى') {
+        // Other installment types (using total paid amount)
          container.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" value="${options.item.amount.toLocaleString('ar')}" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-            <input id="dPaid" type="text" placeholder="💰 المبلغ المدفوع حتى الآن (القيمة الكلية بعد التعديل)" value="${options.item.paid.toLocaleString('ar')}" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
+            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${options.edit ? options.item.amount.toLocaleString('ar') : ''}">
+            <input id="dPaid" type="text" placeholder="💰 المبلغ المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${options.edit ? options.item.paid.toLocaleString('ar') : ''}">
         `;
-        document.getElementById('dAmount').placeholder = '💰 قيمة آخر دفعة (للعرض فقط)';
-    } else {
-        document.getElementById('dAmount').placeholder = '💵 قيمة الفاتورة/القسط الحالي';
+        document.getElementById('dAmount').style.display = 'none'; // Hide current payment field
     }
 }
+
+function updateLoanCalculations() {
+    const totalAmount = formatToNumber(document.getElementById('dTotalAmount')?.value);
+    const totalInstallments = parseInt(document.getElementById('dInstallmentsCount')?.value) || 0;
+    const paidInstallments = parseInt(document.getElementById('dPaidInstallmentsCount')?.value) || 0;
+    
+    const valueDisplay = document.getElementById('dInstallmentValueDisplay');
+    const remainingDisplay = document.getElementById('dRemainingInstallmentsDisplay');
+    
+    // Calculate Installment Value
+    let installmentValue = 0;
+    if (totalAmount > 0 && totalInstallments > 0) {
+        installmentValue = totalAmount / totalInstallments;
+        valueDisplay.innerHTML = `قيمة القسط: <span style="color: var(--success);">${formatCurrency(installmentValue).replace(/<\/?span[^>]*>/g, '')}</span>`;
+    } else {
+        valueDisplay.textContent = 'قيمة القسط = المبلغ الكلي ÷ عدد الأقساط';
+    }
+    
+    // Calculate Remaining Installments
+    let remainingInstallments = totalInstallments - paidInstallments;
+    
+    if (paidInstallments > totalInstallments) {
+        remainingInstallments = 0;
+        remainingDisplay.textContent = `المتبقي: (المبلغ المدفوع أكبر من الأقساط الكلية)`;
+    } else if (remainingInstallments < 0) {
+        remainingInstallments = 0;
+        remainingDisplay.textContent = `المتبقي: 0 قسط (خطأ في الإدخال)`;
+    } else {
+        remainingDisplay.textContent = `المتبقي: ${remainingInstallments} قسط`;
+    }
+}
+
 
 // ----------------------------------------------------
 // وظائف الدفعات الجديدة (للحقوق والالتزامات)
@@ -1949,9 +2032,13 @@ function openPaymentModal(id, type) {
     
     const item = db[type][index];
     
+    // Disable payment modal for Loan type
+    if (type === 'deb' && item.type === 'قرض') {
+        return toastMsg("يرجى استخدام زر 'تعديل الالتزام' لتحديث عدد الأقساط المدفوعة للقرض.");
+    }
+
     paymentData = { id: id, type: type, item: item };
 
-    // إعادة استخدام نفس modal الـ balanceAction
     openLayer('balanceAction', { actionType: type === 'rig' ? 'deposit' : 'withdraw' }); 
     
     document.getElementById('bAmount').value = '';
@@ -1973,9 +2060,8 @@ function openPaymentModal(id, type) {
         document.getElementById('bDesc').placeholder = '📝 وصف عملية الدفع';
     }
     
-    // تغيير وظيفة الزر لتعالج الدفعة
     document.querySelector('#balanceActionModal .action').onclick = processPayment;
-    closeLayer('detail'); // close detail modal
+    closeLayer('detail'); 
 }
 
 async function processPayment() {
@@ -1993,7 +2079,6 @@ async function processPayment() {
 
     const index = db[type].findIndex(i => i.id === id);
     if (index === -1) {
-        // Reset button function back to default
         document.querySelector('#balanceActionModal .action').onclick = processBalanceAction;
         closeLayer('balanceAction');
         return toastMsg("المعاملة الأصلية غير موجودة.");
@@ -2009,14 +2094,13 @@ async function processPayment() {
     
     // 1. تحديث المبلغ المدفوع
     item.paid += paymentAmount;
-    item.currentPayment = paymentAmount; // تحديث الدفعة الحالية فقط للعرض
+    item.currentPayment = paymentAmount; 
     
     // 2. تحديث الحالة
     if (item.paid >= item.amount) {
         item.status = isRig ? 'كامل' : 'مدفوع';
         toastMsg("اكتمل سداد هذا الالتزام/الحق بنجاح!");
     } else if (item.paid > 0) {
-        // حالة جزئية (للتأكد من أن القيمة ليست 'غير مدفوع')
         if(item.status !== 'جزئي') {
              item.status = 'جزئي';
         }
@@ -2031,11 +2115,9 @@ async function processPayment() {
     
     toastMsg(`تم تسجيل الدفعة بنجاح! ${isRig ? 'تم إضافة المبلغ إلى رصيدك.' : 'تم خصم المبلغ من رصيدك.'}`);
     
-    // إعادة تعيين وظيفة الزر إلى الافتراضية
     document.querySelector('#balanceActionModal .action').onclick = processBalanceAction;
     closeLayer('balanceAction');
     
-    // إعادة عرض السجل إذا كانت مفتوحة
     if (document.getElementById('logModal').style.display === 'flex' && currentLog === type) {
         renderLog();
     }
@@ -2055,7 +2137,7 @@ function toastMsg(msg) {
     }, 2500);
 }
 
-// FIX: Added closeLayer('imageSource') to ensure modal closes
+// FIX: Modified to only handle gallery input
 function updateFileName(input, targetId) {
     const file = input.files[0];
     const target = document.getElementById(targetId);
@@ -2074,22 +2156,6 @@ function updateFileName(input, targetId) {
         target.dataset.base64 = '';
         toastMsg("لم يتم اختيار صورة.");
     }
-    
-    // FIX: Close the image source modal after selection
-    const imageSourceModal = document.getElementById('imageSourceModal');
-    if (imageSourceModal && imageSourceModal.classList.contains('open') || imageSourceModal.style.display === 'flex') {
-        closeLayer('imageSource'); 
-    }
-}
-
-function openCameraInput() {
-    closeLayer('imageSource'); // FIX: Close immediately to allow the programmatic click
-    document.getElementById('eImgCamera').click();
-}
-
-function openGalleryInput() {
-    closeLayer('imageSource'); // FIX: Close immediately to allow the programmatic click
-    document.getElementById('eImgGallery').click();
 }
 
 // ===================================================
@@ -2100,7 +2166,7 @@ function exportData() {
     const dataToExport = {
         meta: {
             app: "ميزانتي",
-            version: "3.1",
+            version: "3.2", // Updated version
             date: new Date().toISOString(),
             currency: currentCurrency.code
         },
@@ -2134,19 +2200,15 @@ function importData(event) {
                 throw new Error("Invalid structure");
             }
 
-            // تحديث العملة من البيانات المستوردة إن وجدت
             if (importedData.meta && importedData.meta.currency) {
                  selectCurrency(importedData.meta.currency);
                  localStorage.setItem('currencyCode', importedData.meta.currency);
             }
             
-            // مسح قاعدة البيانات الحالية لضمان النظافة
-            await resetAllData(false); // لا تعرض رسالة toast هنا
+            await resetAllData(false); 
 
-            // استيراد كل store
             const transaction = IDB_connection.transaction(STORE_NAMES, "readwrite");
             
-            // المصروفات، الحقوق، الالتزامات (مصفوفات)
             STORE_NAMES.filter(n => n !== 'bal').forEach(storeName => {
                 const store = transaction.objectStore(storeName);
                 if(Array.isArray(importedData.data[storeName])) {
@@ -2156,19 +2218,15 @@ function importData(event) {
                 }
             });
             
-            // الرصيد (كائن واحد)
             const balStore = transaction.objectStore('bal');
-            // التأكد من أن الكائن يحتوي على clientId=1
             const newBal = { clientId: 1, ...importedData.data.bal };
             balStore.put(newBal); 
             
-            // الانتظار حتى اكتمال المعاملة
             await new Promise((resolve, reject) => {
                 transaction.oncomplete = resolve;
                 transaction.onerror = reject;
             });
 
-            // إعادة تحميل البيانات إلى الذاكرة وتحديث الواجهة
             await loadAllData();
             updateStats(); 
             updateBalanceDisplay();
