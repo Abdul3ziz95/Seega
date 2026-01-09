@@ -203,10 +203,6 @@ body.dark-mode .tabs button.active {
     transform: translateY(-2px);
     border-color: var(--p);
 }
-#overview .balance-actions .action i {
-    font-size: 24px;
-    margin-bottom: 5px;
-}
 #overview .balance-actions .deposit i { color: var(--success); }
 #overview .balance-actions .withdraw i { color: var(--danger); }
 
@@ -2129,55 +2125,75 @@ function updateRightFields(type, currentData = null) {
 // ---------------------------------------------
 
 function calculateInstallmentValue() {
+    const dType = document.getElementById('dType').value;
     const dTotalAmountInput = document.getElementById('dTotalAmount');
     const dInstallmentsInput = document.getElementById('dInstallments');
-    const dPaidInfoInput = document.getElementById('dPaidInstallments') || document.getElementById('dPaidAmount');
-    const dCalcResult = document.getElementById('dCalcResult');
-    const dType = document.getElementById('dType').value;
+    const dPaidInstallmentsInput = document.getElementById('dPaidInstallments');
+    const dPaidAmountInput = document.getElementById('dPaidAmount');
+    // العناصر الجديدة
+    const dInstallmentValueDisplay = document.getElementById('dInstallmentValueDisplay');
+    const dRemainingValue = document.getElementById('dRemainingValue');
+    // العنصر القديم (نحتفظ به للتحقق والمسح فقط)
+    const dCalcResult = document.getElementById('dCalcResult'); 
+
+    // إذا لم يكن هناك حقول لعرض النتائج الجديدة (للقرض والدين الشخصي) نوقف الدالة
+    if ((dType === 'قرض' || dType === 'دين شخصي') && !dRemainingValue) return;
+
+    // إذا كانت الفئة لا تتطلب حسابات، نمسح أي عرض محتمل ونخرج
+    if (dType !== 'قرض' && dType !== 'دين شخصي') {
+        if (dInstallmentValueDisplay) dInstallmentValueDisplay.innerHTML = '';
+        if (dRemainingValue) dRemainingValue.innerHTML = '';
+        if (dCalcResult) dCalcResult.innerHTML = '';
+        return;
+    }
+
+    const totalAmount = parseFloat(dTotalAmountInput ? dTotalAmountInput.value.replace(/,/g, '') : 0) || 0;
     
-    if (!dTotalAmountInput || !dPaidInfoInput || !dCalcResult) return;
-    
-    const totalAmount = parseAmount(dTotalAmountInput.value);
-    let totalPaidAmount = 0;
-    let remainingAmount = totalAmount;
-    let html = '';
+    let remainingAmount = 0;
 
     if (dType === 'قرض') {
-        const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
-        const paidInstallmentsCount = parseInt(dPaidInfoInput.value) || 0;
+        const installmentsTotal = parseInt(dInstallmentsInput?.value) || 0;
+        const paidInstallments = parseInt(dPaidInstallmentsInput?.value) || 0;
         
-        const installmentValue = installmentsTotal > 0 ? (totalAmount / installmentsTotal) : 0;
-        totalPaidAmount = paidInstallmentsCount * installmentValue;
-        remainingAmount = totalAmount - totalPaidAmount;
-        
-        const remainingInstallments = installmentsTotal - paidInstallmentsCount;
-        
-        html = `
-            <div class="calc-result"><span>قيمة القسط:</span> <span>${formatCurrency(installmentValue.toFixed(2))}</span></div>
-            <div class="calc-result"><span>الأقساط المتبقية:</span> <span>${remainingInstallments} من ${installmentsTotal}</span></div>
-        `;
-        
-    } else if (dType === 'دين شخصي') {
-        totalPaidAmount = parseAmount(dPaidInfoInput.value);
+        if (installmentsTotal === 0) {
+            if (dInstallmentValueDisplay) dInstallmentValueDisplay.innerHTML = '';
+            if (dRemainingValue) dRemainingValue.innerHTML = '';
+            return;
+        }
+
+        const installmentValue = totalAmount / installmentsTotal;
+        const totalPaidAmount = installmentValue * paidInstallments;
         remainingAmount = totalAmount - totalPaidAmount;
 
-        html = `
-            <div class="calc-result"><span>إجمالي المدفوع:</span> <span>${formatCurrency(totalPaidAmount)}</span></div>
-        `;
-    }
+        // 1. قيمة القسط اسفل حقل عدد الاقساط
+        if (dInstallmentValueDisplay) {
+            dInstallmentValueDisplay.innerHTML = `
+                <span>قيمة القسط:</span> 
+                <span>${formatCurrency(installmentValue.toFixed(2))}</span>
+            `;
+        }
+        
+    } else if (dType === 'دين شخصي') {
+        const totalPaidAmount = parseFloat(dPaidAmountInput?.value.replace(/,/g, '')) || 0;
+        remainingAmount = totalAmount - totalPaidAmount;
+
+        // إخفاء عرض قيمة القسط (غير مطبق على الدين الشخصي)
+        if (dInstallmentValueDisplay) dInstallmentValueDisplay.innerHTML = '';
+    } 
     
+    // 2. 3. 4. إظهار المتبقي = وحذف العرض القديم
     const remainingColor = remainingAmount > 0 ? 'var(--danger)' : 'var(--success)';
     const remainingText = remainingAmount > 0 ? formatCurrency(remainingAmount) : 'مدفوع بالكامل';
 
-    html += `
-        <div class="calc-result highlight" style="color: var(--p);">
-            <span>المتبقي من الالتزام:</span> 
-            <span style="color: ${remainingColor};">${remainingText}</span>
-        </div>
-    `;
-    
-    dCalcResult.innerHTML = html;
+    if (dRemainingValue) {
+        dRemainingValue.innerHTML = remainingText;
+        dRemainingValue.style.color = remainingColor;
+    }
+
+    // التأكد من مسح محتوى dCalcResult القديم بالكامل
+    if (dCalcResult) dCalcResult.innerHTML = '';
 }
+
 
 function updateDebtFields(type, currentData = null) {
     const dynamicFields = document.getElementById('dDynamicFields');
@@ -2186,8 +2202,7 @@ function updateDebtFields(type, currentData = null) {
     dynamicFields.innerHTML = '';
     dAmount.style.display = 'block';
     dStatus.style.display = 'block';
-    
-    // مسح حقول الالتزام العادية عند اختيار القرض/الدين الشخصي
+
     if (type === 'قرض' || type === 'دين شخصي') {
         dAmount.style.display = 'none';
         dStatus.style.display = 'none';
@@ -2201,17 +2216,29 @@ function updateDebtFields(type, currentData = null) {
             dynamicInputs += `
                 <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" 
                        oninput="calculateInstallmentValue()" pattern="[0-9]*" inputmode="numeric">
+                
+                <div id="dInstallmentValueDisplay" class="calc-result" style="padding-top: 5px; padding-bottom: 5px; font-weight: bold; color: var(--p);"></div>
+                
                 <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة" 
                        oninput="calculateInstallmentValue()" pattern="[0-9]*" inputmode="numeric">
+                
+                <div id="dRemainingDisplay" class="calc-result highlight" style="padding-top: 5px; padding-bottom: 5px; color: var(--p);">
+                    <span>المتبقي =</span> 
+                    <span id="dRemainingValue" style="font-weight: bold;"></span>
+                </div>
             `;
         } else if (type === 'دين شخصي') {
             dynamicInputs += `
                 <input id="dPaidAmount" type="text" placeholder="إجمالي المبلغ المدفوع حتى الآن" 
                        oninput="formatAmount(this); calculateInstallmentValue()" pattern="[0-9]*" inputmode="decimal">
+                       
+                <div id="dRemainingDisplay" class="calc-result highlight" style="padding-top: 5px; padding-bottom: 5px; color: var(--p);">
+                    <span>المتبقي =</span> 
+                    <span id="dRemainingValue" style="font-weight: bold;"></span>
+                </div>
             `;
         }
         
-        dynamicInputs += `<div id="dCalcResult" style="padding: 10px 0;"></div>`;
         dynamicFields.innerHTML = dynamicInputs;
         
         // تحميل البيانات القديمة في وضع التعديل
