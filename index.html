@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -789,7 +788,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p class="card" style="border-top: 3px solid var(--danger);">
             <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري.
         </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.1 (مطور ومثبت)</p>
+        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.2 (محدث)</p>
     </div>
 </div>
 
@@ -811,7 +810,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 // ===================================================
 
 const IDB_NAME = "MySmartBudgetDB";
-const IDB_VERSION = 4; // تم زيادة الإصدار لإعادة إنشاء الـ stores إذا لزم الأمر
+const IDB_VERSION = 4; 
 const STORE_NAMES = ["exp", "rig", "deb", "bal"]; 
 let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; // تهيئة أولية
 let IDB_connection = null; 
@@ -1002,6 +1001,7 @@ function _visualOpen(layerName, data = {}) {
         } else if (layerName === 'detail') {
             const o = db[data.logType].find(item => item.id === data.id);
             if (!o) return toastMsg("لم يتم العثور على المعاملة.");
+            // البحث عن المعاملة بالـ id
             const index = db[data.logType].findIndex(item => item.id === data.id);
             editMode = { type: data.logType, index: index }; 
             _renderDetailContent(o, data.logType); 
@@ -1065,20 +1065,21 @@ function closeLayer(layerName) {
 window.onpopstate = (event) => {
     const closedLayer = historyStack.pop();
     if (closedLayer) {
-        _visualClose(closedLayer.layer); 
+        _visualClose(closedLayer.layer, false); // لا تمسح وضع التعديل عند العودة للخلف
     }
     
     if (historyStack.length === 0) {
-        if (confirm("هل تريد الخروج من التطبيق؟")) {
-             return;
-        } else {
-            const mainState = { layer: 'main' };
-            historyStack.push(mainState);
-            history.pushState(mainState, null, `#main`);
-            for (const name in LAYERS) {
-                _visualClose(name, false); 
-            }
+        // عند الوصول لأصل التاريخ، افترض أننا في الشاشة الرئيسية
+        // لا تطلب الخروج، فقط أعد الحالة الرئيسية لتجنب حلقة لا نهائية
+        const mainState = { layer: 'main' };
+        historyStack.push(mainState);
+        history.replaceState(mainState, null, `#main`); 
+        for (const name in LAYERS) {
+            _visualClose(name, false); 
         }
+        // تأكد من تحديث واجهة المستخدم بالبيانات المحدثة
+        updateStats();
+        updateBalanceDisplay();
     } else {
         const newTop = historyStack[historyStack.length - 1];
         _visualOpen(newTop.layer, newTop.data);
@@ -1143,9 +1144,16 @@ function getFormattedAmount(num) {
 function formatCurrency(amount, withColor = false) {
     const num = parseAmount(amount);
     
-    if (balanceHidden) {
-         return '<span class="hidden-balance">***</span>';
+    if (balanceHidden && formatCurrency.caller !== updateBalanceDisplay) { 
+        // تحقق إضافي لضمان عدم إخفاء الرصيد إلا في واجهة العرض الرئيسية
+        return '<span class="hidden-balance">***</span>';
     }
+    
+    // إذا تم استدعاؤها من updateBalanceDisplay، نحتاج الرؤية الكاملة هنا
+    if (balanceHidden && formatCurrency.caller === updateBalanceDisplay) {
+        return '<span class="hidden-balance">***</span>';
+    }
+
 
     const formattedNum = getFormattedAmount(num);
     
@@ -1242,7 +1250,7 @@ function validateImageSize(file) {
     return true;
 }
 
-function updateFileName(input, displayId) {
+function updateFileName(input, displayId, isEditing = false) {
     const displayElement = document.getElementById(displayId);
     if (input.files && input.files.length > 0) {
         const file = input.files[0];
@@ -1255,21 +1263,38 @@ function updateFileName(input, displayId) {
         const fileName = file.name;
         // تقصير الاسم إذا كان طويلاً
         const shortName = fileName.length > 20 ? fileName.substring(0, 17) + '...' : fileName;
-        displayElement.textContent = `تم اختيار: ${shortName}`;
+        displayElement.textContent = `تم اختيار صورة جديدة: ${shortName}`;
         displayElement.style.color = 'var(--success)';
         
         // إظهار زر حذف الصورة
         document.getElementById('removeImageBtn').style.display = 'block';
     } else {
-        displayElement.textContent = '';
+        // حالة التعديل حيث لم يتم اختيار صورة جديدة ولكن الصورة القديمة موجودة
+        if (isEditing && editMode && editMode.type === 'exp' && db.exp[editMode.index] && db.exp[editMode.index].صورة) {
+            displayElement.textContent = 'صورة مرفقة مسبقاً.';
+            displayElement.style.color = '#999';
+            document.getElementById('removeImageBtn').style.display = 'block';
+        } else {
+            displayElement.textContent = '';
+            document.getElementById('removeImageBtn').style.display = 'none';
+        }
     }
 }
 
 function removeImage() {
     document.getElementById('eImgName').textContent = '';
+    
+    // مسح مدخلات الملفات
     document.getElementById('eImgCamera').value = null;
     document.getElementById('eImgGallery').value = null;
+    
     document.getElementById('removeImageBtn').style.display = 'none';
+    
+    // إذا كنا في وضع التعديل، يجب مسح حقل الصورة من البيانات الحالية للتأكد من حذفها عند الحفظ
+    if (editMode && editMode.type === 'exp' && db.exp[editMode.index]) {
+        delete db.exp[editMode.index].صورة;
+    }
+    
     toastMsg("تم حذف الصورة المختارة");
 }
 
@@ -1278,7 +1303,9 @@ function removeImage() {
 // ---------------------------------------------
 
 function updateBalanceDisplay() {
-    document.getElementById("currentBalanceDisplay").innerHTML = formatCurrency(currentBalance);
+    const balanceText = balanceHidden ? '<span class="hidden-balance">***</span>' : formatCurrency(currentBalance);
+    document.getElementById("currentBalanceDisplay").innerHTML = balanceText;
+    
     const actionDisplay = document.getElementById("currentBalanceInAction");
     if (actionDisplay) actionDisplay.innerHTML = formatCurrency(currentBalance);
 
@@ -1290,39 +1317,51 @@ function updateBalanceDisplay() {
     }
 }
 
-async function processBalanceChange(amount, type, description, recordId = null, isEdit = false, oldAmount = 0) {
-    if (!recordId) recordId = `bal-${Date.now()}`;
-    
+/**
+ * دالة لمعالجة تغييرات الرصيد وحفظها في سجل الحركات.
+ * @param {string} amount - المبلغ كقيمة نصية (يمكن أن يكون مُنسق).
+ * @param {string} type - نوع العملية (deposit, withdraw, expense, right_collection, debt_payment).
+ * @param {string} description - وصف مختصر للحركة.
+ * @param {string} recordId - معرف المعاملة الفريد (مثل exp-123, rig-456).
+ * @param {boolean} isEditing - هل العملية تعديل لمعاملة سابقة؟
+ * @param {number} oldNetChange - صافي التأثير القديم على الرصيد (يستخدم في وضع التعديل).
+ * @returns {Promise<boolean>} - تعيد true عند النجاح.
+ */
+async function processBalanceChange(amount, type, description, recordId, isEditing, oldNetChange = 0) {
     const changeAmount = parseAmount(amount);
-    let netChange = changeAmount;
     
-    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw' || type === 'revert_expense_debt') {
-        netChange *= -1;
+    // تحديد صافي التأثير الجديد على الرصيد
+    let newNetChange = changeAmount;
+    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw') {
+        newNetChange *= -1;
     }
     
-    let effectiveChange = netChange;
-    if (isEdit) {
-        effectiveChange = netChange - oldAmount; 
+    // حساب التغير الفعلي الذي يجب تطبيقه على الرصيد الحالي
+    // (التغير الجديد - التغير القديم)
+    let effectiveChange = newNetChange;
+    if (isEditing) {
+        effectiveChange = newNetChange - oldNetChange; 
     }
     
     currentBalance = parseAmount(currentBalance) + effectiveChange;
     db.bal.amount = currentBalance;
     
+    // إنشاء أو تحديث سجل الحركة
     const newChangeEntry = {
         id: recordId,
         التاريخ: new Date().toISOString().slice(0, 16),
         النوع: description, 
         المبلغ: changeAmount,
-        التأثير: (netChange > 0 ? 'إيداع' : (netChange < 0 ? 'خصم' : 'تعديل')),
-        القيمة_الصافية: netChange,
+        التأثير: (newNetChange > 0 ? 'إيداع' : (newNetChange < 0 ? 'خصم' : 'تعديل')),
+        القيمة_الصافية: newNetChange,
         الرصيد_بعد_العملية: currentBalance
     };
     
     const existingIndex = db.bal.changes.findIndex(c => c.id === recordId);
     if (existingIndex > -1) {
-        db.bal.changes[existingIndex] = newChangeEntry;
+        db.bal.changes[existingIndex] = newChangeEntry; // تحديث
     } else {
-        db.bal.changes.unshift(newChangeEntry); 
+        db.bal.changes.unshift(newChangeEntry); // إضافة
     }
 
     try {
@@ -1331,7 +1370,7 @@ async function processBalanceChange(amount, type, description, recordId = null, 
         return true;
     } catch (e) {
         console.error('فشل حفظ الرصيد', e);
-        currentBalance -= effectiveChange; 
+        currentBalance -= effectiveChange; // التراجع عن التغيير
         toastMsg("فشل تحديث الرصيد.");
         return false;
     }
@@ -1340,11 +1379,11 @@ async function processBalanceChange(amount, type, description, recordId = null, 
 async function processBalanceAction() {
     const amount = document.getElementById('bAmount').value;
     const desc = document.getElementById('bDesc').value || (balanceActionType === 'deposit' ? 'إيداع عام' : 'سحب عام');
-    const date = document.getElementById('bDate').value;
-    
+    const date = document.getElementById('bDate').value; // لم يتم استخدام التاريخ في سجل الرصيد حالياً، لكن يجب حفظه
+
     if (!amount) return toastMsg("الرجاء إدخال المبلغ.");
 
-    const success = await processBalanceChange(amount, balanceActionType, desc, `manual-${Date.now()}`);
+    const success = await processBalanceChange(amount, balanceActionType, desc, `manual-${Date.now()}`, false);
     
     if (success) {
         toastMsg(balanceActionType === 'deposit' ? "تم الإيداع بنجاح" : "تم السحب بنجاح");
@@ -1354,7 +1393,8 @@ async function processBalanceAction() {
 
 function renderBalanceLog() {
     const logContent = document.getElementById("balanceLogContent");
-    const changes = db.bal.changes || [];
+    // يتم عرض التغييرات من الأحدث للأقدم بسبب unshift في processBalanceChange
+    const changes = db.bal.changes || []; 
     
     if (changes.length === 0) {
         logContent.innerHTML = `<p style="text-align: center; color: #999;">لا توجد حركات رصيد مسجلة.</p>`;
@@ -1363,9 +1403,10 @@ function renderBalanceLog() {
 
     logContent.innerHTML = changes
         .map(i => {
-            const isDeposit = i.القيمة_الصافية > 0;
-            const color = isDeposit ? 'var(--success)' : (i.القيمة_الصافية < 0 ? 'var(--danger)' : '#999');
-            const icon = isDeposit ? 'fa-arrow-up' : (i.القيمة_الصافية < 0 ? 'fa-arrow-down' : 'fa-minus');
+            const netChange = i.القيمة_الصافية;
+            const isDeposit = netChange > 0;
+            const color = isDeposit ? 'var(--success)' : (netChange < 0 ? 'var(--danger)' : '#999');
+            const icon = isDeposit ? 'fa-arrow-up' : (netChange < 0 ? 'fa-arrow-down' : 'fa-minus');
             
             return `
                 <div class="list-item" style="border-right-color: ${color};">
@@ -1418,7 +1459,9 @@ async function addExpense() {
   
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
-  const oldAmount = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
+  
+  // صافي التأثير القديم: المصروف يخصم، لذا نضربه في -1
+  const oldNetChange = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
   
   const amount = parseAmount(eAmount.value);
   if (amount === 0) return toastMsg("المبلغ يجب أن يكون أكبر من صفر.");
@@ -1431,50 +1474,51 @@ async function addExpense() {
   data.التاريخ = eDate.value; 
   data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
   
-  // إذا كان في وضع التعديل ولم يتم اختيار صورة جديدة، ابق على الصورة القديمة
-  if (isEditing && !selectedFile && oldData.صورة) {
-      data.صورة = oldData.صورة;
+  // إدارة حالة الصورة
+  if (isEditing && !selectedFile) {
+      // إذا كان تعديلاً ولم يتم اختيار صورة جديدة، احتفظ بالقديمة أو احذفها إذا طُلب ذلك
+      if (document.getElementById('eImgName').textContent === '') {
+          delete data.صورة;
+      } else if (oldData.صورة) {
+          data.صورة = oldData.صورة; // الاحتفاظ بالصورة القديمة
+      }
+  } else if (selectedFile) {
+      // سيتم قراءة وحفظ الصورة الجديدة في الخطوة التالية
+  } else {
+      // إضافة جديدة بدون صورة
+      delete data.صورة; 
   }
-  
-  const done = async () => {
-    try {
-        if (selectedFile) {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                data.صورة = reader.result;
-                await saveData('exp', data);
-                
-                await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
-                
-                toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
-                postSaveCleanup(isEditing, 'exp');
-            };
-            reader.onerror = () => {
-                toastMsg("خطأ في قراءة الصورة");
-                // استمر بدون صورة
-                delete data.صورة;
-                saveData('exp', data).then(() => {
-                    processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
-                    toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف (بدون صورة)");
-                    postSaveCleanup(isEditing, 'exp');
-                });
-            };
-            reader.readAsDataURL(selectedFile);
-        } else {
-            await saveData('exp', data);
-            
-            await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
 
-            toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
-            postSaveCleanup(isEditing, 'exp');
-        }
+  const saveAndProcess = async () => {
+    try {
+        await saveData('exp', data);
+        
+        // المصروف يؤدي إلى خصم، لذا نوع العملية 'expense'
+        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldNetChange);
+
+        toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
+        postSaveCleanup(isEditing, 'exp');
     } catch (error) {
         toastMsg("فشل الحفظ. تحقق من Console.");
         console.error(error);
     }
   };
 
-  done();
+  if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+          data.صورة = reader.result;
+          await saveAndProcess();
+      };
+      reader.onerror = () => {
+          toastMsg("خطأ في قراءة الصورة. سيتم الحفظ بدون صورة.");
+          delete data.صورة;
+          saveAndProcess();
+      };
+      reader.readAsDataURL(selectedFile);
+  } else {
+      await saveAndProcess();
+  }
 }
 
 async function addRight() {
@@ -1491,6 +1535,9 @@ async function addRight() {
   const totalAmount = parseAmount(rAmount.value);
   const rExpectedDate = document.getElementById('rExpectedDate');
   
+  // صافي التأثير القديم: تحصيل الحق يضيف، لذا القيمة موجبة
+  const oldNetChange = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
+  
   const data = isEditing ? { ...oldData } : {};
   data.clientId = isEditing ? oldData.clientId : `rig-${Date.now()}`; 
 
@@ -1501,7 +1548,6 @@ async function addRight() {
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   let amountCollected = 0; 
-  let oldAmountCollected = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
   
   if (data.النوع === 'دين') {
       const rPaidAmountInput = document.getElementById('rPaidAmount');
@@ -1546,7 +1592,8 @@ async function addRight() {
   try {
       await saveData('rig', data);
       
-      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountCollected);
+      // تحصيل الحق يضيف للرصيد، لذا نوع العملية 'right_collection'
+      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldNetChange);
 
       toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
       
@@ -1562,9 +1609,13 @@ function updateRightFields(type, currentData = null) {
     const dynamicFields = document.getElementById('rDynamicFields');
     dynamicFields.innerHTML = '';
     
+    // قيمة افتراضية لحقل المبلغ المدفوع (إذا كان في وضع التعديل)
+    const paidAmountValue = currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_مدفوع).toLocaleString('ar') : '';
+    const expectedDateValue = currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع : '';
+
     if (type === 'دين') {
         dynamicFields.innerHTML = `
-            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_المدفوع).toLocaleString('ar') : ''}">
+            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${paidAmountValue}">
         `;
         document.getElementById('rStatus').style.display = 'none';
         document.getElementById('rStatus').value = ''; 
@@ -1573,7 +1624,7 @@ function updateRightFields(type, currentData = null) {
     }
     
     // إضافة حقل التاريخ المتوقع لجميع الأنواع
-    const expectedDateHtml = `<input id="rExpectedDate" type="date" placeholder="تاريخ التحصيل المتوقع" value="${currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع : ''}">`;
+    const expectedDateHtml = `<input id="rExpectedDate" type="date" placeholder="تاريخ التحصيل المتوقع" value="${expectedDateValue}">`;
     dynamicFields.innerHTML += expectedDateHtml;
 }
 
@@ -1591,6 +1642,9 @@ async function addDebt() {
   const isEditing = editMode && editMode.type === "deb";
   const oldData = isEditing ? db.deb[editMode.index] : {};
   
+  // صافي التأثير القديم: دفع الالتزام يخصم، لذا نضربه في -1
+  const oldNetChange = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
+  
   const data = isEditing ? { ...oldData } : {};
   data.clientId = isEditing ? oldData.clientId : `deb-${Date.now()}`; 
 
@@ -1599,7 +1653,6 @@ async function addDebt() {
   data.التاريخ = dDate.value; 
   
   let amountPaid = 0; 
-  let oldAmountPaid = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
   
   if (isMasterLiability) {
       const dTotalAmountInput = document.getElementById('dTotalAmount');
@@ -1659,6 +1712,10 @@ async function addDebt() {
       delete data.المبلغ_الكلي_للالتزام;
       delete data.إجمالي_المدفوع;
       delete data.المتبقي_للالتزام;
+      delete data.عدد_الاقساط;
+      delete data.قيمة_القسط;
+      delete data.الأقساط_المدفوعة;
+      delete data.المتبقي_للالتزام;
   }
   
   data.المبلغ_المخصوم_للرصيد = amountPaid; 
@@ -1670,7 +1727,8 @@ async function addDebt() {
   try {
       await saveData('deb', data);
       
-      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountPaid);
+      // دفع الالتزام يخصم من الرصيد، لذا نوع العملية 'debt_payment'
+      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldNetChange);
 
       toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
       
@@ -1688,6 +1746,13 @@ function updateDebtFields(type, currentData = null) {
     const statusSelect = document.getElementById('dStatus');
     dynamicFields.innerHTML = '';
 
+    // قيم افتراضية لحقول التعديل
+    const totalAmountValue = currentData && currentData.المبلغ_الكلي_للالتزام ? parseAmount(currentData.المبلغ_الكلي_للالتزام).toLocaleString('ar') : '';
+    const installmentsValue = currentData && currentData.عدد_الاقساط ? currentData.عدد_الاقساط : '';
+    const paidInstallmentsValue = currentData && currentData.الأقساط_المدفوعة ? currentData.الأقساط_المدفوعة : '';
+    const totalPaidAmountValue = currentData && currentData.إجمالي_المدفوع ? parseAmount(currentData.إجمالي_المدفوع).toLocaleString('ar') : '';
+
+
     if (type === 'قرض' || type === 'دين شخصي') {
         amountInput.style.display = 'none';
         statusSelect.style.display = 'none';
@@ -1695,12 +1760,12 @@ function updateDebtFields(type, currentData = null) {
         statusSelect.value = '';
 
         dynamicFields.innerHTML = `
-            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_الكلي_للالتزام ? parseAmount(currentData.المبلغ_الكلي_للالتزام).toLocaleString('ar') : ''}">
+            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${totalAmountValue}">
             ${type === 'قرض' ? `
-                <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" value="${currentData && currentData.عدد_الاقساط ? currentData.عدد_الاقساط : ''}">
-                <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" value="${currentData && currentData.الأقساط_المدفوعة ? currentData.الأقساط_المدفوعة : ''}">
+                <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" value="${installmentsValue}">
+                <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" value="${paidInstallmentsValue}">
             ` : `
-                <input id="dPaidAmount" type="text" placeholder="إجمالي المبلغ المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.إجمالي_المدفوع ? parseAmount(currentData.إجمالي_المدفوع).toLocaleString('ar') : ''}">
+                <input id="dPaidAmount" type="text" placeholder="إجمالي المبلغ المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${totalPaidAmountValue}">
             `}
         `;
     } else {
@@ -1725,14 +1790,19 @@ function editTransaction() {
       document.getElementById('eType').value = currentData.الفئة;
       document.getElementById('eDesc').value = currentData.الوصف;
       document.getElementById('eDate').value = currentData.التاريخ;
+      
+      // تحديث عرض اسم الصورة في وضع التعديل
       if(currentData.صورة) {
-          document.getElementById('eImgName').textContent = 'صورة مرفقة (لن يتم حذفها إلا بإرفاق صورة جديدة)';
-          document.getElementById('removeImageBtn').style.display = 'block';
+          // استخدام دالة تحديث اسم الملف لإظهار حالة الصورة الموجودة
+          updateFileName({ files: [] }, 'eImgName', true); 
+      } else {
+          removeImage(); // لضمان مسح أي حالة سابقة
       }
     }
     
     if (editMode.type === "rig") {
       document.getElementById('rType').value = currentData.النوع;
+      // تمرير البيانات الحالية لملء الحقول الديناميكية
       updateRightFields(currentData.النوع, currentData); 
       
       document.getElementById('rAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
@@ -1749,6 +1819,7 @@ function editTransaction() {
       document.getElementById('dDesc').value = currentData.الوصف;
       document.getElementById('dDate').value = currentData.التاريخ;
 
+      // تمرير البيانات الحالية لملء الحقول الديناميكية
       updateDebtFields(currentData.النوع, currentData); 
 
       if (currentData.النوع !== 'قرض' && currentData.النوع !== 'دين شخصي') {
@@ -1768,24 +1839,25 @@ async function deleteTransaction() {
   const idToDelete = transaction.id;
   
   try {
-      await deleteFromDB(typeToDelete, idToDelete);
-      
+      // 1. التراجع عن تأثير الرصيد (الخطوة الأكثر أهمية)
       if (transaction.clientId) {
-          const balanceRecord = db.bal.changes.find(c => c.id === transaction.clientId);
-          if (balanceRecord) {
-              const oldNetChange = balanceRecord.القيمة_الصافية;
+          const balanceRecordIndex = db.bal.changes.findIndex(c => c.id === transaction.clientId);
+          
+          if (balanceRecordIndex > -1) {
+              const oldNetChange = db.bal.changes[balanceRecordIndex].القيمة_الصافية;
               
-              const balIndex = db.bal.changes.findIndex(c => c.id === transaction.clientId);
-              if (balIndex > -1) {
-                  db.bal.changes.splice(balIndex, 1);
-              }
-              
-              currentBalance -= oldNetChange;
+              currentBalance = parseAmount(currentBalance) - oldNetChange;
               db.bal.amount = currentBalance; 
-              await saveData('bal', db.bal);
+              
+              db.bal.changes.splice(balanceRecordIndex, 1); // حذف سجل الحركة
+              
+              await saveData('bal', db.bal); // حفظ التغييرات في الرصيد
           }
       }
 
+      // 2. حذف المعاملة من قاعدة البيانات الرئيسية
+      await deleteFromDB(typeToDelete, idToDelete);
+      
       editMode = null; 
       await loadAllData(); 
       toastMsg("تم الحذف بنجاح");
@@ -1812,7 +1884,7 @@ function _renderDetailContent(o, type) {
     html += `<h3 style="color: var(--p); margin-top: 0;"><i class="fas fa-info-circle" style="margin-left: 5px;"></i> التفاصيل</h3>`;
     
     for (const [key, value] of Object.entries(o)) {
-        if (key === 'id' || key === 'clientId' || key === 'صورة') continue;
+        if (key === 'id' || key === 'clientId' || key === 'صورة' || key.includes('المخصوم_للرصيد') || key.includes('المضاف_للرصيد')) continue;
         
         // Skip null/undefined/empty string values, except for important fields
         if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '' && key !== 'الوصف')) continue;
@@ -1824,7 +1896,7 @@ function _renderDetailContent(o, type) {
     }
     html += `</div>`;
     
-    // **الجزء الخاص بعرض الصورة (إصلاح المشكلة)**
+    // **الجزء الخاص بعرض الصورة**
     if (o.صورة && type === 'exp' && o.صورة.startsWith('data:image')) {
         html += `<div class="card" style="border-top-color: var(--s);">
             <h3 style="color: var(--s); margin-top: 0;">
@@ -2005,7 +2077,9 @@ async function addDataToStore(storeName, dataArray) {
                 delete dataToSave.id; 
                 dataToSave.clientId = item.clientId || `${storeName}-${Date.now()}`;
                 
+                // هنا نستخدم add بدلاً من put لإنشاء سجل جديد دائماً
                 store.add(dataToSave).onsuccess = resolve;
+                store.onerror = (e) => { console.error(`Import error in ${storeName}:`, e.target.error); resolve(); };
             });
         }
     }
@@ -2045,11 +2119,13 @@ async function importData(event) {
         try {
             const importedData = JSON.parse(e.target.result);
             
-            if (importedData.bal && Array.isArray(importedData.bal.changes)) {
+            // استيراد سجل الرصيد وتحديثه (overwrite)
+            if (importedData.bal && typeof importedData.bal === 'object') {
                  importedData.bal.clientId = 1; 
                  await addDataToStore('bal', [importedData.bal]);
             }
 
+            // استيراد السجلات الأخرى (Add only)
             for (const storeName of ["exp", "rig", "deb"]) {
                 if (importedData[storeName] && Array.isArray(importedData[storeName])) {
                     await addDataToStore(storeName, importedData[storeName]);
@@ -2091,8 +2167,11 @@ function resetAllData() {
         request.onsuccess = () => {
             storesCleared++;
             if (storesCleared === STORE_NAMES.length) {
+                // إعادة تهيئة المتغيرات المحلية بعد مسح المخزن
                 db.exp = db.rig = db.deb = []; 
                 db.bal = { clientId: 1, amount: 0, changes: [] };
+                
+                // إعادة إضافة سجل الرصيد الأساسي (للتجنب مشاكل auto-incrementing key)
                 saveData('bal', db.bal).then(() => {
                     loadAllData().then(() => {
                         updateStats(); 
