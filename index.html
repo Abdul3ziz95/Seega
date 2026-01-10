@@ -1212,13 +1212,19 @@ function openTab(id, keepEditMode = false) {
 // ---------------------------------------------
 
 function openCameraInput() {
-    document.getElementById('eImgCamera').click();
     closeLayer('imageSource');
+    // تأخير النقر لضمان إغلاق الـ modal بشكل كامل
+    setTimeout(() => {
+        document.getElementById('eImgCamera').click();
+    }, 100); 
 }
 
 function openGalleryInput() {
-    document.getElementById('eImgGallery').click();
     closeLayer('imageSource');
+    // تأخير النقر لضمان إغلاق الـ modal بشكل كامل
+    setTimeout(() => {
+        document.getElementById('eImgGallery').click();
+    }, 100);
 }
 
 function updateFileName(input, displayId) {
@@ -1259,7 +1265,10 @@ async function processBalanceChange(amount, type, description, recordId = null, 
     
     let effectiveChange = netChange;
     if (isEdit) {
-        effectiveChange = netChange - oldAmount; 
+        // البحث عن صافي التغيير السابق لتحديد التعديل الفعلي
+        const existingChange = db.bal.changes.find(c => c.id === recordId);
+        const oldNetChange = existingChange ? existingChange.القيمة_الصافية : 0;
+        effectiveChange = netChange - oldNetChange; 
     }
     
     currentBalance = parseAmount(currentBalance) + effectiveChange;
@@ -1267,7 +1276,7 @@ async function processBalanceChange(amount, type, description, recordId = null, 
     
     const newChangeEntry = {
         id: recordId,
-        التاريخ: new Date().toISOString().slice(0, 16),
+        التاريخ: new Date().toISOString(), // استخدم ISO string للحفظ
         النوع: description, 
         المبلغ: changeAmount,
         التأثير: (netChange > 0 ? 'إيداع' : (netChange < 0 ? 'خصم' : 'تعديل')),
@@ -1375,7 +1384,9 @@ async function addExpense() {
   
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
-  const oldAmount = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
+  
+  // oldAmount هنا ليست مطلوبة مباشرة في addExpense لكن يتم استخدامها في processBalanceChange بشكل غير مباشر الآن
+  // processBalanceChange تم تعديلها لاستخدام existingChange.القيمة_الصافية بدلاً من oldAmount في وضع التعديل
   
   const amount = parseAmount(eAmount.value);
   if (amount === 0) return toastMsg("المبلغ يجب أن يكون أكبر من صفر.");
@@ -1397,7 +1408,8 @@ async function addExpense() {
     try {
         await saveData('exp', data); 
         
-        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
+        // oldAmount كان يتم إرسالها سابقاً، الآن نكتفي بـ isEditing لتحديد منطق التعديل في الدالة
+        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing);
 
         toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
         
@@ -1445,7 +1457,6 @@ async function addRight() {
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   let amountCollected = 0; 
-  let oldAmountCollected = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
   
   if (data.النوع === 'دين') {
       const rPaidAmountInput = document.getElementById('rPaidAmount');
@@ -1490,7 +1501,7 @@ async function addRight() {
   try {
       await saveData('rig', data);
       
-      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountCollected);
+      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing);
 
       toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
       
@@ -1508,7 +1519,7 @@ function updateRightFields(type, currentData = null) {
     
     if (type === 'دين') {
         dynamicFields.innerHTML = `
-            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_مدفوع).toLocaleString('ar') : ''}">
+            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_المدفوع).toLocaleString('ar') : ''}">
         `;
         document.getElementById('rStatus').style.display = 'none';
         document.getElementById('rStatus').value = ''; 
@@ -1543,7 +1554,6 @@ async function addDebt() {
   data.التاريخ = dDate.value; 
   
   let amountPaid = 0; 
-  let oldAmountPaid = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
   
   if (isMasterLiability) {
       const dTotalAmountInput = document.getElementById('dTotalAmount');
@@ -1614,7 +1624,7 @@ async function addDebt() {
   try {
       await saveData('deb', data);
       
-      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountPaid);
+      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing);
 
       toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
       
@@ -1712,14 +1722,12 @@ async function deleteTransaction() {
       await deleteFromDB(typeToDelete, idToDelete);
       
       if (transaction.clientId) {
-          const balanceRecord = db.bal.changes.find(c => c.id === transaction.clientId);
-          if (balanceRecord) {
-              const oldNetChange = balanceRecord.القيمة_الصافية;
+          const balanceRecordIndex = db.bal.changes.findIndex(c => c.id === transaction.clientId);
+          
+          if (balanceRecordIndex > -1) {
+              const oldNetChange = db.bal.changes[balanceRecordIndex].القيمة_الصافية;
               
-              const balIndex = db.bal.changes.findIndex(c => c.id === transaction.clientId);
-              if (balIndex > -1) {
-                  db.bal.changes.splice(balIndex, 1);
-              }
+              db.bal.changes.splice(balanceRecordIndex, 1);
               
               currentBalance -= oldNetChange;
               db.bal.amount = currentBalance; 
