@@ -106,7 +106,7 @@ header button:hover { transform: scale(1.1); }
 }
 .tabs button{
     flex: 1 1 auto; 
-    min-width: 0; /* تم التعديل: للسماح للأزرار بالانكماش على الشاشات الصغيرة وتوزيعها بالتساوي */
+    min-width: 0; 
     padding: 15px 10px;
     border:none;
     background: var(--card-bg);
@@ -375,7 +375,6 @@ button.secondary:hover {
     font-size: 17px;
     color: var(--text-dark);
 }
-/* ... (كود الـ switch لم يتغير) ... */
 .switch { position: relative; display: inline-block; width: 45px; height: 25px; }
 .switch input {opacity: 0; width: 0; height: 0;}
 .slider {
@@ -513,8 +512,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 /* ---------------------------------------------------- */
 @media (max-width: 450px) {
     .tabs button {
-        padding: 15px 5px; /* تقليل الحشوة الأفقية */
-        font-size: 13px; /* تصغير حجم الخط للتأكد من احتواء الأقسام الأربعة */
+        padding: 15px 5px; 
+        font-size: 13px; 
     }
 }
 </style>
@@ -807,7 +806,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 // ===================================================
 
 const IDB_NAME = "MySmartBudgetDB";
-const IDB_VERSION = 4; // تم زيادة الإصدار لإعادة إنشاء الـ stores إذا لزم الأمر
+const IDB_VERSION = 5; // تم زيادة الإصدار لإعادة إنشاء الـ stores إذا لزم الأمر
 const STORE_NAMES = ["exp", "rig", "deb", "bal"]; 
 let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; // تهيئة أولية
 let IDB_connection = null; 
@@ -874,6 +873,7 @@ function initDB() {
         const store = IDB_connection.createObjectStore(storeName, { keyPath: keyPath, autoIncrement: autoIncrement });
 
         if(storeName === 'bal') {
+            // إضافة سجل أساسي للرصيد
             store.add({ clientId: 1, amount: 0, changes: [] });
         }
       });
@@ -1058,19 +1058,18 @@ window.onpopstate = (event) => {
     }
     
     if (historyStack.length === 0) {
-        if (confirm("هل تريد الخروج من التطبيق؟")) {
-             return;
-        } else {
-            const mainState = { layer: 'main' };
-            historyStack.push(mainState);
-            history.pushState(mainState, null, `#main`);
-            for (const name in LAYERS) {
-                _visualClose(name, false); 
-            }
+        // عند الوصول إلى الحالة الأولية، لا تفعل شيئًا أو أعد المستخدم إلى 'main'
+        const mainState = { layer: 'main' };
+        historyStack.push(mainState);
+        history.replaceState(mainState, null, `#main`);
+        for (const name in LAYERS) {
+            _visualClose(name, false); 
         }
     } else {
         const newTop = historyStack[historyStack.length - 1];
-        _visualOpen(newTop.layer, newTop.data);
+        if (newTop.layer !== 'main') {
+            _visualOpen(newTop.layer, newTop.data);
+        }
     }
 };
 
@@ -1122,8 +1121,8 @@ function parseAmount(amount) {
 }
 
 function getFormattedAmount(num) {
-    const formattedNum = num.toLocaleString('ar', { 
-        minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+    const formattedNum = parseAmount(num).toLocaleString('ar', { 
+        minimumFractionDigits: parseAmount(num) % 1 === 0 ? 0 : 2,
         maximumFractionDigits: 2 
     });
     return formattedNum;
@@ -1212,19 +1211,13 @@ function openTab(id, keepEditMode = false) {
 // ---------------------------------------------
 
 function openCameraInput() {
+    document.getElementById('eImgCamera').click();
     closeLayer('imageSource');
-    // تأخير النقر لضمان إغلاق الـ modal بشكل كامل
-    setTimeout(() => {
-        document.getElementById('eImgCamera').click();
-    }, 100); 
 }
 
 function openGalleryInput() {
+    document.getElementById('eImgGallery').click();
     closeLayer('imageSource');
-    // تأخير النقر لضمان إغلاق الـ modal بشكل كامل
-    setTimeout(() => {
-        document.getElementById('eImgGallery').click();
-    }, 100);
 }
 
 function updateFileName(input, displayId) {
@@ -1253,34 +1246,50 @@ function updateBalanceDisplay() {
     }
 }
 
-async function processBalanceChange(amount, type, description, recordId = null, isEdit = false, oldAmount = 0) {
+/**
+ * دالة مركزية لتعديل الرصيد وحفظ سجل الحركة.
+ * @param {number|string} amount - المبلغ الذي تم إيداعه/خصمه.
+ * @param {string} type - نوع العملية ('expense', 'right_collection', 'debt_payment', 'deposit', 'withdraw').
+ * @param {string} description - وصف العملية للسجل.
+ * @param {string} recordId - معرف المعاملة الأصلية (clientId) لربطها بسجل الرصيد.
+ * @param {boolean} isEdit - هل العملية تعديل لمعاملة سابقة؟
+ * @param {number} oldAmount - المبلغ القديم الذي أثرت به المعاملة السابقة على الرصيد.
+ * @param {boolean} isDelete - هل العملية حذف؟
+ * @returns {Promise<boolean>}
+ */
+async function processBalanceChange(amount, type, description, recordId = null, isEdit = false, oldAmount = 0, isDelete = false) {
     if (!recordId) recordId = `bal-${Date.now()}`;
     
     const changeAmount = parseAmount(amount);
-    let netChange = changeAmount;
-    
-    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw' || type === 'revert_expense_debt') {
-        netChange *= -1;
+    let netChange = changeAmount; // افتراضياً، العملية إضافة
+
+    // 1. تحديد صافي التغيير (خصم أم إضافة)
+    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw') {
+        netChange *= -1; // الخصم يتم تحويله إلى قيمة سالبة
     }
     
     let effectiveChange = netChange;
-    if (isEdit) {
-        // البحث عن صافي التغيير السابق لتحديد التعديل الفعلي
-        const existingChange = db.bal.changes.find(c => c.id === recordId);
-        const oldNetChange = existingChange ? existingChange.القيمة_الصافية : 0;
-        effectiveChange = netChange - oldNetChange; 
-    }
     
+    // 2. حساب التغيير الفعلي (لمعالجة التعديل والحذف)
+    if (isEdit) {
+        // عند التعديل: التغيير الفعلي = (صافي المبلغ الجديد) - (صافي المبلغ القديم)
+        // إذا كان التغيير القديم خصماً، فإنه قيمة سالبة. إذا كان التعديل خصماً جديداً، فإنه قيمة سالبة.
+        effectiveChange = netChange - oldAmount; 
+    } else if (isDelete) {
+        // عند الحذف: التغيير الفعلي = (عكس صافي المبلغ القديم)
+        effectiveChange = oldAmount * -1;
+    }
+
     currentBalance = parseAmount(currentBalance) + effectiveChange;
     db.bal.amount = currentBalance;
     
     const newChangeEntry = {
         id: recordId,
-        التاريخ: new Date().toISOString(), // استخدم ISO string للحفظ
+        التاريخ: new Date().toISOString(), 
         النوع: description, 
         المبلغ: changeAmount,
         التأثير: (netChange > 0 ? 'إيداع' : (netChange < 0 ? 'خصم' : 'تعديل')),
-        القيمة_الصافية: netChange,
+        القيمة_الصافية: netChange, // القيمة الصافية هنا هي التأثير الجديد
         الرصيد_بعد_العملية: currentBalance
     };
     
@@ -1297,6 +1306,7 @@ async function processBalanceChange(amount, type, description, recordId = null, 
         return true;
     } catch (e) {
         console.error('فشل حفظ الرصيد', e);
+        // التراجع عن تغيير الرصيد في حالة فشل الحفظ
         currentBalance -= effectiveChange; 
         toastMsg("فشل تحديث الرصيد.");
         return false;
@@ -1308,9 +1318,10 @@ async function processBalanceAction() {
     const desc = document.getElementById('bDesc').value || (balanceActionType === 'deposit' ? 'إيداع عام' : 'سحب عام');
     const date = document.getElementById('bDate').value;
     
-    if (!amount) return toastMsg("الرجاء إدخال المبلغ.");
+    if (!amount || parseAmount(amount) === 0) return toastMsg("الرجاء إدخال المبلغ.");
 
-    const success = await processBalanceChange(amount, balanceActionType, desc, `manual-${Date.now()}`);
+    // المبلغ القديم صفر لأنها عملية يدوية جديدة
+    const success = await processBalanceChange(amount, balanceActionType, desc, `manual-${Date.now()}`, false, 0); 
     
     if (success) {
         toastMsg(balanceActionType === 'deposit' ? "تم الإيداع بنجاح" : "تم السحب بنجاح");
@@ -1320,7 +1331,8 @@ async function processBalanceAction() {
 
 function renderBalanceLog() {
     const logContent = document.getElementById("balanceLogContent");
-    const changes = db.bal.changes || [];
+    // يتم فرز السجل من الأحدث للأقدم
+    const changes = db.bal.changes.sort((a, b) => new Date(b.التاريخ) - new Date(a.التاريخ)) || [];
     
     if (changes.length === 0) {
         logContent.innerHTML = `<p style="text-align: center; color: #999;">لا توجد حركات رصيد مسجلة.</p>`;
@@ -1353,6 +1365,7 @@ function renderBalanceLog() {
 function postSaveCleanup(isEditing, type) {
     editMode = null; 
     clearFields(); 
+    // إعادة تحميل البيانات وتحديث الواجهة بعد الحفظ
     loadAllData().then(() => {
         updateStats();
         updateBalanceDisplay();
@@ -1361,12 +1374,13 @@ function postSaveCleanup(isEditing, type) {
     _visualClose('detail');
     
     if (isEditing) {
+        // بعد التعديل، أعد فتح سجل المعاملات للتأكيد
         _visualOpen('log', { logType: type });
     }
 }
 
 // ---------------------------------------------
-// وظائف CRUD 
+// وظائف CRUD (المصروفات)
 // ---------------------------------------------
 
 async function addExpense() { 
@@ -1380,13 +1394,12 @@ async function addExpense() {
   let selectedFile = (eImgCamera.files && eImgCamera.files.length > 0) ? eImgCamera.files[0] : 
                      (eImgGallery.files && eImgGallery.files.length > 0) ? eImgGallery.files[0] : null;
 
-  if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
+  if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات الأساسية (المبلغ، الفئة، التاريخ).");
   
   const isEditing = editMode && editMode.type === "exp";
   const oldData = isEditing ? db.exp[editMode.index] : {}; 
-  
-  // oldAmount هنا ليست مطلوبة مباشرة في addExpense لكن يتم استخدامها في processBalanceChange بشكل غير مباشر الآن
-  // processBalanceChange تم تعديلها لاستخدام existingChange.القيمة_الصافية بدلاً من oldAmount في وضع التعديل
+  // عند التعديل، المبلغ القديم الذي تم خصمه هو المبلغ المسجل في المعاملة القديمة (بقيمة سالبة)
+  const oldNetChange = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
   
   const amount = parseAmount(eAmount.value);
   if (amount === 0) return toastMsg("المبلغ يجب أن يكون أكبر من صفر.");
@@ -1399,17 +1412,20 @@ async function addExpense() {
   data.التاريخ = eDate.value; 
   data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
   
-  // إذا كان في وضع التعديل، تأكد من عدم مسح الصورة إذا لم يتم اختيار صورة جديدة
+  // حفظ الصورة
   if (!isEditing || selectedFile) {
+       // إذا تم اختيار ملف جديد أو كانت عملية جديدة
        delete data.صورة;
   }
   
   const done = async () => {
     try {
-        await saveData('exp', data); 
+        // حفظ بيانات المعاملة
+        const id = await saveData('exp', data); 
+        data.id = data.id || id;
         
-        // oldAmount كان يتم إرسالها سابقاً، الآن نكتفي بـ isEditing لتحديد منطق التعديل في الدالة
-        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing);
+        // تحديث الرصيد
+        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldNetChange);
 
         toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
         
@@ -1433,6 +1449,10 @@ async function addExpense() {
   }
 }
 
+// ---------------------------------------------
+// وظائف CRUD (الحقوق)
+// ---------------------------------------------
+
 async function addRight() {
   const rAmount = document.getElementById('rAmount');
   const rType = document.getElementById('rType');
@@ -1440,7 +1460,7 @@ async function addRight() {
   const rDesc = document.getElementById('rDesc');
   const rStatus = document.getElementById('rStatus');
 
-  if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
+  if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات الأساسية.");
   
   const isEditing = editMode && editMode.type === "rig";
   const oldData = isEditing ? db.rig[editMode.index] : {};
@@ -1457,6 +1477,8 @@ async function addRight() {
   data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
   
   let amountCollected = 0; 
+  // عند التعديل، المبلغ القديم الذي تم إضافته للرصيد
+  const oldNetChange = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
   
   if (data.النوع === 'دين') {
       const rPaidAmountInput = document.getElementById('rPaidAmount');
@@ -1476,7 +1498,6 @@ async function addRight() {
           data.الحالة = "غير مدفوع بعد";
       }
       amountCollected = paidAmount;
-      delete data.الحالة_اليدوية;
       
   } else { // بيع آجل أو أخرى
       if (!rStatus.value) return toastMsg("يرجى تحديد الحالة.");
@@ -1487,21 +1508,16 @@ async function addRight() {
       } else {
           amountCollected = 0;
       }
-      
-      delete data.المبلغ_المدفوع;
-      delete data.المتبقي;
   }
   
   data.المبلغ_المضاف_للرصيد = amountCollected; 
   
-  if (isEditing) {
-      data.id = oldData.id;
-  }
-  
   try {
-      await saveData('rig', data);
+      const id = await saveData('rig', data);
+      data.id = data.id || id;
       
-      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing);
+      // تحديث الرصيد
+      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldNetChange);
 
       toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
       
@@ -1528,9 +1544,13 @@ function updateRightFields(type, currentData = null) {
     }
     
     // إضافة حقل التاريخ المتوقع لجميع الأنواع
-    const expectedDateHtml = `<input id="rExpectedDate" type="date" placeholder="تاريخ التحصيل المتوقع" value="${currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع : ''}">`;
+    const expectedDateHtml = `<input id="rExpectedDate" type="date" placeholder="تاريخ التحصيل المتوقع" value="${currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع.split('T')[0] : ''}">`;
     dynamicFields.innerHTML += expectedDateHtml;
 }
+
+// ---------------------------------------------
+// وظائف CRUD (الالتزامات)
+// ---------------------------------------------
 
 async function addDebt() {
   const dType = document.getElementById('dType');
@@ -1554,6 +1574,8 @@ async function addDebt() {
   data.التاريخ = dDate.value; 
   
   let amountPaid = 0; 
+  // عند التعديل، المبلغ القديم الذي تم خصمه هو القيمة المطلقة للمبلغ المخصوم
+  const oldNetChange = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
   
   if (isMasterLiability) {
       const dTotalAmountInput = document.getElementById('dTotalAmount');
@@ -1594,7 +1616,10 @@ async function addDebt() {
       data.المبلغ = "—";
       data.الحالة = "—";
       
-      amountPaid = totalPaidAmount; 
+      amountPaid = totalPaidAmount; // هذا هو المبلغ الذي يجب أن يؤثر على الرصيد
+      
+      // مسح حقول الفواتير العادية
+      delete data.المبلغ_المخصوم_للرصيد;
       
   } else {
       if (!dAmount.value || !dStatus.value) return toastMsg("أكمل بيانات الفاتورة/القسط العادي.");
@@ -1613,18 +1638,19 @@ async function addDebt() {
       delete data.المبلغ_الكلي_للالتزام;
       delete data.إجمالي_المدفوع;
       delete data.المتبقي_للالتزام;
+      delete data.عدد_الاقساط;
+      delete data.قيمة_القسط;
+      delete data.الأقساط_المدفوعة;
   }
   
   data.المبلغ_المخصوم_للرصيد = amountPaid; 
   
-  if (isEditing) {
-      data.id = oldData.id;
-  }
-  
   try {
-      await saveData('deb', data);
+      const id = await saveData('deb', data);
+      data.id = data.id || id;
       
-      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing);
+      // تحديث الرصيد (الخصم يكون بقيمة amountPaid)
+      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldNetChange);
 
       toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
       
@@ -1684,6 +1710,8 @@ function editTransaction() {
     
     if (editMode.type === "rig") {
       document.getElementById('rType').value = currentData.النوع;
+      
+      // يجب استدعاء تحديث الحقول الديناميكية قبل ملء البيانات
       updateRightFields(currentData.النوع, currentData); 
       
       document.getElementById('rAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
@@ -1693,6 +1721,12 @@ function editTransaction() {
       if (currentData.النوع !== 'دين' && document.getElementById('rStatus')) {
           document.getElementById('rStatus').value = currentData.الحالة === 'مدفوع بالكامل' ? 'كامل' : currentData.الحالة;
       }
+      
+      // ملء حقول الدين بشكل خاص
+      if (currentData.النوع === 'دين' && document.getElementById('rPaidAmount')) {
+         document.getElementById('rPaidAmount').value = parseAmount(currentData.المبلغ_المدفوع || 0).toLocaleString('ar');
+      }
+
     }
     
     if (editMode.type === "deb") {
@@ -1700,6 +1734,7 @@ function editTransaction() {
       document.getElementById('dDesc').value = currentData.الوصف;
       document.getElementById('dDate').value = currentData.التاريخ;
 
+      // يجب استدعاء تحديث الحقول الديناميكية قبل ملء البيانات
       updateDebtFields(currentData.النوع, currentData); 
 
       if (currentData.النوع !== 'قرض' && currentData.النوع !== 'دين شخصي') {
@@ -1727,15 +1762,17 @@ async function deleteTransaction() {
           if (balanceRecordIndex > -1) {
               const oldNetChange = db.bal.changes[balanceRecordIndex].القيمة_الصافية;
               
-              db.bal.changes.splice(balanceRecordIndex, 1);
-              
-              currentBalance -= oldNetChange;
+              currentBalance = parseAmount(currentBalance) - oldNetChange; // عكس التأثير الصافي
               db.bal.amount = currentBalance; 
+              
+              db.bal.changes.splice(balanceRecordIndex, 1); // إزالة سجل الحركة
+              
               await saveData('bal', db.bal);
           }
       }
 
       editMode = null; 
+      // يجب إعادة تحميل البيانات بعد الحذف
       await loadAllData(); 
       toastMsg("تم الحذف بنجاح");
       
@@ -1752,7 +1789,7 @@ async function deleteTransaction() {
 }
 
 // ---------------------------------------------
-// وظائف العرض والتفاصيل (التي تم إصلاحها)
+// وظائف العرض والتفاصيل 
 // ---------------------------------------------
 
 function _renderDetailContent(o, type) {
@@ -1760,20 +1797,23 @@ function _renderDetailContent(o, type) {
     let html = `<div class="card" style="border-top-color: var(--p);">`;
     html += `<h3 style="color: var(--p); margin-top: 0;"><i class="fas fa-info-circle" style="margin-left: 5px;"></i> التفاصيل</h3>`;
     
+    // قائمة الحقول التي يجب تجاهلها
+    const ignoredKeys = ['id', 'clientId', 'صورة', 'المبلغ_المضاف_للرصيد', 'المبلغ_المخصوم_للرصيد'];
+    
     for (const [key, value] of Object.entries(o)) {
-        if (key === 'id' || key === 'clientId' || key === 'صورة') continue;
+        if (ignoredKeys.includes(key)) continue;
         
         // Skip null/undefined/empty string values, except for important fields
         if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '' && key !== 'الوصف')) continue;
         
         const isAmountField = key.includes('المبلغ') || key.includes('المدفوع') || key.includes('المتبقي') || key.includes('القسط');
-        const formattedValue = isAmountField ? formatCurrency(value, true) : value;
+        const formattedValue = isAmountField ? formatCurrency(value, true) : (key === 'التاريخ' ? formatDateTime(value) : value);
         
         html += `<p style="margin: 8px 0;"><strong>${key.replace(/_/g, ' ')}:</strong> <span>${formattedValue}</span></p>`;
     }
     html += `</div>`;
     
-    // **الجزء الخاص بعرض الصورة (إصلاح المشكلة)**
+    // الجزء الخاص بعرض الصورة
     if (o.صورة && type === 'exp') {
         html += `<div class="card" style="border-top-color: var(--s);">
             <h3 style="color: var(--s); margin-top: 0;"><i class="fas fa-image" style="margin-left: 5px;"></i> صورة الفاتورة</h3>
@@ -1812,6 +1852,7 @@ function renderLog() {
             const isExpense = logType === 'exp';
             const isRight = logType === 'rig';
             
+            // تحديد قيمة العرض الأساسية
             const amountValue = parseAmount(i.المبلغ_الكلي_للالتزام || i.المبلغ || 0);
             const amountDisplay = formatCurrency(amountValue);
             
@@ -1882,7 +1923,8 @@ function updateStats() {
     });
     
     db.deb.forEach(i => {
-        let amount = parseAmount(i.المبلغ_الكلي_للالتزام || i.المبلغ);
+        // إذا كان التزاماً كبيراً، استخدم المبلغ الكلي. وإلا، استخدم مبلغ الفاتورة
+        let amount = parseAmount(i.المبلغ_الكلي_للالتزام || i.المبلغ || 0);
         debTotal += amount;
         debPaid += parseAmount(i.المبلغ_المخصوم_للرصيد || 0);
     });
@@ -1942,6 +1984,7 @@ async function addDataToStore(storeName, dataArray) {
         } else {
             await new Promise(resolve => {
                 const dataToSave = { ...item };
+                // نحذف الـ ID القديم ونستخدم clientId فقط في حالة الاستيراد لتجنب تعارض الـ auto-increment
                 delete dataToSave.id; 
                 dataToSave.clientId = item.clientId || `${storeName}-${Date.now()}`;
                 
@@ -1985,8 +2028,11 @@ async function importData(event) {
         try {
             const importedData = JSON.parse(e.target.result);
             
+            // يجب تحديث سجل الرصيد يدوياً في IndexedDB
             if (importedData.bal && Array.isArray(importedData.bal.changes)) {
                  importedData.bal.clientId = 1; 
+                 // حذف السجل القديم قبل وضع الجديد
+                 await deleteFromDB('bal', 1);
                  await addDataToStore('bal', [importedData.bal]);
             }
 
@@ -2031,8 +2077,13 @@ function resetAllData() {
         request.onsuccess = () => {
             storesCleared++;
             if (storesCleared === STORE_NAMES.length) {
-                db.exp = db.rig = db.deb = []; 
+                // إعادة تعيين المتغيرات المحلية 
+                db.exp = []; 
+                db.rig = []; 
+                db.deb = []; 
                 db.bal = { clientId: 1, amount: 0, changes: [] };
+                
+                // إعادة إضافة سجل الرصيد الأساسي (يجب أن يتم هذا بعد مسح المتجر)
                 saveData('bal', db.bal).then(() => {
                     loadAllData().then(() => {
                         updateStats(); 
