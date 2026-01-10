@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ميزانيتك الذكية | Smart Budget</title>
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
 
@@ -108,7 +106,7 @@ header button:hover { transform: scale(1.1); }
 }
 .tabs button{
     flex: 1 1 auto; 
-    min-width: 0; 
+    min-width: 0; /* تم التعديل: للسماح للأزرار بالانكماش على الشاشات الصغيرة وتوزيعها بالتساوي */
     padding: 15px 10px;
     border:none;
     background: var(--card-bg);
@@ -204,6 +202,10 @@ body.dark-mode .tabs button.active {
     box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
     border-color: var(--p);
+}
+#overview .balance-actions .action i {
+    font-size: 24px;
+    margin-bottom: 5px;
 }
 #overview .balance-actions .deposit i { color: var(--success); }
 #overview .balance-actions .withdraw i { color: var(--danger); }
@@ -595,10 +597,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <i class="fas fa-camera" style="margin-left: 5px;"></i> إرفاق صورة الفاتورة (اختياري)
     </button>
     <span id="eImgName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
-    <button id="removeImageBtn" class="secondary" onclick="removeImage()" style="display: none; margin-top: 5px; padding: 8px;">
-        <i class="fas fa-trash" style="margin-left: 5px;"></i> حذف الصورة
-    </button>
-    <input type="file" id="eImgCamera" accept="image/*" capture="environment" style="display: none;" onchange="updateFileName(this, 'eImgName')">
+    <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eImgName')">
     <button class="action" onclick="addExpense()">
         <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ المصروف
@@ -786,7 +785,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p class="card" style="border-top: 3px solid var(--danger);">
             <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري.
         </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.2 (محدث)</p>
+        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.1 (مطور ومثبت)</p>
     </div>
 </div>
 
@@ -798,7 +797,7 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="modal-content">
         <input id="currencySearch" type="text" placeholder="🔍 ابحث عن العملة (ريال، جنيه، دولار...)" oninput="renderCurrencyList()">
         <div id="currencyList">
-        </div>
+            </div>
     </div>
 </div>
 
@@ -806,21 +805,17 @@ input:checked + .slider:before { transform: translateX(20px); }
 // ===================================================
 // 1. إعداد IndexedDB ومتغيرات الحالة والعملات
 // ===================================================
+
 const IDB_NAME = "MySmartBudgetDB";
-const IDB_VERSION = 4;
-const STORE_NAMES = ["exp", "rig", "deb", "bal"];
-let db = { 
-    exp: [], 
-    rig: [], 
-    deb: [], 
-    bal: { clientId: 1, amount: 0, changes: [] } 
-}; // تهيئة أولية
-let IDB_connection = null;
+const IDB_VERSION = 4; // تم زيادة الإصدار لإعادة إنشاء الـ stores إذا لزم الأمر
+const STORE_NAMES = ["exp", "rig", "deb", "bal"]; 
+let db = { exp: [], rig: [], deb: [], bal: { clientId: 1, amount: 0, changes: [] } }; // تهيئة أولية
+let IDB_connection = null; 
 
 // الحالة العالمية
 let currentLog = "", editMode = null, balanceActionType = null;
-let currentBalance = 0;
-let balanceHidden = localStorage.getItem('balanceHidden') === 'true';
+let currentBalance = 0; 
+let balanceHidden = localStorage.getItem('balanceHidden') === 'true'; 
 
 // إدارة حالة التنقل
 const LAYERS = {
@@ -830,10 +825,10 @@ const LAYERS = {
     'currency': { elementId: 'currencyModal', type: 'modal' },
     'about': { elementId: 'aboutModal', type: 'modal' },
     'balanceAction': { elementId: 'balanceActionModal', type: 'modal' },
-    'balanceLog': { elementId: 'balanceLogModal', type: 'modal' },
-    'imageSource': { elementId: 'imageSourceModal', type: 'menu' }
+    'balanceLog': { elementId: 'balanceLogModal', type: 'modal' }, 
+    'imageSource': { elementId: 'imageSourceModal', type: 'menu' } 
 };
-let historyStack = [];
+let historyStack = []; 
 
 const ARABIC_CURRENCIES = [
     { code: 'SAR', symbol: 'ر.س', name: 'ريال سعودي' },
@@ -852,113 +847,94 @@ let currentCurrency = ARABIC_CURRENCIES.find(c => c.code === (localStorage.getIt
 // ===================================================
 // 2. وظائف IndexedDB والحفظ
 // ===================================================
+
 function initDB() {
-    return new Promise((resolve, reject) => {
-        if (!window.indexedDB) {
-            toastMsg("المتصفح لا يدعم IndexedDB. لن يتم حفظ البيانات.");
-            return reject(new Error("IndexedDB not supported."));
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+        toastMsg("المتصفح لا يدعم IndexedDB. لن يتم حفظ البيانات.");
+        return reject(new Error("IndexedDB not supported."));
+    }
+
+    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
+
+    request.onerror = (e) => {
+      console.error("IndexedDB error:", e.target.error);
+      reject(e.target.error);
+    };
+
+    request.onupgradeneeded = (e) => {
+      IDB_connection = e.target.result;
+      STORE_NAMES.forEach(storeName => {
+        if (IDB_connection.objectStoreNames.contains(storeName)) {
+            IDB_connection.deleteObjectStore(storeName); 
         }
+        
+        const keyPath = (storeName === 'bal') ? 'clientId' : 'id'; 
+        const autoIncrement = (storeName !== 'bal'); 
+        const store = IDB_connection.createObjectStore(storeName, { keyPath: keyPath, autoIncrement: autoIncrement });
 
-        const request = indexedDB.open(IDB_NAME, IDB_VERSION);
-
-        request.onerror = (e) => {
-            console.error("IndexedDB error:", e.target.error);
-            reject(e.target.error);
-        };
-
-        request.onupgradeneeded = (e) => {
-            IDB_connection = e.target.result;
-            
-            STORE_NAMES.forEach(storeName => {
-                if (IDB_connection.objectStoreNames.contains(storeName)) {
-                    IDB_connection.deleteObjectStore(storeName);
-                }
-                const keyPath = (storeName === 'bal') ? 'clientId' : 'id';
-                const autoIncrement = (storeName !== 'bal');
-                const store = IDB_connection.createObjectStore(storeName, { keyPath: keyPath, autoIncrement: autoIncrement });
-
-                if(storeName === 'bal') {
-                    store.add({ clientId: 1, amount: 0, changes: [] });
-                }
-            });
-        };
-
-        request.onsuccess = (e) => {
-            IDB_connection = e.target.result;
-            resolve(IDB_connection);
-            
-            loadAllData().then(() => {
-                updateStats(); 
-                updateBalanceDisplay();
-            });
-        };
-    });
+        if(storeName === 'bal') {
+            store.add({ clientId: 1, amount: 0, changes: [] });
+        }
+      });
+    };
+    
+    request.onsuccess = (e) => {
+      IDB_connection = e.target.result;
+      resolve(IDB_connection);
+      loadAllData().then(() => {
+        updateStats();
+        updateBalanceDisplay();
+      });
+    };
+  });
 }
 
-// تأجيل تشغيل initDB حتى تحميل الصفحة بالكامل
-window.addEventListener('load', () => {
-    initDB();
-    loadDarkModePreference();
-    // تحديث عرض العملة
-    if (currentCurrency) {
-        document.getElementById('currentCurrencyDisplay').innerHTML = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
-    }
-
-    // تسجيل Service Worker
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Service Worker Registered', reg))
-            .catch(err => console.log('Service Worker Failed to Register', err));
-    }
-    
-    // إعداد التاريخ والوقت الافتراضي
-    setDefaultDateTime();
-});
+initDB();
 
 function saveData(storeName, data) {
-    return new Promise((resolve, reject) => {
-        if (!IDB_connection) return reject(new Error("Database not connected."));
-        
-        const transaction = IDB_connection.transaction([storeName], "readwrite");
-        const store = transaction.objectStore(storeName);
-        const request = store.put(data);
+  return new Promise((resolve, reject) => {
+    if (!IDB_connection) return reject(new Error("Database not connected."));
 
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = (e) => reject(e.target.error);
-    });
+    const transaction = IDB_connection.transaction([storeName], "readwrite");
+    const store = transaction.objectStore(storeName);
+    const request = store.put(data); 
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
 }
 
 function deleteFromDB(storeName, id) {
-    return new Promise((resolve, reject) => {
-        if (!IDB_connection) return reject(new Error("Database not connected."));
-        
-        const transaction = IDB_connection.transaction([storeName], "readwrite");
-        const store = transaction.objectStore(storeName);
-        const request = store.delete(id);
+  return new Promise((resolve, reject) => {
+    if (!IDB_connection) return reject(new Error("Database not connected."));
 
-        request.onsuccess = () => resolve();
-        request.onerror = (e) => reject(e.target.error);
-    });
+    const transaction = IDB_connection.transaction([storeName], "readwrite");
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(id); 
+
+    request.onsuccess = () => resolve();
+    request.onerror = (e) => reject(e.target.error);
+  });
 }
 
 function loadStoreData(storeName) {
-    return new Promise((resolve) => {
-        if (!IDB_connection) return resolve([]);
-        
-        const transaction = IDB_connection.transaction([storeName], "readonly");
-        const store = transaction.objectStore(storeName);
-        const request = store.getAll();
+  return new Promise((resolve) => {
+    if (!IDB_connection) return resolve([]); 
+    
+    const transaction = IDB_connection.transaction([storeName], "readonly");
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
 
-        request.onsuccess = (e) => {
-            if(storeName === 'bal') {
-                const result = e.target.result[0];
-                return resolve(result || { clientId: 1, amount: 0, changes: [] });
-            }
-            // عكس الترتيب لعرض الأحدث أولاً
-            resolve(e.target.result.reverse());
-        };
-        request.onerror = () => resolve(storeName === 'bal' ? { clientId: 1, amount: 0, changes: [] } : []);
-    });
+    request.onsuccess = (e) => {
+        if(storeName === 'bal') {
+            const result = e.target.result[0];
+            return resolve(result || { clientId: 1, amount: 0, changes: [] });
+        }
+        resolve(e.target.result.reverse());
+    };
+    request.onerror = () => resolve(storeName === 'bal' ? { clientId: 1, amount: 0, changes: [] } : []);
+  });
 }
 
 async function loadAllData() {
@@ -968,11 +944,10 @@ async function loadAllData() {
         loadStoreData('deb'),
         loadStoreData('bal'),
     ]);
-    
     db.exp = expData;
     db.rig = rigData;
     db.deb = debData;
-    db.bal = balData;
+    db.bal = balData; 
     currentBalance = db.bal.amount || 0;
 }
 
@@ -1000,53 +975,46 @@ function toggleBalanceVisibility() {
     updateBalanceDisplay();
 }
 
+loadDarkModePreference(); 
+
 function _visualOpen(layerName, data = {}) {
     const layer = LAYERS[layerName];
     if (!layer) return;
 
-    // Push to history stack only if the layer is not already on top or if it's the first
-    const isAlreadyOnTop = historyStack.length > 0 && historyStack[historyStack.length - 1] === layerName;
-    if (!isAlreadyOnTop) {
-        historyStack.push(layerName);
-    }
-    
     const element = document.getElementById(layer.elementId);
+
     if (layer.type === 'modal') {
         element.style.display = 'flex';
-        // إضافة class لـ overlay خاص بالـ modal (إن وجد)
-        if (layerName === 'imageSource' && document.getElementById('imageSourceOverlay')) {
-            document.getElementById('imageSourceOverlay').style.display = 'block';
-        }
-        
         if (layerName === 'log') {
             currentLog = data.logType;
             renderLog();
         } else if (layerName === 'detail') {
             const o = db[data.logType].find(item => item.id === data.id);
             if (!o) return toastMsg("لم يتم العثور على المعاملة.");
-            renderDetail(o, data.logType);
-        } else if (layerName === 'balanceLog') {
-            renderBalanceLog();
+            const index = db[data.logType].findIndex(item => item.id === data.id);
+            editMode = { type: data.logType, index: index }; 
+            _renderDetailContent(o, data.logType); 
         } else if (layerName === 'balanceAction') {
-            // تحديث محتوى شاشة الإيداع/السحب
-            balanceActionType = data.type;
-            const title = (data.type === 'deposit') ? 'إيداع رصيد' : 'سحب رصيد';
-            document.getElementById('actionModalTitle').innerText = title;
-            document.getElementById('currentBalanceInAction').innerHTML = formatAmountHTML(currentBalance);
+            balanceActionType = data.actionType;
+            document.getElementById('actionModalTitle').textContent = balanceActionType === 'deposit' ? 'إيداع رصيد جديد' : 'سحب/تحويل رصيد';
+            document.getElementById('currentBalanceInAction').innerHTML = formatCurrency(currentBalance);
             document.getElementById('bAmount').value = '';
             document.getElementById('bDesc').value = '';
-            setDefaultDateTime('bDate');
+            document.getElementById('bDate').value = new Date().toISOString().slice(0, 16);
         } else if (layerName === 'currency') {
             document.getElementById('currencySearch').value = '';
             renderCurrencyList();
+        } else if (layerName === 'balanceLog') { 
+             renderBalanceLog();
         }
     } else if (layer.type === 'menu') {
         element.classList.add('open');
-        document.querySelector('.sidebar-overlay').classList.add('open');
+        const overlay = document.querySelector(layerName === 'imageSource' ? '#imageSourceOverlay' : '.sidebar-overlay');
+        if (overlay) overlay.classList.add('open');
     }
 }
 
-function _visualClose(layerName) {
+function _visualClose(layerName, clearEdit = true) {
     const layer = LAYERS[layerName];
     if (!layer) return;
 
@@ -1054,975 +1022,980 @@ function _visualClose(layerName) {
 
     if (layer.type === 'modal') {
         element.style.display = 'none';
-        // إزالة class لـ overlay خاص بالـ modal (إن وجد)
-         if (layerName === 'imageSource' && document.getElementById('imageSourceOverlay')) {
-            document.getElementById('imageSourceOverlay').style.display = 'none';
+        if (clearEdit && (layerName === 'detail' || layerName === 'log')) {
+             editMode = null;
         }
     } else if (layer.type === 'menu') {
         element.classList.remove('open');
-        document.querySelector('.sidebar-overlay').classList.remove('open');
+        const overlay = document.querySelector(layerName === 'imageSource' ? '#imageSourceOverlay' : '.sidebar-overlay');
+        if (overlay) overlay.classList.remove('open');
     }
-    
-    // Remove the closed layer from history
-    historyStack = historyStack.filter(item => item !== layerName);
 }
 
+
 function openLayer(layerName, data = {}) {
+    if (historyStack.length > 0 && historyStack[historyStack.length - 1].layer === layerName) return;
+
+    const state = { layer: layerName, data: data };
+    historyStack.push(state);
+    history.pushState(state, null, `#${layerName}`);
     _visualOpen(layerName, data);
 }
 
 function closeLayer(layerName) {
-    _visualClose(layerName);
+    const top = historyStack[historyStack.length - 1];
+    if (top && top.layer === layerName) {
+        history.back(); 
+    } else {
+        _visualClose(layerName);
+    }
 }
 
-function closeTopLayer() {
-    if (historyStack.length === 0) return;
-    const topLayer = historyStack.pop();
-    _visualClose(topLayer);
-}
-
-window.onpopstate = (e) => {
-    // This handles the browser back button logic for modals/sidebar if implemented
-    // Currently, simple close functions are used:
-    // If the back button is pressed, it should close the top overlay
-    if (historyStack.length > 0) {
-        closeTopLayer();
-        e.preventDefault(); 
+window.onpopstate = (event) => {
+    const closedLayer = historyStack.pop();
+    if (closedLayer) {
+        _visualClose(closedLayer.layer); 
+    }
+    
+    if (historyStack.length === 0) {
+        if (confirm("هل تريد الخروج من التطبيق؟")) {
+             return;
+        } else {
+            const mainState = { layer: 'main' };
+            historyStack.push(mainState);
+            history.pushState(mainState, null, `#main`);
+            for (const name in LAYERS) {
+                _visualClose(name, false); 
+            }
+        }
+    } else {
+        const newTop = historyStack[historyStack.length - 1];
+        _visualOpen(newTop.layer, newTop.data);
     }
 };
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeTopLayer();
+window.onload = () => {
+    if (history.state === null || history.state.layer === undefined) {
+        history.replaceState({ layer: 'main' }, null, '#main');
+        historyStack.push({ layer: 'main' });
+    } else {
+        historyStack.push(history.state);
     }
-});
+};
 
 
-function openTab(tabName) {
-    // إخفاء جميع الأقسام وإلغاء تفعيل جميع الأزرار
-    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-    document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-
-    // إظهار القسم المطلوب وتفعيل زر التبويب
-    document.getElementById(tabName).classList.add('active');
-    document.querySelector(`.tabs button[onclick="openTab('${tabName}')"]`).classList.add('active');
-    
-    // إزالة وضع التعديل عند التبديل
-    editMode = null; 
-    
-    // إعادة تعيين جميع النماذج لضمان واجهة نظيفة
-    resetForms();
-}
-
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    toast.innerText = message;
-    toast.classList.add('show');
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2500);
-}
-
-// ===================================================
-// 4. وظائف تنسيق البيانات وتاريخها
-// ===================================================
+// وظائف الواجهة البرمجية (API)
+function openSidebar() { openLayer('sidebar'); }
+function openBalanceLogModal() { openLayer('balanceLog'); } 
+function openBalanceActionModal(type) { openLayer('balanceAction', { actionType: type }); }
+function openLog(t) { openLayer('log', { logType: t }); }
+function showDetailById(id, type) { openLayer('detail', { logType: type, id: id }); }
+function openCurrencyModal() { openLayer('currency'); }
+function openAboutModal() { openLayer('about'); }
+function showImageSourceModal() { openLayer('imageSource'); } 
 
 function formatAmount(input) {
-    // إزالة الفواصل والنقاط باستثناء نقطة العشرية الأولى
-    let value = input.value.replace(/,/g, '');
-    let parts = value.split('.');
-    if (parts.length > 2) {
-        value = parts[0] + '.' + parts.slice(1).join('');
-    }
+  let value = input.value.replace(/[^\d.]/g, ''); 
+  const parts = value.split('.');
+  
+  if (parts.length > 2) {
+    value = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  const integerPart = parts[0];
+  const decimalPart = parts[1] ? '.' + parts[1] : '';
+  
+  const number = parseFloat(integerPart.replace(/,/g, '')); 
+  let formattedIntegerPart = isNaN(number) ? '' : number.toLocaleString('ar');
+  
+  if (input.value.endsWith('.') && !decimalPart) {
+      formattedIntegerPart += '.';
+  }
 
-    // السماح فقط للأرقام ونقطة عشرية واحدة
-    value = value.replace(/[^0-9.]/g, '');
-
-    // تطبيق التنسيق المحلي
-    if (value) {
-        const number = parseFloat(value);
-        if (!isNaN(number)) {
-            input.value = number.toLocaleString('en-US', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2
-            });
-        }
-    }
+  input.value = formattedIntegerPart + decimalPart;
 }
 
-function getRawAmount(formattedAmount) {
-    if (!formattedAmount) return 0;
-    // إزالة فواصل الآلاف
-    const rawValue = formattedAmount.toString().replace(/,/g, ''); 
-    // تحويلها إلى رقم (سيحول '10.5' إلى 10.5)
-    return parseFloat(rawValue) || 0;
+function parseAmount(amount) {
+  let str = String(amount).replace(/[،\u066c]/g, '').replace(/[^\d.]/g, ''); 
+  str = str.replace(/([٠١٢٣٤٥٦٧٨٩])/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1632 + 48));
+  return parseFloat(str) || 0;
 }
 
-function formatAmountHTML(amount, includeSign = false, hide = false) {
-    const sign = includeSign ? (amount > 0 ? '+' : (amount < 0 ? '-' : '')) : '';
-    const absoluteAmount = Math.abs(amount);
-
-    if (hide && balanceHidden) {
-        return `<span class="hidden-balance">••••••</span>`;
-    }
-
-    // تنسيق الرقم
-    const formattedNumber = absoluteAmount.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+function getFormattedAmount(num) {
+    const formattedNum = num.toLocaleString('ar', { 
+        minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2 
     });
-
-    const colorClass = includeSign ? (amount > 0 ? 'color: var(--success);' : (amount < 0 ? 'color: var(--danger);' : '')) : '';
-
-    return `<span style="${colorClass}">${sign}${formattedNumber}</span> <span class="currency-symbol">${currentCurrency.symbol}</span>`;
+    return formattedNum;
 }
 
-function setDefaultDateTime(elementId) {
-    const now = new Date();
-    // الحصول على التوقيت المحلي (Offset) للتأكد من عرض الوقت الصحيح في المتصفح
-    const offset = now.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, 16);
+function formatCurrency(amount, withColor = false) {
+    const num = parseAmount(amount);
     
-    // إذا كان elementId محدداً، قم بضبط القيمة عليه، وإلا فقم بضبط القيمة على جميع حقول التاريخ في النموذج الرئيسي
-    if (elementId) {
-         const element = document.getElementById(elementId);
-         if (element) element.value = localISOTime;
-    } else {
-        document.getElementById('eDate').value = localISOTime;
-        document.getElementById('rDate').value = localISOTime;
-        document.getElementById('dDate').value = localISOTime;
+    if (balanceHidden) {
+         return '<span class="hidden-balance">***</span>';
     }
+
+    const formattedNum = getFormattedAmount(num);
+    
+    let colorStyle = '';
+    if (withColor) {
+        if (num > 0) colorStyle = `style="color: var(--success);"`;
+        else if (num < 0) colorStyle = `style="color: var(--danger);"`;
+    }
+
+    return `<span ${colorStyle}>${formattedNum} <span class="currency-symbol">${currentCurrency.symbol}</span></span>`;
 }
 
-function formatDate(isoString) {
-    if (!isoString) return 'غير محدد';
-    const date = new Date(isoString);
-    if (isNaN(date)) return 'تاريخ غير صحيح';
 
-    const options = {
+function formatDateTime(dateString) {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    if (isNaN(date)) return 'تاريخ غير صالح';
+    return date.toLocaleString('ar-EG', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',
+        hour: 'numeric',
         minute: '2-digit',
-        hour12: true,
-        timeZone: 'auto' 
-    };
+        hour12: true 
+    });
+}
 
-    // إضافة صيغة التاريخ العربية بشكل صريح
-    return date.toLocaleDateString('ar-SA', options).replace(/،/, ' ');
+function toastMsg(m) {
+  const toast = document.getElementById("toast");
+  toast.textContent = m;
+  toast.classList.add("show");
+  toast.style.animation = 'none';
+  toast.offsetHeight; 
+  toast.style.animation = null; 
+  setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
 
-// ===================================================
-// 5. وظائف إدارة الرصيد (Balance)
-// ===================================================
+function clearFields(keepExpenseImage = false) {
+  const fields = ['eAmount', 'eDesc', 'eType', 'eDate', 
+                  'rAmount', 'rDesc', 'rDate', 'rType', 'rStatus',
+                  'dType', 'dAmount', 'dDesc', 'dDate', 'dStatus'];
+  fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+  });
+  
+  // مسح حالة الصورة
+  document.getElementById('eImgName').textContent = '';
+  document.getElementById('eImgCamera').value = null; 
+  document.getElementById('eImgGallery').value = null; 
+  
+  document.getElementById('rDynamicFields').innerHTML = '';
+  document.getElementById('dDynamicFields').innerHTML = '';
+}
 
-function updateBalanceDisplay() {
-    const balanceElement = document.getElementById('currentBalanceDisplay');
-    const toggleButton = document.getElementById('balanceVisibilityToggle');
+function openTab(id, keepEditMode = false) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
     
-    // تحديث القيمة المعروضة
-    balanceElement.innerHTML = formatAmountHTML(currentBalance, false, true);
+    const button = event && event.currentTarget || document.querySelector(`.tabs button[onclick*="${id}"]`);
+    if(button) button.classList.add("active");
+    
+    if (!keepEditMode) { 
+        editMode = null; 
+        clearFields(); 
+    }
+    
+    if(id === 'overview') updateStats();
+}
 
-    // تحديث أيقونة الإظهار/الإخفاء
-    if (balanceHidden) {
-        toggleButton.innerHTML = `<i class="fas fa-eye-slash"></i>`;
-        toggleButton.title = "إظهار الرصيد";
+// ---------------------------------------------
+// وظائف إرفاق الصور الجديدة (Camera/Gallery)
+// ---------------------------------------------
+
+function openCameraInput() {
+    document.getElementById('eImgCamera').click();
+    closeLayer('imageSource');
+}
+
+function openGalleryInput() {
+    document.getElementById('eImgGallery').click();
+    closeLayer('imageSource');
+}
+
+function updateFileName(input, displayId) {
+    const displayElement = document.getElementById(displayId);
+    if (input.files && input.files.length > 0) {
+        displayElement.textContent = `تم اختيار: ${input.files[0].name}`;
     } else {
-        toggleButton.innerHTML = `<i class="fas fa-eye"></i>`;
-        toggleButton.title = "إخفاء الرصيد";
+        displayElement.textContent = '';
     }
 }
 
-async function updateBalance(amount, type, details, date) {
-    const rawAmount = getRawAmount(amount);
+// ---------------------------------------------
+// وظائف الرصيد (Balance)
+// ---------------------------------------------
+
+function updateBalanceDisplay() {
+    document.getElementById("currentBalanceDisplay").innerHTML = formatCurrency(currentBalance);
+    const actionDisplay = document.getElementById("currentBalanceInAction");
+    if (actionDisplay) actionDisplay.innerHTML = formatCurrency(currentBalance);
+
+    const toggleIconDashboard = document.querySelector('#balanceVisibilityToggle i');
+    if (toggleIconDashboard) toggleIconDashboard.className = balanceHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
     
-    // تحديث الرصيد الكلي
-    currentBalance += rawAmount;
+    if (document.getElementById("balanceLogModal").style.display === 'flex') {
+        renderBalanceLog();
+    }
+}
+
+async function processBalanceChange(amount, type, description, recordId = null, isEdit = false, oldAmount = 0) {
+    if (!recordId) recordId = `bal-${Date.now()}`;
     
-    // إنشاء سجل الحركة
-    const changeRecord = {
-        type: type, // 'deposit', 'withdraw', 'exp', 'rig', 'deb'
-        amount: rawAmount,
-        details: details || 'عملية رصيد',
-        date: date || new Date().toISOString(),
-        id: Date.now() 
+    const changeAmount = parseAmount(amount);
+    let netChange = changeAmount;
+    
+    if (type === 'expense' || type === 'debt_payment' || type === 'withdraw' || type === 'revert_expense_debt') {
+        netChange *= -1;
+    }
+    
+    let effectiveChange = netChange;
+    if (isEdit) {
+        effectiveChange = netChange - oldAmount; 
+    }
+    
+    currentBalance = parseAmount(currentBalance) + effectiveChange;
+    db.bal.amount = currentBalance;
+    
+    const newChangeEntry = {
+        id: recordId,
+        التاريخ: new Date().toISOString().slice(0, 16),
+        النوع: description, 
+        المبلغ: changeAmount,
+        التأثير: (netChange > 0 ? 'إيداع' : (netChange < 0 ? 'خصم' : 'تعديل')),
+        القيمة_الصافية: netChange,
+        الرصيد_بعد_العملية: currentBalance
     };
     
-    // تحديث قاعدة البيانات
-    db.bal.amount = currentBalance;
-    db.bal.changes.unshift(changeRecord); // إضافة السجل في البداية ليكون الأحدث
-    
-    await saveData('bal', db.bal);
-    
-    // تحديث العرض
-    updateBalanceDisplay();
+    const existingIndex = db.bal.changes.findIndex(c => c.id === recordId);
+    if (existingIndex > -1) {
+        db.bal.changes[existingIndex] = newChangeEntry;
+    } else {
+        db.bal.changes.unshift(newChangeEntry); 
+    }
+
+    try {
+        await saveData('bal', db.bal);
+        updateBalanceDisplay();
+        return true;
+    } catch (e) {
+        console.error('فشل حفظ الرصيد', e);
+        currentBalance -= effectiveChange; 
+        toastMsg("فشل تحديث الرصيد.");
+        return false;
+    }
 }
 
 async function processBalanceAction() {
     const amount = document.getElementById('bAmount').value;
-    const desc = document.getElementById('bDesc').value.trim() || (balanceActionType === 'deposit' ? 'إيداع نقدي' : 'سحب نقدي');
+    const desc = document.getElementById('bDesc').value || (balanceActionType === 'deposit' ? 'إيداع عام' : 'سحب عام');
     const date = document.getElementById('bDate').value;
-
-    if (!amount || getRawAmount(amount) <= 0) {
-        return showToast("الرجاء إدخال مبلغ صحيح.");
-    }
-
-    await updateBalance(amount, balanceActionType, desc, date);
     
-    showToast(`تم تنفيذ ${balanceActionType === 'deposit' ? 'الإيداع' : 'السحب'} بنجاح.`);
-    closeLayer('balanceAction');
+    if (!amount) return toastMsg("الرجاء إدخال المبلغ.");
+
+    const success = await processBalanceChange(amount, balanceActionType, desc, `manual-${Date.now()}`);
+    
+    if (success) {
+        toastMsg(balanceActionType === 'deposit' ? "تم الإيداع بنجاح" : "تم السحب بنجاح");
+        closeLayer('balanceAction');
+    }
 }
 
-
 function renderBalanceLog() {
-    const content = document.getElementById('balanceLogContent');
-    content.innerHTML = '';
+    const logContent = document.getElementById("balanceLogContent");
+    const changes = db.bal.changes || [];
     
-    if (db.bal.changes.length === 0) {
-        content.innerHTML = `<p style="text-align: center; color: #999; margin-top: 50px;">لا يوجد سجل لحركات الرصيد بعد.</p>`;
+    if (changes.length === 0) {
+        logContent.innerHTML = `<p style="text-align: center; color: #999;">لا توجد حركات رصيد مسجلة.</p>`;
         return;
     }
 
-    db.bal.changes.forEach(change => {
-        const isPositive = change.amount >= 0;
-        const icon = isPositive ? 'fa-plus' : 'fa-minus';
-        const color = isPositive ? 'var(--success)' : 'var(--danger)';
-        const amountDisplay = formatAmountHTML(change.amount, true);
-        
-        const html = `
-            <div class="list-item" style="border-right-color: ${color};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold;">${amountDisplay}</span>
-                    <span style="font-size: 0.9em; color: var(--text-dark);">
-                         ${change.details}
-                    </span>
+    logContent.innerHTML = changes
+        .map(i => {
+            const isDeposit = i.القيمة_الصافية > 0;
+            const color = isDeposit ? 'var(--success)' : (i.القيمة_الصافية < 0 ? 'var(--danger)' : '#999');
+            const icon = isDeposit ? 'fa-arrow-up' : (i.القيمة_الصافية < 0 ? 'fa-arrow-down' : 'fa-minus');
+            
+            return `
+                <div class="list-item" style="border-right-color: ${color};">
+                    <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas ${icon}" style="margin-left: 8px; color: ${color};"></i> ${i.النوع}</span> 
+                        <span style="color: ${color};">${formatCurrency(i.المبلغ)}</span>
+                    </div>
+                    <div class="details">
+                        <span>الرصيد بعد: ${formatCurrency(i.الرصيد_بعد_العملية)}</span>
+                        <span><i class="far fa-clock" style="margin-left: 4px;"></i>${formatDateTime(i.التاريخ)}</span>
+                    </div>
                 </div>
-                <div class="details">
-                    <span><i class="fas fa-clock" style="margin-left: 5px;"></i> ${formatDate(change.date)}</span>
-                    <i class="fas ${icon}" style="color: ${color};"></i>
-                </div>
-            </div>
-        `;
-        content.innerHTML += html;
+            `;
+        })
+        .join("");
+}
+
+
+function postSaveCleanup(isEditing, type) {
+    editMode = null; 
+    clearFields(); 
+    loadAllData().then(() => {
+        updateStats();
+        updateBalanceDisplay();
     });
+    
+    _visualClose('detail');
+    
+    if (isEditing) {
+        _visualOpen('log', { logType: type });
+    }
 }
 
-// ===================================================
-// 6. وظائف إضافة وحفظ البيانات
-// ===================================================
+// ---------------------------------------------
+// وظائف CRUD 
+// ---------------------------------------------
 
-function resetForms() {
-    // إعادة تعيين حقول نموذج المصروفات
-    document.getElementById('eAmount').value = '';
-    document.getElementById('eType').value = '';
-    document.getElementById('eDesc').value = '';
-    document.getElementById('eImgName').innerText = '';
-    document.getElementById('removeImageBtn').style.display = 'none';
-    document.getElementById('eImgCamera').value = ''; 
-    document.getElementById('eImgGallery').value = '';
-    
-    // إعادة تعيين حقول نموذج الحقوق
-    document.getElementById('rType').value = '';
-    document.getElementById('rAmount').value = '';
-    document.getElementById('rDynamicFields').innerHTML = '';
-    document.getElementById('rDesc').value = '';
-    document.getElementById('rStatus').value = '';
-    
-    // إعادة تعيين حقول نموذج الالتزامات
-    document.getElementById('dType').value = '';
-    document.getElementById('dAmount').value = '';
-    document.getElementById('dDynamicFields').innerHTML = '';
-    document.getElementById('dDesc').value = '';
-    document.getElementById('dStatus').value = '';
+async function addExpense() { 
+  const eAmount = document.getElementById('eAmount');
+  const eType = document.getElementById('eType');
+  const eDate = document.getElementById('eDate');
+  const eDesc = document.getElementById('eDesc');
+  const eImgCamera = document.getElementById('eImgCamera');
+  const eImgGallery = document.getElementById('eImgGallery');
+  
+  let selectedFile = (eImgCamera.files && eImgCamera.files.length > 0) ? eImgCamera.files[0] : 
+                     (eImgGallery.files && eImgGallery.files.length > 0) ? eImgGallery.files[0] : null;
 
-    setDefaultDateTime();
-}
+  if (!eAmount.value || !eType.value || !eDate.value) return toastMsg("أكمل البيانات");
+  
+  const isEditing = editMode && editMode.type === "exp";
+  const oldData = isEditing ? db.exp[editMode.index] : {}; 
+  const oldAmount = isEditing ? parseAmount(oldData.المبلغ) * -1 : 0; 
+  
+  const amount = parseAmount(eAmount.value);
+  if (amount === 0) return toastMsg("المبلغ يجب أن يكون أكبر من صفر.");
+  
+  const data = isEditing ? { ...oldData } : {}; 
 
+  data.المبلغ = getFormattedAmount(amount); 
+  data.الفئة = eType.value; 
+  data.الوصف = eDesc.value; 
+  data.التاريخ = eDate.value; 
+  data.clientId = isEditing ? oldData.clientId : `exp-${Date.now()}`; 
+  
+  // إذا كان في وضع التعديل، تأكد من عدم مسح الصورة إذا لم يتم اختيار صورة جديدة
+  if (!isEditing || selectedFile) {
+       delete data.صورة;
+  }
+  
+  const done = async () => {
+    try {
+        await saveData('exp', data); 
+        
+        await processBalanceChange(amount, 'expense', `مصروف: ${data.الفئة} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmount);
 
-async function addExpense() {
-    const amount = getRawAmount(document.getElementById('eAmount').value);
-    const type = document.getElementById('eType').value;
-    const desc = document.getElementById('eDesc').value.trim();
-    const date = document.getElementById('eDate').value;
-    const imgFile = document.getElementById('eImgCamera').files[0] || document.getElementById('eImgGallery').files[0];
-    
-    if (amount <= 0 || !type) {
-        return showToast("الرجاء إدخال مبلغ صحيح واختيار فئة.");
+        toastMsg(isEditing ? "تم تعديل المصروف" : "تم حفظ المصروف");
+        
+        postSaveCleanup(isEditing, 'exp'); 
+
+    } catch (error) {
+        toastMsg("فشل الحفظ. تحقق من Console.");
+        console.error(error);
     }
-    
-    let imgData = null;
-    if (imgFile) {
-        imgData = await convertFileToBase64(imgFile);
-    }
-    
-    const newExpense = {
-        amount: amount,
-        type: type,
-        desc: desc,
-        date: date,
-        img: imgData,
-        id: editMode ? editMode.id : Date.now()
+  };
+
+  if (selectedFile) {
+    const r = new FileReader();
+    r.onload = () => { 
+        data.صورة = r.result; 
+        done(); 
     };
-    
-    if (editMode) {
-         // في وضع التعديل، يجب إرجاع المبلغ القديم أولاً ثم خصم الجديد
-        const oldExpense = db.exp.find(e => e.id === editMode.id);
-        if (oldExpense) {
-            // إرجاع الرصيد القديم (المصروف سالب، لذلك يتم إضافة -oldAmount)
-            await updateBalance(-oldExpense.amount, 'exp_undo', `تعديل مصروف (إلغاء القديم: ${oldExpense.desc})`, new Date().toISOString());
-            db.exp = db.exp.filter(e => e.id !== editMode.id);
-        }
-    }
-    
-    // إضافة المصروف الجديد (أو المعدل)
-    db.exp.unshift(newExpense);
-    await saveData('exp', newExpense);
-    
-    // خصم المبلغ الجديد من الرصيد
-    await updateBalance(-amount, 'exp', desc || `مصروف: ${type}`, date);
-    
-    showToast(`تم حفظ المصروف ${editMode ? 'المعدل' : 'الجديد'} بنجاح!`);
-    
-    updateStats();
-    resetForms();
-    editMode = null;
-    openTab('overview'); 
-}
-
-function updateRightFields(type) {
-    const container = document.getElementById('rDynamicFields');
-    container.innerHTML = '';
-    
-    if (type === 'دين' || type === 'بيع بالآجل') {
-        const requiredAmount = `<input id="rRequiredAmount" type="text" placeholder="💰 المبلغ المطلوب دفعه شهريا (اختياري)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">`;
-        const dateRequired = `<div class="datetime-container"><input id="rDeadline" type="datetime-local"><span class="calendar-icon"><i class="far fa-calendar-alt"></i></span></div>`;
-        container.innerHTML = requiredAmount + dateRequired;
-    }
-    // في وضع التعديل، يتم ملء الحقول من دالة fillFormForEdit
-    if (editMode && editMode.type === 'rig') {
-        const currentItem = db.rig.find(r => r.id === editMode.id);
-        if (currentItem && (currentItem.type === 'دين' || currentItem.type === 'بيع بالآجل')) {
-            document.getElementById('rRequiredAmount').value = currentItem.requiredAmount ? currentItem.requiredAmount.toLocaleString('en-US') : '';
-            document.getElementById('rDeadline').value = currentItem.deadline || '';
-        }
-    }
+    r.readAsDataURL(selectedFile);
+  } else {
+      done(); 
+  }
 }
 
 async function addRight() {
-    const type = document.getElementById('rType').value;
-    const amount = getRawAmount(document.getElementById('rAmount').value);
-    const requiredAmount = getRawAmount(document.getElementById('rRequiredAmount')?.value) || 0;
-    const deadline = document.getElementById('rDeadline')?.value || '';
-    const desc = document.getElementById('rDesc').value.trim();
-    const date = document.getElementById('rDate').value;
-    let status = document.getElementById('rStatus').value;
-    
-    if (amount <= 0 || !type || !status) {
-        return showToast("الرجاء إدخال مبلغ صحيح، واختيار نوع وحالة الحق.");
-    }
-    
-    const newRight = {
-        amount: amount,
-        requiredAmount: requiredAmount,
-        deadline: deadline,
-        type: type,
-        desc: desc,
-        date: date,
-        status: status,
-        paidAmount: 0, // لتتبع المبالغ المدفوعة لاحقاً
-        id: editMode ? editMode.id : Date.now()
-    };
-    
-    let isNew = !editMode;
-    let oldRight = null;
-    
-    if (editMode) {
-        oldRight = db.rig.find(r => r.id === editMode.id);
-        if (oldRight) {
-            newRight.paidAmount = oldRight.paidAmount; // الاحتفاظ بالمبلغ المدفوع
-            db.rig = db.rig.filter(r => r.id !== editMode.id);
-        }
-    }
-    
-    if (isNew && status === 'كامل') {
-         // إذا كان الحق جديداً ومدفوعاً بالكامل، يتم إضافة المبلغ للرصيد
-        await updateBalance(amount, 'rig', desc || `تحصيل حق: ${type}`, date);
-        newRight.paidAmount = amount;
-    } else if (editMode && oldRight && oldRight.status === 'غير مدفوع' && status === 'كامل') {
-        // إذا كان الحق معدلاً من غير مدفوع إلى مدفوع بالكامل، يتم إضافة المبلغ الكلي
-        const amountToAdd = amount - oldRight.paidAmount; 
-        await updateBalance(amountToAdd, 'rig', desc || `تحصيل حق (إتمام الدفع): ${type}`, date);
-        newRight.paidAmount = amount;
-    }
-    
-    // إضافة الحق الجديد (أو المعدل)
-    db.rig.unshift(newRight);
-    await saveData('rig', newRight);
-    
-    showToast(`تم حفظ الحق ${editMode ? 'المعدل' : 'الجديد'} بنجاح!`);
-    
-    updateStats();
-    resetForms();
-    editMode = null;
-    openTab('overview');
+  const rAmount = document.getElementById('rAmount');
+  const rType = document.getElementById('rType');
+  const rDate = document.getElementById('rDate');
+  const rDesc = document.getElementById('rDesc');
+  const rStatus = document.getElementById('rStatus');
+
+  if (!rAmount.value || !rType.value || !rDate.value) return toastMsg("أكمل البيانات");
+  
+  const isEditing = editMode && editMode.type === "rig";
+  const oldData = isEditing ? db.rig[editMode.index] : {};
+  const totalAmount = parseAmount(rAmount.value);
+  const rExpectedDate = document.getElementById('rExpectedDate');
+  
+  const data = isEditing ? { ...oldData } : {};
+  data.clientId = isEditing ? oldData.clientId : `rig-${Date.now()}`; 
+
+  data.النوع = rType.value; 
+  data.المبلغ = getFormattedAmount(totalAmount);
+  data.الوصف = rDesc.value; 
+  data.التاريخ = rDate.value; 
+  data.تاريخ_متوقع = rExpectedDate ? rExpectedDate.value : null; 
+  
+  let amountCollected = 0; 
+  let oldAmountCollected = isEditing ? parseAmount(oldData.المبلغ_المضاف_للرصيد || 0) : 0; 
+  
+  if (data.النوع === 'دين') {
+      const rPaidAmountInput = document.getElementById('rPaidAmount');
+      const paidAmount = rPaidAmountInput ? parseAmount(rPaidAmountInput.value) : 0;
+      const remaining = totalAmount - paidAmount;
+      
+      if (paidAmount > totalAmount) return toastMsg("المبلغ المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
+
+      data.المبلغ_المدفوع = getFormattedAmount(paidAmount); 
+      data.المتبقي = getFormattedAmount(remaining); 
+      
+      if (remaining <= 0) {
+          data.الحالة = "مدفوع بالكامل";
+      } else if (paidAmount > 0) {
+          data.الحالة = "مدفوع جزئياً";
+      } else {
+          data.الحالة = "غير مدفوع بعد";
+      }
+      amountCollected = paidAmount;
+      delete data.الحالة_اليدوية;
+      
+  } else { // بيع آجل أو أخرى
+      if (!rStatus.value) return toastMsg("يرجى تحديد الحالة.");
+      data.الحالة = rStatus.value === 'كامل' ? 'مدفوع بالكامل' : 'غير مدفوع بعد';
+      
+      if (rStatus.value === 'كامل') {
+          amountCollected = totalAmount;
+      } else {
+          amountCollected = 0;
+      }
+      
+      delete data.المبلغ_المدفوع;
+      delete data.المتبقي;
+  }
+  
+  data.المبلغ_المضاف_للرصيد = amountCollected; 
+  
+  if (isEditing) {
+      data.id = oldData.id;
+  }
+  
+  try {
+      await saveData('rig', data);
+      
+      await processBalanceChange(amountCollected, 'right_collection', `تحصيل: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountCollected);
+
+      toastMsg(isEditing ? "تم تعديل الحق" : "تم حفظ الحق");
+      
+      postSaveCleanup(isEditing, 'rig');
+
+  } catch (error) {
+      toastMsg("فشل الحفظ. تحقق من Console.");
+      console.error(error);
+  }
 }
 
-function updateDebtFields(type) {
-    const container = document.getElementById('dDynamicFields');
-    container.innerHTML = '';
+function updateRightFields(type, currentData = null) {
+    const dynamicFields = document.getElementById('rDynamicFields');
+    dynamicFields.innerHTML = '';
     
-    if (type === 'إيجار' || type === 'قسط/فاتورة أخرى' || type === 'قرض') {
-        const requiredAmount = `<input id="dTotalAmount" type="text" placeholder="💰 المبلغ الكلي المستحق (اختياري)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">`;
-        const dateRequired = `<div class="datetime-container"><input id="dDeadline" type="datetime-local"><span class="calendar-icon"><i class="far fa-calendar-alt"></i></span></div>`;
-        container.innerHTML = requiredAmount + dateRequired;
+    if (type === 'دين') {
+        dynamicFields.innerHTML = `
+            <input id="rPaidAmount" type="text" placeholder="💰 المبلغ المدفوع (إن وجد)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_المدفوع ? parseAmount(currentData.المبلغ_مدفوع).toLocaleString('ar') : ''}">
+        `;
+        document.getElementById('rStatus').style.display = 'none';
+        document.getElementById('rStatus').value = ''; 
+    } else {
+        document.getElementById('rStatus').style.display = 'block';
     }
-    // في وضع التعديل، يتم ملء الحقول من دالة fillFormForEdit
-    if (editMode && editMode.type === 'deb') {
-        const currentItem = db.deb.find(d => d.id === editMode.id);
-        if (currentItem && (currentItem.type === 'إيجار' || currentItem.type === 'قسط/فاتورة أخرى' || currentItem.type === 'قرض')) {
-            document.getElementById('dTotalAmount').value = currentItem.totalAmount ? currentItem.totalAmount.toLocaleString('en-US') : '';
-            document.getElementById('dDeadline').value = currentItem.deadline || '';
-        }
-    }
+    
+    // إضافة حقل التاريخ المتوقع لجميع الأنواع
+    const expectedDateHtml = `<input id="rExpectedDate" type="date" placeholder="تاريخ التحصيل المتوقع" value="${currentData && currentData.تاريخ_متوقع ? currentData.تاريخ_متوقع : ''}">`;
+    dynamicFields.innerHTML += expectedDateHtml;
 }
 
 async function addDebt() {
-    const type = document.getElementById('dType').value;
-    const amount = getRawAmount(document.getElementById('dAmount').value);
-    const totalAmount = getRawAmount(document.getElementById('dTotalAmount')?.value) || 0;
-    const deadline = document.getElementById('dDeadline')?.value || '';
-    const desc = document.getElementById('dDesc').value.trim();
-    const date = document.getElementById('dDate').value;
-    let status = document.getElementById('dStatus').value;
-    
-    if (amount <= 0 || !type || !status) {
-        return showToast("الرجاء إدخال مبلغ صحيح، واختيار نوع وحالة الالتزام.");
-    }
-    
-    const newDebt = {
-        amount: amount,
-        totalAmount: totalAmount,
-        deadline: deadline,
-        type: type,
-        desc: desc,
-        date: date,
-        status: status,
-        paidAmount: 0, // لتتبع المبالغ المدفوعة لاحقاً
-        id: editMode ? editMode.id : Date.now()
-    };
-    
-    let isNew = !editMode;
-    let oldDebt = null;
+  const dType = document.getElementById('dType');
+  const dDate = document.getElementById('dDate');
+  const dAmount = document.getElementById('dAmount');
+  const dStatus = document.getElementById('dStatus');
+  const dDesc = document.getElementById('dDesc');
 
-    if (editMode) {
-        oldDebt = db.deb.find(d => d.id === editMode.id);
-        if (oldDebt) {
-            newDebt.paidAmount = oldDebt.paidAmount; // الاحتفاظ بالمبلغ المدفوع
-            db.deb = db.deb.filter(d => d.id !== editMode.id);
-        }
-    }
-    
-    if (isNew && status === 'مدفوع') {
-        // إذا كان الالتزام جديداً ومدفوعاً، يتم خصم المبلغ من الرصيد
-        await updateBalance(-amount, 'deb', desc || `دفع التزام: ${type}`, date);
-        newDebt.paidAmount = amount;
-    } else if (editMode && oldDebt && oldDebt.status === 'غير مدفوع' && status === 'مدفوع') {
-         // إذا كان الالتزام معدلاً من غير مدفوع إلى مدفوع، يتم خصم المبلغ
-        const amountToDeduct = amount - oldDebt.paidAmount;
-        await updateBalance(-amountToDeduct, 'deb', desc || `دفع التزام: ${type}`, date);
-        newDebt.paidAmount = amount;
-    }
-    
-    // إضافة الالتزام الجديد (أو المعدل)
-    db.deb.unshift(newDebt);
-    await saveData('deb', newDebt);
-    
-    showToast(`تم حفظ الالتزام ${editMode ? 'المعدل' : 'الجديد'} بنجاح!`);
-    
-    updateStats();
-    resetForms();
-    editMode = null;
-    openTab('overview');
+  if (!dType.value || !dDate.value) return toastMsg("أكمل البيانات الأساسية");
+  
+  const isMasterLiability = (dType.value === 'قرض' || dType.value === 'دين شخصي');
+  
+  const isEditing = editMode && editMode.type === "deb";
+  const oldData = isEditing ? db.deb[editMode.index] : {};
+  
+  const data = isEditing ? { ...oldData } : {};
+  data.clientId = isEditing ? oldData.clientId : `deb-${Date.now()}`; 
+
+  data.النوع = dType.value; 
+  data.الوصف = dDesc.value; 
+  data.التاريخ = dDate.value; 
+  
+  let amountPaid = 0; 
+  let oldAmountPaid = isEditing ? parseAmount(oldData.المبلغ_المخصوم_للرصيد || 0) * -1 : 0; 
+  
+  if (isMasterLiability) {
+      const dTotalAmountInput = document.getElementById('dTotalAmount');
+      const dInstallmentsInput = document.getElementById('dInstallments');
+      const dPaidInfoInput = document.getElementById(dType.value === 'قرض' ? 'dPaidInstallments' : 'dPaidAmount'); 
+
+      if (!dTotalAmountInput.value) return toastMsg("الرجاء إدخال المبلغ الكلي للالتزام.");
+      
+      const totalAmount = parseAmount(dTotalAmountInput.value);
+      let totalPaidAmount = 0;
+
+      if (data.النوع === 'قرض') {
+          const paidInstallmentsCount = parseInt(dPaidInfoInput.value) || 0;
+          const installmentsTotal = parseInt(dInstallmentsInput.value) || 0;
+          
+          if (installmentsTotal <= 0) return toastMsg("عدد الأقساط يجب أن يكون أكبر من صفر.");
+          if (paidInstallmentsCount > installmentsTotal) return toastMsg("عدد الأقساط المدفوعة لا يمكن أن يتجاوز الكلي.");
+
+          const installmentValue = totalAmount / installmentsTotal;
+          totalPaidAmount = paidInstallmentsCount * installmentValue;
+          
+          data.عدد_الاقساط = installmentsTotal;
+          data.قيمة_القسط = getFormattedAmount(installmentValue.toFixed(2));
+          data.الأقساط_المدفوعة = paidInstallmentsCount;
+          
+      } else if (data.النوع === 'دين شخصي') {
+          totalPaidAmount = parseAmount(dPaidInfoInput.value);
+          
+          if (totalPaidAmount > totalAmount) return toastMsg("إجمالي المدفوع لا يمكن أن يتجاوز المبلغ الكلي للدين.");
+      }
+      
+      const remainingAmount = totalAmount - totalPaidAmount;
+      
+      data.المبلغ_الكلي_للالتزام = getFormattedAmount(totalAmount);
+      data.إجمالي_المدفوع = getFormattedAmount(totalPaidAmount); 
+      data.المتبقي_للالتزام = getFormattedAmount(remainingAmount);
+      
+      data.المبلغ = "—";
+      data.الحالة = "—";
+      
+      amountPaid = totalPaidAmount; 
+      
+  } else {
+      if (!dAmount.value || !dStatus.value) return toastMsg("أكمل بيانات الفاتورة/القسط العادي.");
+
+      const amountValue = parseAmount(dAmount.value);
+      data.المبلغ = getFormattedAmount(amountValue); 
+      data.الحالة = dStatus.value;
+      
+      if (data.الحالة === 'مدفوع') {
+          amountPaid = amountValue;
+      } else {
+          amountPaid = 0;
+      }
+      
+      // مسح حقول الالتزامات الكبرى إذا تم التغيير لنوع عادي
+      delete data.المبلغ_الكلي_للالتزام;
+      delete data.إجمالي_المدفوع;
+      delete data.المتبقي_للالتزام;
+  }
+  
+  data.المبلغ_المخصوم_للرصيد = amountPaid; 
+  
+  if (isEditing) {
+      data.id = oldData.id;
+  }
+  
+  try {
+      await saveData('deb', data);
+      
+      await processBalanceChange(amountPaid, 'debt_payment', `دفعة التزام: ${data.النوع} (${data.الوصف || '—'})`, data.clientId, isEditing, oldAmountPaid);
+
+      toastMsg(isEditing ? "تم تعديل الالتزام" : "تم حفظ الالتزام");
+      
+      postSaveCleanup(isEditing, 'deb');
+
+  } catch (error) {
+      toastMsg("فشل الحفظ. تحقق من Console.");
+      console.error(error);
+  }
 }
 
+function updateDebtFields(type, currentData = null) {
+    const dynamicFields = document.getElementById('dDynamicFields');
+    const amountInput = document.getElementById('dAmount');
+    const statusSelect = document.getElementById('dStatus');
+    dynamicFields.innerHTML = '';
 
-// ===================================================
-// 7. وظائف الإحصائيات (Stats)
-// ===================================================
+    if (type === 'قرض' || type === 'دين شخصي') {
+        amountInput.style.display = 'none';
+        statusSelect.style.display = 'none';
+        amountInput.value = '';
+        statusSelect.value = '';
 
-function updateStats() {
-    const totalExp = db.exp.reduce((sum, item) => sum + item.amount, 0);
-    
-    // الحقول الكلية
-    const totalRig = db.rig.reduce((sum, item) => sum + item.amount, 0);
-    const totalDeb = db.deb.reduce((sum, item) => sum + item.amount, 0);
-    
-    // الحقول المدفوعة / المحصلة
-    const paidRig = db.rig.reduce((sum, item) => sum + item.paidAmount, 0);
-    const paidDeb = db.deb.reduce((sum, item) => sum + item.paidAmount, 0);
-    
-    document.getElementById('sExpTotal').innerHTML = formatAmountHTML(totalExp);
-    document.getElementById('sRigTotal').innerHTML = formatAmountHTML(totalRig);
-    document.getElementById('sDebTotal').innerHTML = formatAmountHTML(totalDeb);
-    document.getElementById('sRigPaid').innerHTML = formatAmountHTML(paidRig, true);
-    document.getElementById('sDebPaid').innerHTML = formatAmountHTML(paidDeb, true);
-}
-
-
-// ===================================================
-// 8. وظائف عرض السجل والتفاصيل (Logs & Details)
-// ===================================================
-
-function openLog(logType) {
-    openLayer('log', { logType: logType });
-}
-
-function renderLog() {
-    const content = document.getElementById('logContent');
-    const search = document.getElementById('search').value.toLowerCase();
-    
-    let logData = db[currentLog] || [];
-    
-    // تصفية البيانات حسب البحث
-    if (search) {
-        logData = logData.filter(item => 
-            (item.desc && item.desc.toLowerCase().includes(search)) ||
-            (item.type && item.type.toLowerCase().includes(search)) ||
-            (item.status && item.status.toLowerCase().includes(search))
-        );
-    }
-    
-    content.innerHTML = '';
-    
-    if (logData.length === 0) {
-        content.innerHTML = `<p style="text-align: center; color: #999; margin-top: 50px;">لا توجد معاملات مسجلة في هذا السجل${search ? ' تطابق البحث.' : ' بعد.'}</p>`;
-        return;
-    }
-
-    logData.forEach(item => {
-        let title, amountDisplay, detailsText, color;
-        
-        if (currentLog === 'exp') {
-            title = `<i class="fas fa-money-bill-wave" style="margin-left: 5px; color: var(--danger);"></i> مصروف: ${item.type}`;
-            amountDisplay = formatAmountHTML(-item.amount, true);
-            detailsText = item.desc || 'لا يوجد وصف';
-            color = 'var(--danger)';
-        } else if (currentLog === 'rig') {
-            title = `<i class="fas fa-handshake" style="margin-left: 5px; color: var(--success);"></i> حق: ${item.type}`;
-            amountDisplay = formatAmountHTML(item.amount);
-            detailsText = item.desc || 'لا يوجد وصف';
-            color = (item.status === 'كامل') ? 'var(--success)' : (item.paidAmount > 0 ? 'var(--warning)' : 'var(--danger)');
-        } else if (currentLog === 'deb') {
-            title = `<i class="fas fa-file-invoice" style="margin-left: 5px; color: var(--danger);"></i> التزام: ${item.type}`;
-            amountDisplay = formatAmountHTML(item.amount);
-            detailsText = item.desc || 'لا يوجد وصف';
-            color = (item.status === 'مدفوع') ? 'var(--success)' : 'var(--danger)';
-        }
-
-        const html = `
-            <div class="list-item" onclick="openLayer('detail', {id: ${item.id}, logType: '${currentLog}'})" style="border-right-color: ${color};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold;">${title}</span>
-                    <span style="font-size: 1.1em; font-weight: 700;">${amountDisplay}</span>
-                </div>
-                <div class="details">
-                    <span>${detailsText}</span>
-                    <span><i class="fas fa-clock" style="margin-left: 5px;"></i> ${formatDate(item.date)}</span>
-                </div>
-            </div>
+        dynamicFields.innerHTML = `
+            <input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.المبلغ_الكلي_للالتزام ? parseAmount(currentData.المبلغ_الكلي_للالتزام).toLocaleString('ar') : ''}">
+            ${type === 'قرض' ? `
+                <input id="dInstallments" type="number" placeholder="عدد الأقساط الكلي" value="${currentData && currentData.عدد_الاقساط ? currentData.عدد_الاقساط : ''}">
+                <input id="dPaidInstallments" type="number" placeholder="عدد الأقساط المدفوعة حتى الآن" value="${currentData && currentData.الأقساط_المدفوعة ? currentData.الأقساط_المدفوعة : ''}">
+            ` : `
+                <input id="dPaidAmount" type="text" placeholder="إجمالي المبلغ المدفوع حتى الآن" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${currentData && currentData.إجمالي_المدفوع ? parseAmount(currentData.إجمالي_المدفوع).toLocaleString('ar') : ''}">
+            `}
         `;
-        content.innerHTML += html;
-    });
+    } else {
+        amountInput.style.display = 'block';
+        statusSelect.style.display = 'block';
+    }
 }
 
-function renderDetail(item, logType) {
-    const content = document.getElementById('detailContent');
-    content.innerHTML = ''; 
-    
-    let html = `
-        <div class="card" style="border-top: 5px solid var(--p);">
-            <p style="text-align: center;">المبلغ: <span style="font-size: 1.5em; font-weight: 800; color: var(--p);">${formatAmountHTML(item.amount)}</span></p>
-            <p><strong>الوصف/الملاحظة:</strong> ${item.desc || 'لا يوجد'}</p>
-            <p><strong>التاريخ:</strong> ${formatDate(item.date)}</p>
-            
-            ${logType === 'rig' ? `
-                <p><strong>الحالة:</strong> ${item.status}</p>
-                <p><strong>المحصل:</strong> ${formatAmountHTML(item.paidAmount, true)}</p>
-                ${item.requiredAmount > 0 ? `<p><strong>المبلغ المطلوب شهرياً:</strong> ${formatAmountHTML(item.requiredAmount)}</p>` : ''}
-                ${item.deadline ? `<p><strong>تاريخ الاستحقاق:</strong> ${formatDate(item.deadline)}</p>` : ''}
-            ` : ''}
 
-            ${logType === 'deb' ? `
-                <p><strong>الحالة:</strong> ${item.status}</p>
-                <p><strong>المدفوع:</strong> ${formatAmountHTML(item.paidAmount, true)}</p>
-                ${item.totalAmount > 0 ? `<p><strong>المبلغ الكلي المستحق:</strong> ${formatAmountHTML(item.totalAmount)}</p>` : ''}
-                ${item.deadline ? `<p><strong>تاريخ الاستحقاق:</strong> ${formatDate(item.deadline)}</p>` : ''}
-            ` : ''}
-            
-            ${item.img ? `<p style="margin-top: 20px; text-align: center;">
-                 <a href="${item.img}" target="_blank" style="color: var(--p); font-weight: bold; text-decoration: none;">
-                    <i class="fas fa-image" style="margin-left: 5px;"></i> عرض الصورة المرفقة
-                </a>
-            </p>` : ''}
-        </div>
-        
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="secondary" style="flex: 1; border-color: var(--danger); color: var(--danger);" onclick="confirmDelete('${logType}', ${item.id})">
-                <i class="fas fa-trash" style="margin-left: 5px;"></i> حذف
-            </button>
-            <button class="action" style="flex: 1; background: var(--s); color: var(--text-dark);" onclick="fillFormForEdit(${item.id}, '${logType}')">
-                <i class="fas fa-edit" style="margin-left: 5px;"></i> تعديل
-            </button>
-        </div>
-        
-        ${(logType === 'rig' && item.status !== 'كامل') || (logType === 'deb' && item.status !== 'مدفوع') ? `
-        <div class="card" style="margin-top: 15px;">
-             <h4 style="margin-top: 0; color: var(--p);">تسديد/تحصيل جزئي</h4>
-             <input id="partialAmount" type="text" placeholder="💵 المبلغ المدفوع/المحصل" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-             <button class="action" onclick="handlePartialPayment(${item.id}, '${logType}')">
-                <i class="fas fa-hand-holding-usd" style="margin-left: 5px;"></i> تنفيذ العملية
-            </button>
-        </div>
-        ` : ''}
-    `;
+function editTransaction() {
+  if (!editMode) return;
+  const currentData = db[editMode.type][editMode.index];
+  
+  closeLayer('detail'); 
+
+  setTimeout(() => {
     
+    openTab(editMode.type === 'exp' ? 'expenses' : (editMode.type === 'rig' ? 'rights' : 'debts'), true); 
+
+    if (editMode.type === "exp") {
+      document.getElementById('eAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
+      document.getElementById('eType').value = currentData.الفئة;
+      document.getElementById('eDesc').value = currentData.الوصف;
+      document.getElementById('eDate').value = currentData.التاريخ;
+      if(currentData.صورة) document.getElementById('eImgName').textContent = 'صورة مرفقة (لن يتم حذفها إلا بإرفاق صورة جديدة)';
+    }
+    
+    if (editMode.type === "rig") {
+      document.getElementById('rType').value = currentData.النوع;
+      updateRightFields(currentData.النوع, currentData); 
+      
+      document.getElementById('rAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
+      document.getElementById('rDesc').value = currentData.الوصف;
+      document.getElementById('rDate').value = currentData.التاريخ;
+      
+      if (currentData.النوع !== 'دين' && document.getElementById('rStatus')) {
+          document.getElementById('rStatus').value = currentData.الحالة === 'مدفوع بالكامل' ? 'كامل' : currentData.الحالة;
+      }
+    }
+    
+    if (editMode.type === "deb") {
+      document.getElementById('dType').value = currentData.النوع;
+      document.getElementById('dDesc').value = currentData.الوصف;
+      document.getElementById('dDate').value = currentData.التاريخ;
+
+      updateDebtFields(currentData.النوع, currentData); 
+
+      if (currentData.النوع !== 'قرض' && currentData.النوع !== 'دين شخصي') {
+          document.getElementById('dAmount').value = parseAmount(currentData.المبلغ).toLocaleString('ar');
+          document.getElementById('dStatus').value = currentData.الحالة;
+      }
+    }
+  }, 300); 
+}
+
+async function deleteTransaction() {
+  if (!editMode) return;
+  if (!confirm("هل أنت متأكد من حذف هذه المعاملة؟ سيتم التراجع عن تأثيرها على رصيدك الحالي أيضاً.")) return;
+  
+  const typeToDelete = editMode.type;
+  const transaction = db[typeToDelete][editMode.index];
+  const idToDelete = transaction.id;
+  
+  try {
+      await deleteFromDB(typeToDelete, idToDelete);
+      
+      if (transaction.clientId) {
+          const balanceRecord = db.bal.changes.find(c => c.id === transaction.clientId);
+          if (balanceRecord) {
+              const oldNetChange = balanceRecord.القيمة_الصافية;
+              
+              const balIndex = db.bal.changes.findIndex(c => c.id === transaction.clientId);
+              if (balIndex > -1) {
+                  db.bal.changes.splice(balIndex, 1);
+              }
+              
+              currentBalance -= oldNetChange;
+              db.bal.amount = currentBalance; 
+              await saveData('bal', db.bal);
+          }
+      }
+
+      editMode = null; 
+      await loadAllData(); 
+      toastMsg("تم الحذف بنجاح");
+      
+      updateStats();
+      updateBalanceDisplay();
+      
+      closeLayer('detail'); 
+      closeLayer('log'); 
+      
+  } catch (error) {
+      toastMsg("فشل الحذف.");
+      console.error(error);
+  }
+}
+
+// ---------------------------------------------
+// وظائف العرض والتفاصيل (التي تم إصلاحها)
+// ---------------------------------------------
+
+function _renderDetailContent(o, type) {
+    const content = document.getElementById('detailContent');
+    let html = `<div class="card" style="border-top-color: var(--p);">`;
+    html += `<h3 style="color: var(--p); margin-top: 0;"><i class="fas fa-info-circle" style="margin-left: 5px;"></i> التفاصيل</h3>`;
+    
+    for (const [key, value] of Object.entries(o)) {
+        if (key === 'id' || key === 'clientId' || key === 'صورة') continue;
+        
+        // Skip null/undefined/empty string values, except for important fields
+        if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '' && key !== 'الوصف')) continue;
+        
+        const isAmountField = key.includes('المبلغ') || key.includes('المدفوع') || key.includes('المتبقي') || key.includes('القسط');
+        const formattedValue = isAmountField ? formatCurrency(value, true) : value;
+        
+        html += `<p style="margin: 8px 0;"><strong>${key.replace(/_/g, ' ')}:</strong> <span>${formattedValue}</span></p>`;
+    }
+    html += `</div>`;
+    
+    // **الجزء الخاص بعرض الصورة (إصلاح المشكلة)**
+    if (o.صورة && type === 'exp') {
+        html += `<div class="card" style="border-top-color: var(--s);">
+            <h3 style="color: var(--s); margin-top: 0;"><i class="fas fa-image" style="margin-left: 5px;"></i> صورة الفاتورة</h3>
+            <img src="${o.صورة}" alt="صورة الفاتورة" style="width: 100%; border-radius: 10px; margin-top: 10px; box-shadow: var(--shadow-light);">
+        </div>`;
+    }
+    
+    html += `<div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="secondary" onclick="editTransaction()" style="flex: 1;"><i class="fas fa-edit" style="margin-left: 5px;"></i> تعديل</button>
+                <button class="action" onclick="deleteTransaction()" style="background: var(--danger); flex: 1;"><i class="fas fa-trash" style="margin-left: 5px;"></i> حذف</button>
+             </div>`;
+             
     content.innerHTML = html;
 }
 
-function confirmDelete(logType, id) {
-    if (confirm("هل أنت متأكد أنك تريد حذف هذه المعاملة؟ سيتم تحديث الرصيد وفقاً لذلك.")) {
-        deleteTransaction(logType, id);
-    }
-}
-
-async function deleteTransaction(logType, id) {
-    const item = db[logType].find(i => i.id === id);
-    if (!item) return toastMsg("المعاملة غير موجودة.");
-
-    let amountToAdjust = 0;
+function renderLog() {
+    const logContent = document.getElementById("logContent");
+    const logType = currentLog;
+    const items = db[logType];
+    const search = document.getElementById('search').value.toLowerCase();
     
-    if (logType === 'exp') {
-        // المصروفات: يتم إضافة المبلغ المحذوف إلى الرصيد
-        amountToAdjust = item.amount; 
-        
-    } else if (logType === 'rig') {
-        // الحقوق: يتم خصم المبلغ المحصل (paidAmount) من الرصيد
-        amountToAdjust = -item.paidAmount;
-        
-    } else if (logType === 'deb') {
-        // الالتزامات: يتم إضافة المبلغ المدفوع (paidAmount) إلى الرصيد
-        amountToAdjust = item.paidAmount;
-    }
-    
-    // تعديل الرصيد
-    if (amountToAdjust !== 0) {
-        await updateBalance(amountToAdjust, `${logType}_del`, `حذف سجل: ${item.type} (رقم: ${id})`, new Date().toISOString());
-    }
-
-    // حذف من قاعدة البيانات
-    await deleteFromDB(logType, id);
-
-    // حذف من المتغير المحلي
-    db[logType] = db[logType].filter(i => i.id !== id);
-    
-    showToast("تم حذف المعاملة بنجاح وتحديث الرصيد!");
-    closeLayer('detail');
-    closeLayer('log'); // إغلاق السجل وإعادة فتحه
-    updateStats();
-    openLog(logType);
-}
-
-function fillFormForEdit(id, logType) {
-    const item = db[logType].find(i => i.id === id);
-    if (!item) return toastMsg("المعاملة غير موجودة.");
-    
-    editMode = { id: id, type: logType };
-    
-    closeLayer('detail');
-    
-    if (logType === 'exp') {
-        openTab('expenses');
-        document.getElementById('eAmount').value = item.amount.toLocaleString('en-US');
-        document.getElementById('eType').value = item.type;
-        document.getElementById('eDesc').value = item.desc || '';
-        document.getElementById('eDate').value = item.date;
-        // لا يمكن استرجاع ملف الصورة نفسه، ولكن يمكن عرض اسم الملف
-        if (item.img) {
-            document.getElementById('eImgName').innerText = 'تم إرفاق صورة (للتعديل، اختر صورة جديدة)';
-            document.getElementById('removeImageBtn').style.display = 'block';
-        }
-
-    } else if (logType === 'rig') {
-        openTab('rights');
-        document.getElementById('rType').value = item.type;
-        updateRightFields(item.type); // لإنشاء الحقول الديناميكية أولاً
-        document.getElementById('rAmount').value = item.amount.toLocaleString('en-US');
-        if (item.requiredAmount > 0) {
-            document.getElementById('rRequiredAmount').value = item.requiredAmount.toLocaleString('en-US');
-        }
-        if (item.deadline) {
-            document.getElementById('rDeadline').value = item.deadline;
-        }
-        document.getElementById('rDesc').value = item.desc || '';
-        document.getElementById('rDate').value = item.date;
-        document.getElementById('rStatus').value = item.status;
-        
-    } else if (logType === 'deb') {
-        openTab('debts');
-        document.getElementById('dType').value = item.type;
-        updateDebtFields(item.type); // لإنشاء الحقول الديناميكية أولاً
-        document.getElementById('dAmount').value = item.amount.toLocaleString('en-US');
-         if (item.totalAmount > 0) {
-            document.getElementById('dTotalAmount').value = item.totalAmount.toLocaleString('en-US');
-        }
-        if (item.deadline) {
-            document.getElementById('dDeadline').value = item.deadline;
-        }
-        document.getElementById('dDesc').value = item.desc || '';
-        document.getElementById('dDate').value = item.date;
-        document.getElementById('dStatus').value = item.status;
-    }
-    showToast(`وضع التعديل لـ ${logType.toUpperCase()} مفعل.`);
-}
-
-async function handlePartialPayment(id, logType) {
-    const amount = getRawAmount(document.getElementById('partialAmount').value);
-    
-    if (amount <= 0) {
-        return showToast("الرجاء إدخال مبلغ دفع/تحصيل صحيح.");
-    }
-
-    const item = db[logType].find(i => i.id === id);
-    if (!item) return toastMsg("المعاملة غير موجودة.");
-    
-    let isRig = logType === 'rig';
-    let balanceChange = isRig ? amount : -amount;
-    let totalPaidAfter = item.paidAmount + amount;
-    
-    // التحقق من أن المبلغ الجزئي لا يتجاوز المبلغ الكلي
-    if (item.amount > 0 && totalPaidAfter > item.amount) {
-        return showToast(`لا يمكن أن يتجاوز المبلغ الكلي ${formatAmountHTML(item.amount)}.`);
-    }
-
-    // تحديث السجل في قاعدة البيانات
-    item.paidAmount = totalPaidAfter;
-    if (item.paidAmount === item.amount) {
-        item.status = isRig ? 'كامل' : 'مدفوع';
-    } else {
-         item.status = isRig ? 'جزئي' : 'جزئي الدفع';
-    }
-    
-    await saveData(logType, item);
-    
-    // تحديث الرصيد
-    await updateBalance(balanceChange, isRig ? 'rig_part' : 'deb_part', `${isRig ? 'تحصيل' : 'دفع'} جزئي: ${item.type}`, new Date().toISOString());
-    
-    showToast(`تم ${isRig ? 'تحصيل' : 'دفع'} المبلغ الجزئي بنجاح!`);
-    
-    closeLayer('detail');
-    closeLayer('log');
-    updateStats();
-    openLog(logType);
-}
-
-
-// ===================================================
-// 9. وظائف الصور
-// ===================================================
-
-function showImageSourceModal() {
-    // إغلاق أي modal آخر مفتوح
-    closeTopLayer(); 
-    openLayer('imageSource');
-}
-
-function openCameraInput() {
-    closeLayer('imageSource');
-    // تشغيل الكاميرا الأمامية/الخلفية مباشرة
-    document.getElementById('eImgCamera').click();
-}
-
-function openGalleryInput() {
-    closeLayer('imageSource');
-    // فتح معرض الصور
-    document.getElementById('eImgGallery').click();
-}
-
-function updateFileName(input, elementId) {
-    if (input.files.length > 0) {
-        document.getElementById(elementId).innerText = `صورة مرفقة: ${input.files[0].name}`;
-        document.getElementById('removeImageBtn').style.display = 'block';
-        
-        // مسح محتوى الحقل الآخر لضمان اختيار واحد فقط
-        if (input.id === 'eImgCamera') {
-            document.getElementById('eImgGallery').value = '';
-        } else {
-            document.getElementById('eImgCamera').value = '';
-        }
-    }
-}
-
-function removeImage() {
-    document.getElementById('eImgCamera').value = ''; 
-    document.getElementById('eImgGallery').value = '';
-    document.getElementById('eImgName').innerText = '';
-    document.getElementById('removeImageBtn').style.display = 'none';
-    showToast("تم حذف الصورة المرفقة.");
-}
-
-function convertFileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
+    const filteredItems = items.filter(i => {
+        if (!search) return true;
+        return Object.values(i).some(val => 
+            String(val).toLowerCase().includes(search)
+        );
     });
+
+    if (filteredItems.length === 0) {
+        logContent.innerHTML = `<p style="text-align: center; color: #999; margin-top: 20px;">لا توجد معاملات مسجلة تطابق بحثك.</p>`;
+        return;
+    }
+
+    logContent.innerHTML = filteredItems
+        .map(i => {
+            const isExpense = logType === 'exp';
+            const isRight = logType === 'rig';
+            
+            const amountValue = parseAmount(i.المبلغ_الكلي_للالتزام || i.المبلغ || 0);
+            const amountDisplay = formatCurrency(amountValue);
+            
+            let description = i.الوصف || i.الفئة || i.النوع || '—';
+            let date = formatDateTime(i.التاريخ);
+            let borderColor = 'var(--s)'; 
+            let statusBadge = '';
+            let amountColor = 'var(--text-dark)';
+
+            if (isExpense) {
+                borderColor = 'var(--danger)';
+                amountColor = 'var(--danger)';
+            } else if (isRight) {
+                const status = i.الحالة;
+                borderColor = status.includes('كامل') ? 'var(--success)' : (status.includes('جزئياً') ? 'var(--warning)' : 'var(--s)');
+                statusBadge = `<span style="font-size: 0.8em; margin-right: 10px; color: ${borderColor};">${status}</span>`;
+                amountColor = 'var(--success)'; 
+            } else { // Debt
+                 const status = i.الحالة;
+                 const isMaster = i.النوع === 'قرض' || i.النوع === 'دين شخصي';
+                 
+                 if (isMaster) {
+                     borderColor = 'var(--p)';
+                     const remaining = parseAmount(i.المتبقي_للالتزام || 0);
+                     statusBadge = `<span style="font-size: 0.8em; margin-right: 10px; color: var(--p);">المتبقي: ${formatCurrency(remaining)}</span>`;
+                     amountColor = 'var(--p)';
+                 } else {
+                     borderColor = status === 'مدفوع' ? 'var(--success)' : 'var(--danger)';
+                     statusBadge = `<span style="font-size: 0.8em; margin-right: 10px; color: ${borderColor};">${status}</span>`;
+                     amountColor = borderColor;
+                 }
+            }
+            
+            // إضافة أيقونة الكاميرا إذا كانت هناك صورة مرفقة
+            const imageIcon = i.صورة ? '<i class="fas fa-camera" style="margin-left: 5px; color: var(--p);"></i>' : '';
+
+
+            return `
+                <div class="list-item" style="border-right-color: ${borderColor};" onclick="showDetailById(${i.id}, '${logType}')">
+                    <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${imageIcon} ${description}</span> 
+                        <span style="color: ${amountColor};">${amountDisplay}</span>
+                    </div>
+                    <div class="details">
+                        <span>النوع: ${i.النوع || i.الفئة} ${statusBadge}</span>
+                        <span><i class="far fa-clock" style="margin-left: 4px;"></i>${date}</span>
+                    </div>
+                </div>
+            `;
+        })
+        .join("");
 }
 
+// ---------------------------------------------
+// وظائف الإحصائيات والمساعدة
+// ---------------------------------------------
 
-// ===================================================
-// 10. وظائف إدارة العملة
-// ===================================================
+function updateStats() {
+    let expTotal = 0, rigTotal = 0, debTotal = 0;
+    let rigPaid = 0, debPaid = 0;
+    
+    db.exp.forEach(i => expTotal += parseAmount(i.المبلغ));
+    
+    db.rig.forEach(i => {
+        const amount = parseAmount(i.المبلغ);
+        rigTotal += amount;
+        rigPaid += parseAmount(i.المبلغ_المضاف_للرصيد || 0);
+    });
+    
+    db.deb.forEach(i => {
+        let amount = parseAmount(i.المبلغ_الكلي_للالتزام || i.المبلغ);
+        debTotal += amount;
+        debPaid += parseAmount(i.المبلغ_المخصوم_للرصيد || 0);
+    });
 
-function openCurrencyModal() {
-    closeLayer('sidebar');
-    openLayer('currency');
+    // تحديث ملخص الإحصائيات في لوحة القيادة
+    document.getElementById('sExpTotal').innerHTML = formatCurrency(expTotal, true);
+    document.getElementById('sRigTotal').innerHTML = formatCurrency(rigTotal, rigTotal > 0);
+    document.getElementById('sDebTotal').innerHTML = formatCurrency(debTotal, debTotal > 0);
+    document.getElementById('sRigPaid').innerHTML = formatCurrency(rigPaid, true);
+    document.getElementById('sDebPaid').innerHTML = formatCurrency(debPaid, false);
 }
+
+// ---------------------------------------------
+// وظائف العملات والتصدير/الاستيراد
+// ---------------------------------------------
 
 function renderCurrencyList() {
     const list = document.getElementById('currencyList');
     const search = document.getElementById('currencySearch').value.toLowerCase();
     
-    list.innerHTML = '';
-
-    const filteredCurrencies = ARABIC_CURRENCIES.filter(c => 
+    const filtered = ARABIC_CURRENCIES.filter(c => 
         c.name.toLowerCase().includes(search) || 
-        c.code.toLowerCase().includes(search) || 
-        c.symbol.toLowerCase().includes(search)
+        c.code.toLowerCase().includes(search)
     );
     
-    filteredCurrencies.forEach(currency => {
-        const isSelected = currency.code === currentCurrency.code;
-        const html = `
-            <div class="sidebar-menu-item" style="padding: 10px 20px;" onclick="setCurrency('${currency.code}')">
-                <span>${currency.name} (${currency.symbol})</span>
-                ${isSelected ? '<i class="fas fa-check" style="color: var(--success);"></i>' : ''}
-            </div>
-        `;
-        list.innerHTML += html;
-    });
+    list.innerHTML = filtered.map(c => `
+        <button class="secondary" style="margin: 5px 0; border: 1px solid ${c.code === currentCurrency.code ? 'var(--p)' : 'var(--border-color)'};" onclick="setCurrency('${c.code}')">
+            <span style="font-weight: bold;">${c.symbol} ${c.name} (${c.code})</span>
+            ${c.code === currentCurrency.code ? '<i class="fas fa-check" style="color: var(--success);"></i>' : ''}
+        </button>
+    `).join('');
 }
 
 function setCurrency(code) {
-    const selectedCurrency = ARABIC_CURRENCIES.find(c => c.code === code);
-    if (selectedCurrency) {
-        currentCurrency = selectedCurrency;
+    const selected = ARABIC_CURRENCIES.find(c => c.code === code);
+    if (selected) {
+        currentCurrency = selected;
         localStorage.setItem('currencyCode', code);
-        document.getElementById('currentCurrencyDisplay').innerHTML = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
-        
+        document.getElementById('currentCurrencyDisplay').innerHTML = `العملة: ${selected.name} (${selected.symbol})`;
         updateBalanceDisplay();
         updateStats(); 
-        
         closeLayer('currency');
-        showToast(`تم تغيير العملة إلى ${currentCurrency.name} (${currentCurrency.symbol}).`);
+        toastMsg(`تم تعيين العملة إلى ${selected.name}`);
     }
 }
 
-// ===================================================
-// 11. وظائف تصدير واستيراد البيانات
-// ===================================================
+async function addDataToStore(storeName, dataArray) {
+    if (!IDB_connection) return;
+    const transaction = IDB_connection.transaction([storeName], "readwrite");
+    const store = transaction.objectStore(storeName);
+
+    for (const item of dataArray) {
+        if (storeName === 'bal') {
+            await new Promise(resolve => {
+                store.put(item).onsuccess = resolve;
+            });
+        } else {
+            await new Promise(resolve => {
+                const dataToSave = { ...item };
+                delete dataToSave.id; 
+                dataToSave.clientId = item.clientId || `${storeName}-${Date.now()}`;
+                
+                store.add(dataToSave).onsuccess = resolve;
+            });
+        }
+    }
+}
 
 function exportData() {
+    if (!IDB_connection) return toastMsg("لا يمكن الاتصال بقاعدة البيانات.");
+
     const dataToExport = {
-        db: db,
-        currencyCode: currentCurrency.code,
-        darkMode: localStorage.getItem('darkMode')
+        exp: db.exp,
+        rig: db.rig,
+        deb: db.deb,
+        bal: db.bal
     };
-    
-    const jsonString = JSON.stringify(dataToExport, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
+
+    const json = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
     const a = document.createElement('a');
     a.href = url;
-    a.download = `smart_budget_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `smart_budget_data_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    closeLayer('sidebar');
-    showToast("تم تصدير البيانات بنجاح!");
+    toastMsg("تم تصدير البيانات بنجاح!");
 }
 
-function importData(event) {
+async function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.type !== "application/json") {
-        return toastMsg("الرجاء اختيار ملف JSON صالح.");
-    }
+    if (!confirm("تحذير: هل أنت متأكد من استيراد البيانات؟ هذا سيضيف المعاملات إلى بياناتك الحالية.")) return;
     
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
             const importedData = JSON.parse(e.target.result);
             
-            if (!importedData.db || !importedData.db.exp || !importedData.db.bal) {
-                 return toastMsg("صيغة ملف الاستيراد غير صحيحة.");
+            if (importedData.bal && Array.isArray(importedData.bal.changes)) {
+                 importedData.bal.clientId = 1; 
+                 await addDataToStore('bal', [importedData.bal]);
             }
-            
-            // إعادة تعيين قاعدة البيانات الحالية
-            await resetAllData(); 
-            
-            // استيراد السجلات المخزنة
-            db.exp = importedData.db.exp;
-            db.rig = importedData.db.rig;
-            db.deb = importedData.db.deb;
-            db.bal = importedData.db.bal;
-            
-            // حفظ جميع السجلات الجديدة في IndexedDB
-            const allPromises = [
-                ...db.exp.map(item => saveData('exp', item)),
-                ...db.rig.map(item => saveData('rig', item)),
-                ...db.deb.map(item => saveData('deb', item)),
-                saveData('bal', db.bal)
-            ];
-            
-            await Promise.all(allPromises);
 
-            // تحديث الإعدادات
-            if (importedData.currencyCode) {
-                 localStorage.setItem('currencyCode', importedData.currencyCode);
+            for (const storeName of ["exp", "rig", "deb"]) {
+                if (importedData[storeName] && Array.isArray(importedData[storeName])) {
+                    await addDataToStore(storeName, importedData[storeName]);
+                }
             }
-            if (importedData.darkMode !== undefined) {
-                 localStorage.setItem('darkMode', importedData.darkMode);
-            }
-            
-            // إعادة تحميل وعرض البيانات
+
             await loadAllData(); 
-            
-            if (importedData.darkMode === 'true') {
-                 document.body.classList.add('dark-mode');
-            } else {
-                 document.body.classList.remove('dark-mode');
-            }
-            
-            // تحديث العملة
-             currentCurrency = ARABIC_CURRENCIES.find(c => c.code === importedData.currencyCode) || ARABIC_CURRENCIES[0];
-            document.getElementById('currentCurrencyDisplay').innerHTML = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
-
-
             updateStats();
             updateBalanceDisplay();
-            closeLayer('sidebar');
-            toastMsg("تم استيراد البيانات بنجاح! (تم إعادة تعيين قاعدة البيانات أولاً)");
+            toastMsg("تم استيراد البيانات وتحديثها بنجاح!");
 
         } catch (error) {
-            console.error("Import error:", error);
-            toastMsg("حدث خطأ أثناء معالجة ملف الاستيراد.", error);
+            toastMsg("فشل الاستيراد. تأكد من أن الملف بصيغة JSON صحيحة.");
+            console.error("Import Error:", error);
         } finally {
             event.target.value = null; 
         }
@@ -2050,11 +2023,8 @@ function resetAllData() {
         request.onsuccess = () => {
             storesCleared++;
             if (storesCleared === STORE_NAMES.length) {
-                // إعادة تهيئة المتغيرات المحلية بعد مسح المخزن
                 db.exp = db.rig = db.deb = []; 
                 db.bal = { clientId: 1, amount: 0, changes: [] };
-                
-                // إعادة إضافة سجل الرصيد الأساسي (للتجنب مشاكل auto-incrementing key)
                 saveData('bal', db.bal).then(() => {
                     loadAllData().then(() => {
                         updateStats(); 
