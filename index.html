@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ميزانيتك الذكية | Smart Budget</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+
 <style>
 /* ---------------------------------------------------- */
 /* Variables and Base Styling - LIGHT MODE (Default) */
@@ -53,7 +56,7 @@ body.dark-mode {
 }
 body{
     margin:0;
-    font-family: 'Arial', sans-serif; /* **تحديث:** تم استبدال Tajawal بخط نظامي للعمل أوفلاين */
+    font-family: 'Tajawal', sans-serif; /* **تمت الاستعادة:** استخدام خط Tajawal */
     background: var(--bg);
     color: var(--text-dark);
     overflow-x: hidden;
@@ -828,7 +831,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         <p class="card" style="border-top: 3px solid var(--danger);"> 
             <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية IndexedDB، ولا يتم إرسالها لأي خادم خارجي. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري. 
         </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.3 (تحديث العملات والعمل أوفلاين)</p>
+        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 3.4 (استعادة الأيقونات)</p>
     </div>
 </div>
 
@@ -878,7 +881,7 @@ const LAYERS = {
 };
 let historyStack = [];
 
-// **تحديث:** قائمة شاملة للعملات العالمية (بما في ذلك العملة السودانية)
+// **تم الحفاظ عليها:** قائمة شاملة للعملات العالمية
 const WORLD_CURRENCIES = [
     { code: 'SAR', symbol: 'ر.س', name: 'ريال سعودي' },
     { code: 'SDG', symbol: 'ج.س', name: 'جنيه سوداني' }, // العملة السودانية
@@ -914,7 +917,7 @@ const WORLD_CURRENCIES = [
 
 
 // تحديد العملة الافتراضية
-let defaultCurrencyCode = localStorage.getItem('currencyCode') || 'SDG'; // **تحديث:** تعيين SDG كافتراضي جديد
+let defaultCurrencyCode = localStorage.getItem('currencyCode') || 'SDG'; // **تم الحفاظ عليها:** SDG كافتراضي جديد
 let currentCurrency = WORLD_CURRENCIES.find(c => c.code === defaultCurrencyCode);
 if (!currentCurrency) {
     // محاولة البحث عن الجنيه السوداني، وإلا العودة إلى العملة الأولى
@@ -1474,7 +1477,7 @@ function addDebt() {
 // 8. إدارة السجلات (Logs)
 // ===================================================
 
-// **تحديث:** تم دمج الإصلاح من الخطوة السابقة هنا لضمان عرض المبلغ ورمز العملة
+// **تم الحفاظ على الإصلاح:** ضمان عرض المبلغ ورمز العملة
 function renderLog() {
     const t = Translations[currentLanguage];
     const search = document.getElementById('search').value.toLowerCase();
@@ -1642,7 +1645,7 @@ function renderCurrencyList() {
     const search = document.getElementById('currencySearch').value.toLowerCase();
     const container = document.getElementById('currencyList');
     
-    // **تحديث:** استخدام قائمة العملات العالمية
+    // **تم الحفاظ عليها:** استخدام قائمة العملات العالمية
     let filteredCurrencies = WORLD_CURRENCIES.filter(c => 
         c.name.toLowerCase().includes(search) || 
         c.code.toLowerCase().includes(search) || 
@@ -1676,7 +1679,7 @@ function renderCurrencyList() {
 }
 
 function setCurrency(code) {
-    // **تحديث:** استخدام قائمة العملات العالمية
+    // **تم الحفاظ عليها:** استخدام قائمة العملات العالمية
     currentCurrency = WORLD_CURRENCIES.find(c => c.code === code);
     localStorage.setItem('currencyCode', code);
     updateBalanceDisplay();
