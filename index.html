@@ -1004,7 +1004,7 @@ async function loadAllData() {
 }
 
 // ===================================================
-// 3. وظائف الأدوات المساعدة والملاحية
+// 3. وظائف الأدوات المساعدة والملاحية (مع إضافة تحويل الأرقام)
 // ===================================================
 
 function loadDarkModePreference() {
@@ -1040,22 +1040,29 @@ function getCurrencySymbol() {
     return currentCurrency.symbol;
 }
 
+// **وظيفة جديدة لتحويل الأرقام الإنجليزية (0-9) إلى الأرقام العربية الشرقية (٠-٩)**
+function toEasternArabic(s) {
+    return String(s).replace(/[0-9]/g, function(d) {
+        return d.charCodeAt(0) - 48 + 1632; // 1632 is the base Unicode for ٠
+    });
+}
+
 function formatCurrency(amount) {
     if (balanceHidden) return "XXXXX";
-    const num = parseFloat(amount);
-    const formatted = num.toLocaleString('ar-SA', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-    });
+    // استخدام formatCurrencyPlain للحصول على الرقم مهيأ بالأرقام العربية الشرقية
+    const formatted = formatCurrencyPlain(amount); 
     return `${formatted} ${getCurrencySymbol()}`;
 }
 
 function formatCurrencyPlain(amount) {
     const num = parseFloat(amount);
-    return num.toLocaleString('ar-SA', { 
+    // نستخدم en-US لضمان الحصول على الأرقام الإنجليزية (0-9) أولاً
+    const formatted = num.toLocaleString('en-US', { 
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
     });
+    // ثم نقوم بتحويلها إلى الأرقام العربية الشرقية (٠-٩)
+    return toEasternArabic(formatted);
 }
 
 function formatAmount(input) {
@@ -1567,6 +1574,10 @@ function renderLog() {
         let icon = '';
         let color = '';
         let secondaryText = '';
+        
+        // الأرقام في النص الثانوي
+        const itemAmountPlain = formatCurrencyPlain(item.amount);
+        const itemPaidPlain = formatCurrencyPlain(item.paidAmount || 0);
 
         if (currentLog === 'exp') {
             color = 'var(--danger)';
@@ -1575,11 +1586,12 @@ function renderLog() {
         } else if (currentLog === 'rig') {
             color = item.status === 'كامل' ? 'var(--success)' : 'var(--warning)';
             icon = 'fas fa-handshake';
-            secondaryText = `الحالة: ${item.status} | المستحق: ${formatCurrencyPlain(item.amount - (item.paidAmount || 0))} ${getCurrencySymbol()}`;
+            const remaining = item.amount - (item.paidAmount || 0);
+            secondaryText = `الحالة: ${item.status} | المستحق: ${formatCurrencyPlain(remaining)} ${getCurrencySymbol()}`;
         } else if (currentLog === 'deb') {
             color = item.status === 'مدفوع' ? 'var(--success)' : 'var(--warning)';
             icon = 'fas fa-file-invoice';
-            secondaryText = `الحالة: ${item.status} | القيمة الكلية: ${formatCurrencyPlain(item.amount)} ${getCurrencySymbol()}`;
+            secondaryText = `الحالة: ${item.status} | القيمة الكلية: ${itemAmountPlain} ${getCurrencySymbol()}`;
         }
 
         html += `
@@ -1625,17 +1637,20 @@ function renderBalanceLog() {
             sign = '-';
         }
 
+        const amountDisplay = formatCurrency(item.amount);
+        const newBalanceDisplay = formatCurrency(item.newBalance);
+
         html += `
             <div class="list-item" style="border-right-color: ${color};">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: bold; font-size: 1.1em; color: var(--text-dark);">
                         <i class="${icon}" style="margin-left: 5px; color: ${color};"></i> ${item.desc}
                     </span>
-                    <span style="font-weight: bold; color: ${color};">${sign}${formatCurrency(item.amount)}</span>
+                    <span style="font-weight: bold; color: ${color};">${sign}${amountDisplay.replace(getCurrencySymbol(), '').trim()} ${getCurrencySymbol()}</span>
                 </div>
                 <div class="details">
                     <span>${new Date(item.date).toLocaleDateString('ar-SA')} ${new Date(item.date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span style="color: var(--p); font-weight: bold;">الرصيد بعد العملية: ${formatCurrency(item.newBalance)}</span>
+                    <span style="color: var(--p); font-weight: bold;">الرصيد بعد العملية: ${newBalanceDisplay}</span>
                 </div>
             </div>
         `;
@@ -1659,10 +1674,14 @@ function openDetailModal(id, type) {
     const isRigDeb = (type === 'rig' || type === 'deb');
     const color = (type === 'exp' || type === 'deb') ? 'var(--danger)' : 'var(--success)';
     const statusColor = item.status === 'مدفوع' || item.status === 'كامل' ? 'var(--success)' : 'var(--danger)';
+    
+    const formattedAmount = formatCurrency(amount);
+    const formattedTotalAmount = item.amount ? formatCurrency(item.amount) : '';
+    const formattedPaidAmount = formatCurrency(item.paidAmount || 0);
 
     html += `<h3 style="color: var(--p); text-align: center; margin-bottom: 20px;">${item.type}</h3>`;
     html += `<p style="font-size: 1.5em; font-weight: bold; text-align: center; color: ${color};">
-                المبلغ: ${formatCurrency(amount)}
+                المبلغ: ${formattedAmount}
             </p>`;
 
     html += `<p><strong>الوصف/الملاحظة:</strong> ${item.desc || 'لا يوجد'}</p>`;
@@ -1677,10 +1696,10 @@ function openDetailModal(id, type) {
             html += `<p><strong>الطرف الآخر:</strong> ${item.person}</p>`;
         }
         if (item.isInstallment && type === 'deb') {
-            html += `<p><strong>المبلغ الكلي للالتزام:</strong> ${formatCurrency(item.amount)}</p>`;
+            html += `<p><strong>المبلغ الكلي للالتزام:</strong> ${formattedTotalAmount}</p>`;
             html += `<p><strong>قيمة القسط الحالي:</strong> ${formatCurrency(item.currentAmount)}</p>`;
         }
-        html += `<p><strong>المبلغ المدفوع:</strong> ${formatCurrency(item.paidAmount || 0)}</p>`;
+        html += `<p><strong>المبلغ المدفوع:</strong> ${formattedPaidAmount}</p>`;
     }
 
     if (item.img) {
