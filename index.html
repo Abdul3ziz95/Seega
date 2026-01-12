@@ -1,532 +1,112 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ميزانيتك الذكية | SQLite Edition</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
-    
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ميزانيتك الذكية | Smart Budget Pro</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
 /* ---------------------------------------------------- */
-/* Variables and Base Styling - LIGHT MODE (Default) */
+/* Variables and Base Styling */
 /* ---------------------------------------------------- */
 :root{
-    --p: #0077b6; /* Primary Blue (Vibrant) */
-    --s: #48cae4; /* Secondary Light Blue */
-    --bg: #f7f9fc; /* Light Background */
-    --danger: #ef476f; 
-    --success: #2a9d8f;
-    --warning: #fbc02d;
-    --text-dark: #333;
-    --text-light: #f7f9fc;
+    --p: #0077b6; --s: #48cae4; --bg: #f7f9fc; 
+    --danger: #ef476f; --success: #2a9d8f; --warning: #fbc02d;
+    --text-dark: #333; --text-light: #f7f9fc;
     --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 6px 15px rgba(0, 0, 0, 0.15);
-    --card-bg: #fff;
-    --input-bg: #fff;
-    --border-color: #ddd;
-    --tab-active-bg: #fff;
+    --card-bg: #fff; --input-bg: #fff; --border-color: #ddd;
 }
 
-/* ---------------------------------------------------- */
-/* Dark Mode Variables */
-/* ---------------------------------------------------- */
 body.dark-mode {
-    --p: #90e0ef; /* Lighter Primary Blue for contrast */
-    --s: #48cae4; 
-    --bg: #1f1f1f; /* Dark Background */
-    --danger: #ff8a80;
-    --success: #66bb6a;
-    --warning: #fbc02d;
-    --text-dark: #e0e0e0; /* Light Text */
-    --text-light: #1f1f1f;
-    --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.5);
-    --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.8);
-    --card-bg: #2d2d2d;
-    --input-bg: #3c3c3c;
-    --border-color: #555;
-    --tab-active-bg: #2d2d2d;
+    --p: #90e0ef; --bg: #1f1f1f; --text-dark: #e0e0e0; 
+    --card-bg: #2d2d2d; --input-bg: #3c3c3c; --border-color: #555;
 }
 
-/* ---------------------------------------------------- */
-/* Global Reset and Base Styling */
-/* ---------------------------------------------------- */
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 body{
-    margin:0;
-    font-family: 'Tajawal', 'Arial', sans-serif;
-    background: var(--bg);
-    color: var(--text-dark);
-    overflow-x: hidden;
-    line-height: 1.6;
-    transition: background 0.3s, color 0.3s;
+    margin:0; font-family: 'Tajawal', sans-serif;
+    background: var(--bg); color: var(--text-dark);
+    line-height: 1.6; transition: 0.3s;
 }
 
-/* Global Dark Mode Overrides for Specific Elements */
-.card, .sidebar, .modal { background: var(--card-bg); }
-.modal header { background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-
 /* ---------------------------------------------------- */
-/* Header & Navigation */
+/* UI Elements */
 /* ---------------------------------------------------- */
 header{
-    background: var(--p);
-    color: var(--text-light);
-    padding: 15px;
-    font-size: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: var(--shadow-hover);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    background: var(--p); color: var(--text-light);
+    padding: 15px; font-size: 18px; display: flex;
+    justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-hover);
 }
-header .title { flex-grow: 1; text-align: center; font-weight: 800; }
-header button {
-    background: none; 
-    border: none; 
-    color: var(--text-light); 
-    font-size: 20px; 
-    cursor: pointer; 
-    padding: 0 10px;
-    transition: transform 0.2s;
-}
-header button:hover { transform: scale(1.1); }
+header button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
 
-.tabs{
-    display:flex;
-    background: var(--card-bg);
-    border-bottom: 2px solid var(--border-color);
-    box-shadow: var(--shadow-light);
-    overflow-x: auto; 
-    white-space: nowrap;
-}
+.tabs{ display:flex; background: var(--card-bg); border-bottom: 2px solid var(--border-color); }
 .tabs button{
-    flex: 1 1 auto; 
-    min-width: 0; 
-    padding: 15px 10px;
-    border:none;
-    background: var(--card-bg);
-    color: var(--text-dark);
-    font-weight: 700;
-    font-size: 14px;
-    transition: all 0.3s;
-    border-bottom: 3px solid transparent;
+    flex: 1; padding: 15px 5px; border:none; background: none;
+    color: var(--text-dark); font-weight: 700; font-size: 13px; cursor: pointer;
 }
-.tabs button.active{
-    color: var(--p);
-    border-bottom: 3px solid var(--p);
-    background: color-mix(in srgb, var(--bg) 90%, var(--p)); 
-}
-body.dark-mode .tabs button.active {
-    background: color-mix(in srgb, var(--bg) 85%, var(--p)); 
-}
+.tabs button.active{ color: var(--p); border-bottom: 3px solid var(--p); }
 
-/* ---------------------------------------------------- */
-/* General Layout & Cards */
-/* ---------------------------------------------------- */
-.section{ display:none; padding: 15px; }
+.section{ display:none; padding: 15px; animation: fadeIn 0.3s; }
 .section.active{ display:block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .card{
-    background:var(--card-bg);
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: var(--shadow-light);
-    margin-bottom: 15px;
-    border-top: 5px solid var(--s); 
-    transition: background 0.3s, border-color 0.3s;
+    background:var(--card-bg); padding: 20px; border-radius: 15px;
+    box-shadow: var(--shadow-light); margin-bottom: 15px; border-top: 5px solid var(--s);
 }
 
-/* ---------------------------------------------------- */
-/* Overview Section Styling (New Dashboard) */
-/* ---------------------------------------------------- */
-#overview .balance-display {
-    text-align: center;
-    padding: 30px 20px;
-    margin-bottom: 20px;
-    border-radius: 15px;
-    background: var(--card-bg);
-    box-shadow: var(--shadow-hover);
-    border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.balance-display {
+    text-align: center; padding: 25px; background: var(--card-bg);
+    border-radius: 15px; box-shadow: var(--shadow-hover); margin-bottom: 20px;
 }
-#overview .balance-display h2 {
-    margin: 0 0 5px 0;
-    font-size: 18px;
-    color: #999;
-}
-#overview .balance-display p {
-    font-size: 38px;
-    font-weight: 800;
-    margin: 5px 0 0 0;
-    color: var(--p);
-    display: flex;
-    align-items: center;
-}
-#overview .balance-display button {
-    background: none;
-    border: none;
-    color: var(--p);
-    font-size: 24px;
-    cursor: pointer;
-    margin-right: 10px;
-    transition: color 0.2s;
-}
-#overview .balance-display button:hover {
-    color: var(--s);
-}
-#overview .balance-actions {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
-}
-#overview .balance-actions .action {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    color: var(--text-dark);
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-light);
-    transition: all 0.2s;
-    background: var(--input-bg);
-}
-#overview .balance-actions .action:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
-    border-color: var(--p);
-}
-#overview .balance-actions .action i {
-    font-size: 24px;
-    margin-bottom: 5px;
-}
-#overview .balance-actions .deposit i { color: var(--success); }
-#overview .balance-actions .withdraw i { color: var(--danger); }
+#currentBalanceDisplay { font-size: 32px; font-weight: 800; color: var(--p); margin: 10px 0; }
 
-/* ---------------------------------------------------- */
-/* Form Elements & Inputs */
-/* ---------------------------------------------------- */
-input, select, .datetime-container input[type="datetime-local"] {
-    width: 100%;
-    padding: 14px;
-    margin: 8px 0;
-    font-size: 16px;
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    box-sizing: border-box;
-    background: var(--input-bg);
-    color: var(--text-dark);
-    transition: all 0.3s;
-    /* الأهم: ضمان أن تكون مدخلات الأرقام باللغة الإنجليزية */
-    direction: ltr;
-    text-align: right;
+input, select {
+    width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px;
+    border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-dark);
 }
 
-input:focus, select:focus, .datetime-container input[type="datetime-local"]:focus {
-    border-color: var(--s);
-    box-shadow: 0 0 0 3px rgba(72, 202, 228, 0.2);
-    outline: none;
+button.action {
+    background: var(--p); color: white; border: none; padding: 15px;
+    width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px;
 }
-body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode .datetime-container input[type="datetime-local"]:focus {
-    box-shadow: 0 0 0 3px rgba(72, 202, 228, 0.3);
-}
-
-.datetime-container { position: relative; width: 100%; margin: 8px 0; }
-.datetime-container input[type="datetime-local"] { margin: 0; padding-left: 40px; }
-
-.calendar-icon {
-    position: absolute;
-    top: 50%;
-    left: 15px; 
-    transform: translateY(-50%);
-    font-size: 1.4em;
-    z-index: 2;
-    pointer-events: none; 
-    color: var(--p); 
+button.secondary {
+    background: var(--input-bg); color: var(--text-dark); border: 1px solid var(--border-color);
+    padding: 10px; width: 100%; border-radius: 10px; cursor: pointer; margin-top: 5px;
 }
 
-/* ---------------------------------------------------- */
-/* Buttons & Actions */
-/* ---------------------------------------------------- */
-button.action{
-    background: var(--p);
-    color: var(--text-light);
-    border: none;
-    padding: 16px;
-    width: 100%;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    box-shadow: var(--shadow-light);
-}
-button.action:hover{
-    background: color-mix(in srgb, var(--p) 85%, black); 
-    transform: translateY(-2px);
-}
-
-button.secondary{
-    background: var(--input-bg);
-    color: var(--text-dark);
-    padding: 12px;
-    width: 100%;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    margin-top: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-button.secondary:hover {
-    background: color-mix(in srgb, var(--input-bg) 80%, #999); 
-}
-
-/* ---------------------------------------------------- */
-/* Utility & Custom Elements */
-/* ---------------------------------------------------- */
-.toast{
-    position:fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: var(--text-light);
-    padding: 12px 25px;
-    border-radius: 30px;
-    display:none;
-    z-index: 100;
-    font-size: 15px;
-    box-shadow: var(--shadow-hover);
-    white-space: nowrap;
-}
-
-.currency-symbol { color: var(--p); font-weight: bold; font-size: 1.1em; margin-right: 5px; }
-.hidden-balance { font-size: 38px; font-weight: 800; letter-spacing: 5px; color: var(--p); }
-
-/* ---------------------------------------------------- */
-/* Modals and Sidebar Refinements */
-/* ---------------------------------------------------- */
+/* Modals */
 .modal{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background: var(--bg);
-    display:none;
-    flex-direction:column;
-    z-index: 30;
-    overflow-y: auto;
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background: var(--bg); display:none; flex-direction:column; z-index: 200;
 }
-.modal header{
-    display:flex;
-    gap: 10px;
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--card-bg);
-    align-items: center;
-    box-shadow: var(--shadow-light);
-    position: sticky;
-    top: 0;
-    z-index: 35;
-}
-.modal header .title { flex-grow: 1; text-align: center; font-weight: 700; }
-.modal header button {
-    background: none; 
-    border: none; 
-    color: var(--text-dark); 
-    font-size: 20px; 
-    cursor: pointer; 
-    padding: 0 10px;
-}
-.modal-content {
-    flex-grow: 1;
-    padding: 15px;
+.modal header{ background: var(--card-bg); color: var(--text-dark); border-bottom: 1px solid var(--border-color); }
+.modal-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
+
+.toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: white; padding: 10px 20px; border-radius: 20px;
+    display: none; z-index: 1000; font-size: 14px;
 }
 
 .sidebar {
-    position: fixed;
-    top: 0;
-    right: 0; 
-    width: 300px; 
-    max-width: 85%;
-    height: 100%;
-    background: var(--card-bg);
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
-    transform: translateX(100%); 
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
-    z-index: 25; 
-    display: flex;
-    flex-direction: column;
+    position: fixed; top: 0; right: 0; width: 280px; height: 100%;
+    background: var(--card-bg); z-index: 300; transform: translateX(100%);
+    transition: 0.3s; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
 }
 .sidebar.open { transform: translateX(0); }
-
-/* Switch Style (Dark Mode) */
-.switch-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    font-size: 17px;
-    color: var(--text-dark);
-}
-/* ... (كود الـ switch لم يتغير) ... */
-.switch { position: relative; display: inline-block; width: 45px; height: 25px; }
-.switch input {opacity: 0; width: 0; height: 0;}
-.slider {
-    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: var(--border-color); transition: .4s; border-radius: 25px;
-}
-.slider:before {
-    position: absolute; content: ""; height: 19px; width: 19px; left: 3px; bottom: 3px;
-    background-color: white; transition: .4s; border-radius: 50%;
-}
-input:checked + .slider { background-color: var(--p); }
-input:checked + .slider:before { transform: translateX(20px); }
-
-
-/* Sidebar */
-.sidebar-header {
-    padding: 15px;
-    background: var(--p);
-    color: var(--text-light);
-    font-size: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-}
-.sidebar-content {
-    flex-grow: 1;
-    padding: 15px 0;
-    overflow-y: auto;
-}
-
-.sidebar-menu-item {
-    padding: 15px 20px;
-    margin: 5px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between; 
-    gap: 15px;
-    font-size: 17px;
-    color: var(--text-dark);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-}
-
-.sidebar-menu-item:hover {
-    background: var(--s);
-    color: var(--text-dark); 
-}
-.sidebar-menu-item i { font-size: 1.2em; }
-
 .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    z-index: 24;
-}
-.sidebar-overlay.open { display: block; }
-
-/* Small Image Source Modal */
-#imageSourceModal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    max-width: 350px;
-    height: auto;
-    background: var(--card-bg);
-    border-radius: 15px;
-    box-shadow: var(--shadow-hover);
-    padding: 20px;
-    z-index: 150;
-    display: none; 
-    flex-direction: column;
-    align-items: center;
-}
-/* **الإصلاح:** جعل النافذة مرئية عند إضافة كلاس open */
-#imageSourceModal.open {
-    display: flex;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; z-index: 250;
 }
 
-#imageSourceModal h3 {
-    margin-top: 0;
-    color: var(--p);
-    text-align: center;
-}
-#imageSourceModal button {
-    margin: 10px 0;
-    padding: 15px;
-    font-size: 16px;
-    border-radius: 10px;
-    width: 100%;
-}
-
-/* Toast Animation */
-.toast.show{
-    display:block;
-    animation: fadeInOut 2.5s ease-in-out forwards;
-}
-
-@keyframes fadeInOut {
-    0% { opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { opacity: 0; }
-}
-
-/* List Item */
-.list-item{
-    background: var(--card-bg);
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border-right: 5px solid var(--s); 
-    color: var(--text-dark);
-}
-.list-item:hover {
-    background: color-mix(in srgb, var(--card-bg) 95%, #999);
-    box-shadow: var(--shadow-light);
-}
-.list-item .details {
-    font-size: 0.9em; 
-    color: #666; 
-    text-align: right;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
-}
-
-/* ---------------------------------------------------- */
-/* Responsive Fix for Tabs (Small Screens) */
-/* ---------------------------------------------------- */
-@media (max-width: 450px) {
-    .tabs button {
-        padding: 15px 5px; 
-        font-size: 13px; 
-    }
+.list-item {
+    background: var(--card-bg); padding: 15px; border-radius: 10px;
+    margin-bottom: 10px; border-right: 5px solid var(--p); box-shadow: var(--shadow-light);
 }
 </style>
 </head>
@@ -534,581 +114,274 @@ input:checked + .slider:before { transform: translateX(20px); }
 <body>
 
 <header>
-    <button onclick="openSidebar()"><i class="fas fa-bars"></i></button> 
-    <span class="title">ميزانيتك المالية الذكية</span>
-    <button style="visibility: hidden;"><i class="fas fa-search"></i></button> 
+    <button onclick="openLayer('sidebar')"><i class="fas fa-bars"></i></button> 
+    <span class="title">ميزانيتك الذكية</span>
+    <button onclick="openLayer('about')"><i class="fas fa-info-circle"></i></button> 
 </header>
 
 <div class="tabs">
-    <button class="active" onclick="openTab('overview')">
-        <i class="fas fa-tachometer-alt" style="margin-left: 5px;"></i> لوحة القيادة
-    </button>
-    <button onclick="openTab('expenses')">
-        <i class="fas fa-money-bill-wave" style="margin-left: 5px;"></i> مصروفات
-    </button>
-    <button onclick="openTab('rights')">
-        <i class="fas fa-handshake" style="margin-left: 5px;"></i> حقوق
-    </button>
-    <button onclick="openTab('debts')">
-        <i class="fas fa-file-invoice" style="margin-left: 5px;"></i> التزامات
-    </button>
+    <button class="active" onclick="openTab('overview', event)">لوحة القيادة</button>
+    <button onclick="openTab('expenses', event)">مصروفات</button>
+    <button onclick="openTab('rights', event)">حقوق</button>
+    <button onclick="openTab('debts', event)">التزامات</button>
 </div>
 
 <div id="overview" class="section active">
     <div class="balance-display">
-        <h2>الرصيد النقدي الحالي</h2>
-        <p id="currentBalanceDisplay">
-            <i class="fas fa-spinner fa-spin"></i>
-        </p>
-        <button onclick="toggleBalanceVisibility()" id="balanceVisibilityToggle" title="إخفاء/إظهار الرصيد">
+        <h2 style="font-size: 16px; color: #777;">الرصيد النقدي الحالي</h2>
+        <p id="currentBalanceDisplay">0.00</p>
+        <button onclick="toggleBalanceVisibility()" id="balanceVisibilityToggle" style="background:none; border:none; color:var(--p); cursor:pointer;">
              <i class="fas fa-eye"></i>
         </button>
-    </div>
-
-    <div class="balance-actions">
-        <button class="action deposit" onclick="openBalanceActionModal('deposit')">
-            <i class="fas fa-plus-circle"></i> إيداع
-        </button>
-        <button class="action withdraw" onclick="openBalanceActionModal('withdraw')">
-            <i class="fas fa-minus-circle"></i> سحب
-        </button>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="action" onclick="openBalanceActionModal('deposit')" style="background: var(--success);">إيداع</button>
+            <button class="action" onclick="openBalanceActionModal('withdraw')" style="background: var(--danger);">سحب</button>
+        </div>
     </div>
     
-    <button class="secondary" onclick="openBalanceLogModal()" style="margin-top: 15px;">
-        <i class="fas fa-history" style="margin-left: 5px;"></i> سجل حركات الرصيد
-    </button>
-    <div class="card" style="margin-top: 20px; border-top: 5px solid var(--p);">
-        <h3 style="color: var(--p); margin-top: 0;"><i class="fas fa-calculator" style="margin-left: 5px;"></i> ملخص الإحصائيات</h3>
-        <p><span>إجمالي المصروفات (تشمل المدفوعات):</span> <b id="sExpTotal">0</b></p>
-        <p><span>إجمالي الحقوق المستحقة:</span> <b id="sRigTotal">0</b></p>
-        <p><span>إجمالي الالتزامات الكلية:</span> <b id="sDebTotal">0</b></p>
-        <p><span>المحصل من الحقوق:</span> <b id="sRigPaid">0</b></p>
-        <p><span>المدفوع من الالتزامات:</span> <b id="sDebPaid">0</b></p>
-        </div>
+    <div class="card">
+        <h3 style="margin-top:0">ملخص سريع</h3>
+        <p>إجمالي المصروفات: <span id="sExpTotal">0</span></p>
+        <p>إجمالي الحقوق: <span id="sRigTotal">0</span></p>
+        <p>إجمالي الالتزامات: <span id="sDebTotal">0</span></p>
+    </div>
+    <button class="secondary" onclick="openLayer('balanceLog')">سجل حركات الرصيد</button>
 </div>
 
 <div id="expenses" class="section">
     <div class="card">
-    <p style="color: var(--danger); font-weight: bold; font-size: 0.9em; text-align: right;">* المصروفات يتم خصمها من رصيدك الحالي فوراً</p>
-    <input id="eAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-    <select id="eType">
-    <option value="">🛒 الفئة (نفقات متغيرة)</option>
-    <option>طعام</option><option>مواصلات</option>
-    <option>رعاية شخصية</option><option>أجهزة إلكترونية</option>
-    <option>صحة</option><option>ترفيه</option><option>تسوق</option>
-    <option>تعليم</option><option>صيانة وإصلاح</option><option>أخرى</option>
-    </select>
-    <input id="eDesc" placeholder="📝 وصف / ملاحظة">
-    <div class="datetime-container">
+        <input id="eAmount" type="text" placeholder="المبلغ" oninput="formatAmount(this)">
+        <select id="eType">
+            <option value="">اختر الفئة</option>
+            <option>طعام</option><option>مواصلات</option><option>تسوق</option><option>أخرى</option>
+        </select>
+        <input id="eDesc" placeholder="وصف">
         <input id="eDate" type="datetime-local">
-        <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-    </div>
-    
-    <button class="secondary" onclick="showImageSourceModal()">
-        <i class="fas fa-camera" style="margin-left: 5px;"></i> إرفاق صورة الفاتورة (اختياري)
-    </button>
-    <span id="eImgName" style="display: block; font-size: 0.8em; color: var(--success); text-align: right; margin-top: 5px;"></span>
-    <input type="file" id="eImgCamera" accept="image/*" capture="camera" style="display: none;" onchange="updateFileName(this, 'eImgName')">
-    <input type="file" id="eImgGallery" accept="image/*" style="display: none;" onchange="updateFileName(this, 'eImgName')">
-    <button class="action" onclick="addExpense()">
-        <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ المصروف
-    </button>
-    <button class="secondary" onclick="openLog('exp')">
-        <i class="fas fa-history" style="margin-left: 5px;"></i> سجل المصروفات
-    </button>
+        <button class="action" onclick="addExpense()">حفظ المصروف</button>
+        <button class="secondary" onclick="openLog('exp')">سجل المصروفات</button>
     </div>
 </div>
 
 <div id="rights" class="section">
     <div class="card">
-    <p style="color: var(--success); font-weight: bold; font-size: 0.9em; text-align: right;">* المبالغ المحصلة (دفع الدين/الآجل) يتم إضافتها إلى رصيدك الحالي</p>
-    <select id="rType" onchange="updateRightFields(this.value)">
-    <option value="">🤝 نوع الحق</option>
-    <option>دين</option>
-    <option>بيع بالآجل</option>
-    <option>أخرى</option>
-    </select>
-    <input id="rAmount" type="text" placeholder="💵 المبلغ المستحق (المبلغ الكلي)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-    <div id="rDynamicFields"></div>
-    <input id="rDesc" placeholder="👤 وصف / ملاحظة (المدين/الجهة)">
-    <div class="datetime-container">
+        <input id="rAmount" type="text" placeholder="المبلغ الكلي" oninput="formatAmount(this)">
+        <input id="rDesc" placeholder="المدين / الجهة">
+        <select id="rStatus">
+            <option value="غير مدفوع">غير مدفوع</option>
+            <option value="كامل">مدفوع بالكامل</option>
+        </select>
         <input id="rDate" type="datetime-local">
-        <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-    </div>
-    <select id="rStatus">
-    <option value="">✅ الحالة</option>
-    <option value="كامل">مدفوع بالكامل</option>
-    <option value="غير مدفوع">غير مدفوع بعد</option>
-    </select>
-    <button class="action" onclick="addRight()">
-        <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ الحق
-    </button>
-    <button class="secondary" onclick="openLog('rig')">
-        <i class="fas fa-history" style="margin-left: 5px;"></i> سجل الحقوق
-    </button>
+        <button class="action" onclick="addRight()">حفظ الحق</button>
+        <button class="secondary" onclick="openLog('rig')">سجل الحقوق</button>
     </div>
 </div>
 
 <div id="debts" class="section">
     <div class="card">
-    <p style="color: var(--danger); font-weight: bold; font-size: 0.9em; text-align: right;">* دفع الالتزامات يتم خصمه من رصيدك الحالي</p>
-    <select id="dType" onchange="updateDebtFields(this.value)">
-    <option value="">🧾 نوع الالتزام</option>
-    <option>إيجار</option>
-    <option>كهرباء</option>
-    <option>ماء</option>
-    <option>إنترنت</option>
-    <option>قرض</option> <option>دين شخصي</option> <option>قسط/فاتورة أخرى</option>
-    <option>أخرى</option>
-    </select>
-    <input id="dAmount" type="text" placeholder="💵 قيمة الفاتورة/القسط الحالي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-
-    <div id="dDynamicFields"></div>
-    <input id="dDesc" placeholder="🏢 وصف / ملاحظة (الدائن/الجهة)">
-    <div class="datetime-container">
+        <input id="dAmount" type="text" placeholder="قيمة الالتزام" oninput="formatAmount(this)">
+        <input id="dDesc" placeholder="الدائن / الجهة">
+        <select id="dStatus">
+            <option value="غير مدفوع">غير مدفوع</option>
+            <option value="مدفوع">مدفوع</option>
+        </select>
         <input id="dDate" type="datetime-local">
-        <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-    </div>
-    <select id="dStatus">
-    <option value="">✅ الحالة</option>
-    <option value="مدفوع">مدفوع</option>
-    <option value="غير مدفوع">غير مدفوع</option>
-    </select>
-    <button class="action" onclick="addDebt()">
-        <i class="fas fa-save" style="margin-left: 5px;"></i> حفظ الالتزام
-    </button>
-    <button class="secondary" onclick="openLog('deb')">
-        <i class="fas fa-history" style="margin-left: 5px;"></i> سجل الالتزامات
-    </button>
+        <button class="action" onclick="addDebt()">حفظ الالتزام</button>
+        <button class="secondary" onclick="openLog('deb')">سجل الالتزامات</button>
     </div>
 </div>
 
 <div class="modal" id="logModal">
     <header>
-        <input id="search" placeholder="🔍 بحث في السجل..." oninput="renderLog()">
         <button onclick="closeLayer('log')"><i class="fas fa-times"></i></button>
+        <span class="title">السجل</span>
+        <div style="width:40px"></div>
     </header>
     <div class="modal-content" id="logContent"></div>
 </div>
 
-<div class="modal" id="detailModal">
+<div class="modal" id="actionModal">
     <header>
-        <span class="title">تفاصيل المعاملة</span>
-        <button onclick="closeLayer('detail')"><i class="fas fa-times"></i></button>
-    </header>
-    <div class="modal-content detail" id="detailContent"></div>
-</div>
-
-<div class="modal" id="editModal">
-    <header>
-        <span class="title" id="editModalTitle">تعديل المعاملة</span>
-        <button onclick="closeLayer('edit')"><i class="fas fa-times"></i></button>
-    </header>
-    <div class="modal-content">
-        <div id="editFormContainer">
-            <div id="editExpForm" style="display:none;">
-                <input id="eEditAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-                <select id="eEditType"></select> <input id="eEditDesc" placeholder="📝 وصف / ملاحظة">
-                <div class="datetime-container">
-                    <input id="eEditDate" type="datetime-local">
-                    <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-                </div>
-                
-                <p id="eEditImgInfo" style="font-size: 0.9em; color: var(--p); text-align: right; margin-top: 10px;"></p>
-                <button class="secondary" onclick="document.getElementById('eEditImgNew').click()">
-                    <i class="fas fa-camera" style="margin-left: 5px;"></i> استبدال صورة الفاتورة
-                </button>
-                <input type="file" id="eEditImgNew" accept="image/*" style="display: none;" onchange="updateEditFileName(this, 'eEditImgInfo')">
-                <button class="secondary" id="eEditImgRemoveBtn" style="background: var(--danger); color: var(--text-light); border: none; margin-top: 5px; display: none;" onclick="removeEditImage('eEditImgInfo')">
-                     <i class="fas fa-trash-alt" style="margin-left: 5px;"></i> إزالة الصورة الحالية
-                </button>
-            </div>
-
-            <div id="editRigDebForm" style="display:none;">
-                <select id="rdEditType"></select> <input id="rdEditAmount" type="text" placeholder="💵 المبلغ الكلي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-                <div id="rdEditDynamicFields"></div>
-                <input id="rdEditDesc" placeholder="📝 وصف / ملاحظة">
-                <div class="datetime-container">
-                    <input id="rdEditDate" type="datetime-local">
-                    <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-                </div>
-                <select id="rdEditStatus"></select> <p id="rdEditPaidInfo" style="font-size: 0.9em; color: var(--success); text-align: right; margin-top: 10px; font-weight: bold;"></p>
-            </div>
-
-        </div>
-
-        <button class="action" onclick="updateTransaction()">
-            <i class="fas fa-check" style="margin-left: 5px;"></i> حفظ التعديلات
-        </button>
-    </div>
-</div>
-
-
-<div class="modal" id="balanceActionModal">
-    <header>
-        <span class="title" id="actionModalTitle"></span>
         <button onclick="closeLayer('balanceAction')"><i class="fas fa-times"></i></button>
+        <span id="actionModalTitle">إجراء</span>
+        <div style="width:40px"></div>
     </header>
     <div class="modal-content">
-        <p style="text-align: center; font-size: 1.1em;">رصيدك الحالي: <span id="currentBalanceInAction" style="color: var(--p); font-weight: bold;"></span></p>
-        <input id="bAmount" type="text" placeholder="💵 المبلغ" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">
-        <input id="bDesc" placeholder="📝 وصف العملية (مثل: راتب، تحويل شخصي)">
-        <div class="datetime-container">
-            <input id="bDate" type="datetime-local">
-            <span class="calendar-icon"><i class="far fa-calendar-alt"></i></span>
-        </div>
-        <button class="action" onclick="processBalanceAction()">
-            <i class="fas fa-check" style="margin-left: 5px;"></i> تنفيذ
-        </button>
+        <input id="bAmount" type="text" placeholder="المبلغ" oninput="formatAmount(this)">
+        <input id="bDesc" placeholder="ملاحظة">
+        <button class="action" onclick="processBalanceAction()">تأكيد</button>
     </div>
 </div>
 
 <div class="modal" id="balanceLogModal">
-    <header>
-        <span class="title">سجل حركات الرصيد</span>
-        <button onclick="closeLayer('balanceLog')"><i class="fas fa-times"></i></button>
-    </header>
-    <div class="modal-content" id="balanceLogContent">
-        </div>
+    <header><button onclick="closeLayer('balanceLog')"><i class="fas fa-times"></i></button><span>سجل الرصيد</span><div style="width:40px"></div></header>
+    <div class="modal-content" id="balanceLogContent"></div>
 </div>
 
-<div id="imageSourceModal">
-    <h3 style="margin-bottom: 20px;">اختيار مصدر الصورة</h3>
-    <button class="action" onclick="openCameraInput()"><i class="fas fa-camera" style="margin-left: 10px;"></i> التقاط بالكاميرا</button>
-    <button class="secondary" onclick="openGalleryInput()"><i class="fas fa-images" style="margin-left: 10px;"></i> اختيار من المعرض</button>
-    <button class="secondary" style="background: none; border: none; color: var(--danger); margin-top: 10px;" onclick="closeLayer('imageSource')">إلغاء</button>
+<div class="sidebar-overlay" id="mainOverlay" onclick="closeLayer('sidebar')"></div>
+<div class="sidebar" id="appSidebar">
+    <div style="padding:20px; background:var(--p); color:white; font-weight:bold;">القائمة والإعدادات</div>
+    <div style="padding:10px;">
+        <button class="secondary" onclick="toggleDarkMode()">الوضع الليلي</button>
+        <button class="secondary" onclick="exportData()">تصدير البيانات (JSON)</button>
+        <label class="secondary" style="display:block; text-align:center;">
+            استيراد بيانات
+            <input type="file" style="display:none" onchange="importData(event)">
+        </label>
+        <button class="secondary" style="color:red" onclick="clearAllData()">مسح كافة البيانات</button>
+    </div>
 </div>
-<div class="sidebar-overlay" id="imageSourceOverlay" style="z-index: 140; display: none;" onclick="closeLayer('imageSource')"></div>
 
 <div class="toast" id="toast"></div>
 
-<div class="sidebar-overlay" onclick="closeLayer('sidebar')"></div>
-
-<div class="sidebar" id="appSidebar">
-    <div class="sidebar-header">
-        <span>الإعدادات والبيانات</span>
-        <button onclick="closeLayer('sidebar')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="sidebar-content">
-        <div class="card" style="margin: 0 15px 15px; border-top: 5px solid var(--s);">
-             <p style="font-weight: bold; margin-top: 0; color: var(--p);">الإعدادات العامة</p>
-             
-             <div class="switch-container">
-                 <i class="fas fa-moon" style="margin-left: 10px;"></i> <span>الوضع الليلي</span>
-                 <label class="switch">
-                     <input type="checkbox" id="darkModeToggle" onclick="toggleDarkMode()">
-                     <span class="slider"></span>
-                 </label>
-             </div>
-             
-             <button class="secondary" onclick="openCurrencyModal()" style="display: flex; justify-content: space-between; align-items: center; border: none; background: var(--card-bg); margin-top: 15px;">
-                 <span id="currentCurrencyDisplay" style="font-weight: bold;">العملة: ريال سعودي (ر.س)</span>
-                 <span style="color: var(--p);"><i class="fas fa-exchange-alt"></i> تغيير</span>
-             </button>
-        </div>
-        
-        <div class="sidebar-menu-item" onclick="exportData()">
-            <i class="fas fa-file-export"></i> <span>تصدير البيانات (JSON)</span>
-        </div>
-        
-        <div class="sidebar-menu-item" onclick="document.getElementById('importFile').click()">
-            <i class="fas fa-file-import"></i> <span>استيراد البيانات (JSON)</span>
-        </div>
-        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-        
-        <div class="sidebar-menu-item" onclick="openAboutModal()">
-            <i class="fas fa-info-circle"></i> <span>حول التطبيق</span>
-        </div>
-        
-        <div class="sidebar-menu-item" onclick="confirmResetData()" style="color: var(--danger);">
-            <i class="fas fa-exclamation-triangle"></i> <span>إعادة تعيين البيانات</span>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="aboutModal">
-    <header>
-        <h3 style="color: var(--p);">حول ميزانيتك الذكية</h3>
-        <button onclick="closeLayer('about')"><i class="fas fa-times"></i></button>
-    </header>
-    <div class="modal-content">
-        <p>تطبيق ميزانيتك المالية الذكية هو أداة بسيطة للمساعدة في تتبع:</p>
-        <ul>
-            <li><i class="fas fa-wallet" style="color: var(--s);"></i> **المصروفات المتغيرة** اليومية.</li>
-            <li><i class="fas fa-receipt" style="color: var(--s);"></i> **الحقوق** المالية المستحقة لك (ديون، بيع آجل).</li>
-            <li><i class="fas fa-clipboard-list" style="color: var(--s);"></i> **الالتزامات** المالية المستحقة عليك (فواتير، أقساط، قروض).</li>
-        </ul>
-        <p class="card" style="border-top: 3px solid var(--danger);">
-            <strong>ملاحظة هامة:</strong> يتم حفظ جميع البيانات محلياً على جهازك باستخدام تقنية SQLite عبر `sql.js`. يرجى استخدام خاصية التصدير لحفظ نسخة احتياطية بشكل دوري.
-        </p>
-        <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">الإصدار 4.0 (SQLite Edition)</p>
-    </div>
-</div>
-
-<div class="modal" id="currencyModal">
-    <header>
-        <h3 style="color: var(--p);">اختيار العملة</h3>
-        <button onclick="closeLayer('currency')"><i class="fas fa-times"></i></button>
-    </header>
-    <div class="modal-content">
-        <input id="currencySearch" type="text" placeholder="🔍 ابحث عن العملة (ريال، جنيه، دولار...)" oninput="renderCurrencyList()">
-        <div id="currencyList">
-            </div>
-    </div>
-</div>
-
 <script>
-// ===================================================
-// 1. إعداد SQLite و IndexedDB للحفظ المستمر (Persistent Storage)
-// ===================================================
+// ------------------------------------
+// 1. التهيئة والبيانات الأساسية
+// ------------------------------------
+const STORE_NAMES = ["exp", "rig", "deb", "bal"];
+let db = { exp: [], rig: [], deb: [], bal: { amount: 0, changes: [] } };
+let IDB_connection = null;
+let currentBalance = 0;
+let balanceHidden = localStorage.getItem('balanceHidden') === 'true';
+let balanceActionType = null;
+let historyStack = [];
 
-const DB_FILENAME = "budget.sqlite"; // اسم ملف قاعدة البيانات
-const IDB_STORE_NAME = "sqlite-storage";
-let SQL_DB = null; // كائن قاعدة بيانات SQLite 
-let SQL_INIT = null; // لتحميل ملف sql-wasm.js مرة واحدة
-
-// الحالة العالمية
-let currentBalance = 0; 
-let balanceHidden = localStorage.getItem('balanceHidden') === 'true'; 
-let currentImageBase64 = null; 
-let transactionCache = { exp: [], rig: [], deb: [], bal: { changes: [] } }; // لتخزين البيانات محليًا بعد التحميل
-
-const EXP_TYPES = ["طعام", "مواصلات", "رعاية شخصية", "أجهزة إلكترونية", "صحة", "ترفيه", "تسوق", "تعليم", "صيانة وإصلاح", "أخرى"];
-const RIG_TYPES = ["دين", "بيع بالآجل", "أخرى"];
-const DEB_TYPES = ["إيجار", "كهرباء", "ماء", "إنترنت", "قرض", "دين شخصي", "قسط/فاتورة أخرى", "أخرى"];
-
-// إدارة حالة التنقل
 const LAYERS = {
     'sidebar': { elementId: 'appSidebar', type: 'menu' },
     'log': { elementId: 'logModal', type: 'modal' },
-    'detail': { elementId: 'detailModal', type: 'modal' },
-    'currency': { elementId: 'currencyModal', type: 'modal' },
-    'about': { elementId: 'aboutModal', type: 'modal' },
-    'balanceAction': { elementId: 'balanceActionModal', type: 'modal' },
+    'balanceAction': { elementId: 'actionModal', type: 'modal' },
     'balanceLog': { elementId: 'balanceLogModal', type: 'modal' },
-    'imageSource': { elementId: 'imageSourceModal', type: 'menu' },
-    'edit': { elementId: 'editModal', type: 'modal' }
+    'about': { elementId: 'logModal', type: 'modal' } // مثال
 };
-let historyStack = [];
 
-const ARABIC_CURRENCIES = [
-    { code: 'SAR', symbol: 'ر.س', name: 'ريال سعودي' },
-    { code: 'EGP', symbol: 'ج.م', name: 'جنيه مصري' },
-    { code: 'AED', symbol: 'د.إ', name: 'درهم إماراتي' },
-    { code: 'KWD', symbol: 'د.ك', name: 'دينار كويتي' },
-    { code: 'USD', symbol: '$', name: 'دولار أمريكي' },
-    { code: 'QAR', symbol: 'ر.ق', name: 'ريال قطري' },
-    { code: 'OMR', symbol: 'ر.ع.', name: 'ريال عماني' },
-    { code: 'JOD', symbol: 'د.ا', name: 'دينار أردني' },
-    { code: 'ILS', symbol: 'ش.ج', name: 'شيكل فلسطيني جديد' }, 
-    { code: 'EUR', symbol: '€', name: 'يورو' },
-];
-
-let currentCurrency = ARABIC_CURRENCIES.find(c => c.code === (localStorage.getItem('currencyCode') || 'SAR'));
-
-// ------------------------------------------------------------------
-// IndexedDB Wrapper for saving the SQL file (Persistence Layer)
-// ------------------------------------------------------------------
-
-function initIDBForSQL() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_FILENAME, 1);
-        
+// ------------------------------------
+// 2. إدارة قاعدة البيانات (IndexedDB)
+// ------------------------------------
+function initDB() {
+    return new Promise((resolve) => {
+        const request = indexedDB.open("SmartBudgetDB", 2);
         request.onupgradeneeded = (e) => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
-                db.createObjectStore(IDB_STORE_NAME, { keyPath: 'id' });
-            }
+            const tempDb = e.target.result;
+            STORE_NAMES.forEach(name => {
+                if (!tempDb.objectStoreNames.contains(name)) {
+                    tempDb.createObjectStore(name, { keyPath: "id", autoIncrement: true });
+                }
+            });
         };
-
-        request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => reject(e.target.error);
+        request.onsuccess = (e) => {
+            IDB_connection = e.target.result;
+            loadAllData().then(resolve);
+        };
     });
 }
-
-async function loadDatabaseFile(dbName) {
-    const idb = await initIDBForSQL();
-    return new Promise((resolve, reject) => {
-        const transaction = idb.transaction([IDB_STORE_NAME], "readonly");
-        const store = transaction.objectStore(IDB_STORE_NAME);
-        const request = store.get(dbName);
-        
-        request.onsuccess = (e) => resolve(e.target.result ? e.target.result.data : null);
-        request.onerror = (e) => reject(e.target.error);
-    });
-}
-
-async function saveDatabaseFile(dbName, data) {
-    const idb = await initIDBForSQL();
-    return new Promise((resolve, reject) => {
-        const transaction = idb.transaction([IDB_STORE_NAME], "readwrite");
-        const store = transaction.objectStore(IDB_STORE_NAME);
-        const request = store.put({ id: dbName, data: data });
-        
-        request.onsuccess = () => resolve();
-        request.onerror = (e) => reject(e.target.error);
-    });
-}
-
-// ------------------------------------------------------------------
-// SQLite Initialization and Structure
-// ------------------------------------------------------------------
-
-async function initDB() {
-    try {
-        // تحميل مكتبة sql-wasm
-        SQL_INIT = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}` });
-        
-        // محاولة تحميل البيانات المحفوظة من IndexedDB
-        const savedData = await loadDatabaseFile(DB_FILENAME);
-        
-        if (savedData) {
-            SQL_DB = new SQL_INIT.Database(savedData);
-            toastMsg("تم تحميل قاعدة بيانات SQLite بنجاح.");
-        } else {
-            // إنشاء قاعدة بيانات جديدة إذا لم يتم العثور على بيانات
-            SQL_DB = new SQL_INIT.Database();
-            createTables();
-            toastMsg("تم إنشاء قاعدة بيانات SQLite جديدة.");
-        }
-        
-        // تحميل جميع البيانات بعد إنشاء أو تحميل قاعدة البيانات
-        await loadAllData(); 
-        updateStats();
-        updateBalanceDisplay();
-        
-        // تعيين حفظ تلقائي كل 5 ثوانٍ
-        setInterval(saveDBToFile, 5000); 
-
-    } catch (e) {
-        console.error("Failed to initialize SQLite:", e);
-        toastMsg("خطأ فادح: فشل في تحميل SQLite.");
-    }
-}
-
-function createTables() {
-    const tableQueries = [
-        `CREATE TABLE IF NOT EXISTS transactions (
-            id TEXT PRIMARY KEY,
-            type TEXT NOT NULL, 
-            amount REAL NOT NULL, 
-            currentAmount REAL, 
-            paidAmount REAL DEFAULT 0, 
-            desc TEXT, 
-            date TEXT NOT NULL, 
-            currency TEXT NOT NULL,
-            status TEXT, 
-            dueDate TEXT, 
-            person TEXT,
-            img TEXT
-        );`,
-        `CREATE TABLE IF NOT EXISTS balance (
-            id INTEGER PRIMARY KEY,
-            amount REAL NOT NULL
-        );`,
-        `CREATE TABLE IF NOT EXISTS balance_changes (
-            id TEXT PRIMARY KEY,
-            type TEXT NOT NULL, 
-            amount REAL NOT NULL, 
-            desc TEXT, 
-            date TEXT NOT NULL, 
-            currency TEXT NOT NULL,
-            newBalance REAL NOT NULL
-        );`
-    ];
-
-    SQL_DB.exec(tableQueries.join(''));
-    
-    // إدراج سجل الرصيد الأولي إذا كان الجدول فارغًا
-    const balanceCount = SQL_DB.exec("SELECT COUNT(*) FROM balance;")[0].values[0][0];
-    if (balanceCount === 0) {
-        SQL_DB.exec("INSERT INTO balance (id, amount) VALUES (1, 0);");
-    }
-}
-
-function executeSql(query, params = {}) {
-    if (!SQL_DB) throw new Error("SQLite DB not initialized.");
-    try {
-        const stmt = SQL_DB.prepare(query);
-        stmt.bind(params);
-        let rows = [];
-        while (stmt.step()) {
-            let row = stmt.getAsObject();
-            // تحويل أنواع البيانات العددية التي تم تخزينها كسلسلة (إذا لزم الأمر)
-            rows.push(row);
-        }
-        stmt.free();
-        return rows;
-    } catch (e) {
-        console.error("SQL Execution Error:", e);
-        toastMsg("خطأ في تنفيذ استعلام قاعدة البيانات.");
-        throw e;
-    }
-}
-
-function executeRun(query, params = {}) {
-    if (!SQL_DB) throw new Error("SQLite DB not initialized.");
-    try {
-        SQL_DB.run(query, params);
-    } catch (e) {
-        console.error("SQL Run Error:", e);
-        toastMsg("خطأ في حفظ البيانات في قاعدة البيانات.");
-        throw e;
-    }
-}
-
-async function saveDBToFile() {
-    if (!SQL_DB) return;
-    try {
-        const data = SQL_DB.export();
-        await saveDatabaseFile(DB_FILENAME, data);
-    } catch (e) {
-        console.error("Error saving SQLite file:", e);
-    }
-}
-
-// ===================================================
-// 2. وظائف تحميل البيانات (Load All Data)
-// ===================================================
 
 async function loadAllData() {
-    if (!SQL_DB) return;
-    try {
-        // 1. تحميل الرصيد الحالي
-        const balanceResult = executeSql("SELECT amount FROM balance WHERE id = 1;");
-        currentBalance = balanceResult.length ? balanceResult[0].amount : 0;
-        
-        // 2. تحميل الحركات
-        transactionCache.exp = executeSql("SELECT * FROM transactions WHERE type = 'exp' ORDER BY date DESC;");
-        transactionCache.rig = executeSql("SELECT * FROM transactions WHERE type = 'rig' ORDER BY date DESC;");
-        transactionCache.deb = executeSql("SELECT * FROM transactions WHERE type = 'deb' ORDER BY date DESC;");
-        
-        // 3. تحميل سجل حركات الرصيد
-        transactionCache.bal.changes = executeSql("SELECT * FROM balance_changes ORDER BY date DESC;");
+    for (const storeName of STORE_NAMES) {
+        db[storeName] = await loadStoreData(storeName);
+    }
+    // معالجة الرصيد
+    if (db.bal.length > 0) {
+        const balObj = db.bal[db.bal.length - 1]; // آخر حالة للرصيد
+        currentBalance = balObj.amount || 0;
+        db.bal = balObj; 
+    } else {
+        db.bal = { amount: 0, changes: [] };
+    }
+    updateStats();
+    updateBalanceDisplay();
+}
 
-    } catch(e) {
-        console.error("Failed to load all data from SQLite:", e);
-        toastMsg("فشل تحميل البيانات من SQLite.");
+function loadStoreData(name) {
+    return new Promise((resolve) => {
+        const transaction = IDB_connection.transaction([name], "readonly");
+        const store = transaction.objectStore(name);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+    });
+}
+
+function saveData(storeName, data) {
+    return new Promise((resolve) => {
+        const transaction = IDB_connection.transaction([storeName], "readwrite");
+        const store = transaction.objectStore(storeName);
+        const request = store.put(data);
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
+// ------------------------------------
+// 3. الدوال المساعدة (المهمة)
+// ------------------------------------
+function formatAmount(input) {
+    let value = input.value.replace(/[^0-9.]/g, '');
+    if (value) {
+        let parts = value.split('.');
+        parts[0] = new Intl.NumberFormat().format(parts[0]);
+        input.value = parts.join('.');
     }
 }
 
-
-// ===================================================
-// 3. وظائف الأدوات المساعدة والملاحية (لم تتغير)
-// ===================================================
-
-function loadDarkModePreference() {
-    const isDark = localStorage.getItem('darkMode') === 'true';
-    if (isDark) {
-        document.body.classList.add('dark-mode');
-        const toggle = document.getElementById('darkModeToggle');
-        if (toggle) toggle.checked = true;
-    }
+function cleanAmount(val) {
+    return parseFloat(val.toString().replace(/,/g, '')) || 0;
 }
 
-function toggleDarkMode() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', isDark);
+function toastMsg(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+}
+
+// ------------------------------------
+// 4. إدارة الواجهة والتبويبات
+// ------------------------------------
+function openTab(tabId, event) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if(event) event.currentTarget.classList.add('active');
+}
+
+function openLayer(name, data = null) {
+    const layer = LAYERS[name];
+    if (!layer) return;
+    const el = document.getElementById(layer.elementId);
+    if (layer.type === 'modal') el.style.display = 'flex';
+    else {
+        el.classList.add('open');
+        document.getElementById('mainOverlay').style.display = 'block';
+    }
+    historyStack.push(name);
+    
+    if(name === 'balanceLog') renderBalanceLog();
+}
+
+function closeLayer(name) {
+    const layer = LAYERS[name];
+    if (!layer) return;
+    const el = document.getElementById(layer.elementId);
+    if (layer.type === 'modal') el.style.display = 'none';
+    else {
+        el.classList.remove('open');
+        document.getElementById('mainOverlay').style.display = 'none';
+    }
+    historyStack.pop();
+}
+
+// ------------------------------------
+// 5. وظائف العمليات المالية
+// ------------------------------------
+async function updateBalance(amount, type, desc) {
+    currentBalance += amount;
+    db.bal.amount = currentBalance;
+    db.bal.changes.push({ amount, type, desc, date: new Date().toISOString() });
+    await saveData('bal', db.bal);
+    updateBalanceDisplay();
+    updateStats();
+}
+
+function updateBalanceDisplay() {
+    const el = document.getElementById('currentBalanceDisplay');
+    if (balanceHidden) el.innerText = "••••••";
+    else el.innerText = currentBalance.toFixed(2);
 }
 
 function toggleBalanceVisibility() {
@@ -1117,1131 +390,117 @@ function toggleBalanceVisibility() {
     updateBalanceDisplay();
 }
 
-function toastMsg(message) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.add('show');
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 2500);
-}
-
-function getCurrencySymbol() {
-    return currentCurrency.symbol;
-}
-
-function toEasternArabic(s) {
-    return String(s).replace(/[0-9]/g, function(d) {
-        return d.charCodeAt(0) - 48 + 1632; // 1632 is the base Unicode for ٠
-    });
-}
-
-function formatCurrency(amount) {
-    if (balanceHidden) return "XXXXX";
-    const formatted = formatCurrencyPlain(amount); 
-    return `${formatted} ${getCurrencySymbol()}`;
-}
-
-function formatCurrencyPlain(amount) {
-    const num = parseFloat(amount);
-    if (isNaN(num)) return "0.00";
-    const formatted = num.toLocaleString('en-US', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-    });
-    return toEasternArabic(formatted);
-}
-
-function formatAmount(input) {
-    let value = input.value.replace(/[^\d.]/g, ''); 
-    const parts = value.split('.');
-    if (parts.length > 2) {
-        value = parts[0] + '.' + parts.slice(1).join('');
-    }
-    input.value = value;
-}
-
-function getCurrentTimestamp() {
-    return new Date().toISOString();
-}
-
-function generateUniqueID() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-function openTab(tabName) {
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
-    });
-    document.querySelectorAll('.tabs button').forEach(button => {
-        button.classList.remove('active');
-    });
-
-    document.getElementById(tabName).classList.add('active');
-    document.querySelector(`.tabs button[onclick="openTab('${tabName}')"]`).classList.add('active');
-    history.pushState({ layer: 'tab', tab: tabName }, '');
-}
-
-function openLayer(layerName) {
-    const layer = LAYERS[layerName];
-    if (layer) {
-        document.getElementById(layer.elementId).style.display = (layer.type === 'modal' ? 'flex' : 'block');
-        if (layer.type === 'menu' && layerName !== 'imageSource') { // Sidebar specific
-            document.getElementById(layer.elementId).classList.add('open');
-            document.querySelector('.sidebar-overlay').classList.add('open');
-        } else if (layerName === 'imageSource') {
-             document.getElementById('imageSourceModal').classList.add('open');
-             document.getElementById('imageSourceOverlay').style.display = 'block';
-        }
-        historyStack.push({ layer: layerName });
-        history.pushState({ layer: layerName }, '');
-    }
-}
-
-function closeLayer(layerName) {
-    const layer = LAYERS[layerName];
-    if (layer) {
-        if (layer.type === 'menu' && layerName !== 'imageSource') {
-             document.getElementById(layer.elementId).classList.remove('open');
-             document.querySelector('.sidebar-overlay').classList.remove('open');
-        } else if (layerName === 'imageSource') {
-             document.getElementById('imageSourceModal').classList.remove('open');
-             document.getElementById('imageSourceOverlay').style.display = 'none';
-        } else {
-            document.getElementById(layer.elementId).style.display = 'none';
-        }
-
-        if (historyStack.length > 0 && historyStack[historyStack.length - 1].layer === layerName) {
-            historyStack.pop();
-        }
-        
-        if (layerName === 'edit') editMode = null;
-        if (layerName === 'balanceAction') balanceActionType = null;
-    }
-}
-
-function openSidebar() {
-    openLayer('sidebar');
-    loadDarkModePreference();
-    document.getElementById('currentCurrencyDisplay').textContent = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
-}
-
-window.addEventListener('popstate', (event) => {
-    if (event.state && event.state.layer) {
-        // لا نحتاج لـ handleBackNavigation() هنا طالما أننا نستخدم popstate
-    } else if (historyStack.length > 0) {
-        const lastLayer = historyStack[historyStack.length - 1].layer;
-        closeLayer(lastLayer);
-    }
-});
-
-
-// ===================================================
-// 4. وظائف الإحصائيات والرصيد (تم التعديل لاستخدام الكاش)
-// ===================================================
-
-function updateStats() {
-    const currencySymbol = getCurrencySymbol();
-    let expTotal = 0;
-    let rigTotal = 0;
-    let debTotal = 0;
-    let rigPaid = 0;
-    let debPaid = 0;
-
-    transactionCache.exp.forEach(e => { expTotal += e.amount; });
-    transactionCache.rig.forEach(r => {
-        rigTotal += r.amount;
-        rigPaid += r.paidAmount || 0;
-    });
-    transactionCache.deb.forEach(d => {
-        debTotal += d.currentAmount || d.amount; 
-        debPaid += d.paidAmount || 0;
-    });
-    
-    document.getElementById('sExpTotal').textContent = formatCurrencyPlain(expTotal) + ' ' + currencySymbol;
-    document.getElementById('sRigTotal').textContent = formatCurrencyPlain(rigTotal) + ' ' + currencySymbol;
-    document.getElementById('sDebTotal').textContent = formatCurrencyPlain(debTotal) + ' ' + currencySymbol;
-    document.getElementById('sRigPaid').textContent = formatCurrencyPlain(rigPaid) + ' ' + currencySymbol;
-    document.getElementById('sDebPaid').textContent = formatCurrencyPlain(debPaid) + ' ' + currencySymbol;
-}
-
-function updateBalanceDisplay() {
-    const displayElement = document.getElementById('currentBalanceDisplay');
-    const toggleButton = document.getElementById('balanceVisibilityToggle');
-    const currencySymbol = getCurrencySymbol();
-    
-    if (balanceHidden) {
-        displayElement.innerHTML = `<span class="hidden-balance">••••••</span>`;
-        toggleButton.innerHTML = `<i class="fas fa-eye-slash"></i>`;
-    } else {
-        const balanceHTML = `<span class="currency-symbol">${currencySymbol}</span>${formatCurrencyPlain(currentBalance)}`;
-        displayElement.innerHTML = balanceHTML;
-        toggleButton.innerHTML = `<i class="fas fa-eye"></i>`;
-    }
-}
-
 function openBalanceActionModal(type) {
     balanceActionType = type;
-    const titleElement = document.getElementById('actionModalTitle');
-    const currentBalanceElement = document.getElementById('currentBalanceInAction');
-    
-    titleElement.textContent = (type === 'deposit') ? 'إيداع نقدي / إضافة رصيد' : 'سحب نقدي / خصم رصيد';
-    currentBalanceElement.textContent = formatCurrency(currentBalance);
-    
-    document.getElementById('bAmount').value = '';
-    document.getElementById('bDesc').value = '';
-    document.getElementById('bDate').value = getCurrentTimestamp().slice(0, 16);
-    
+    document.getElementById('actionModalTitle').innerText = type === 'deposit' ? 'إيداع رصيد' : 'سحب رصيد';
     openLayer('balanceAction');
 }
 
 async function processBalanceAction() {
-    const amountStr = document.getElementById('bAmount').value;
-    const desc = document.getElementById('bDesc').value.trim();
-    const date = document.getElementById('bDate').value;
-
-    const amount = parseFloat(amountStr);
-
-    if (isNaN(amount) || amount <= 0) {
-        return toastMsg("الرجاء إدخال مبلغ صحيح.");
-    }
-    if (!desc) {
-        return toastMsg("الرجاء إدخال وصف للعملية.");
-    }
+    const amtInput = document.getElementById('bAmount');
+    const descInput = document.getElementById('bDesc');
+    const amount = cleanAmount(amtInput.value);
     
-    const type = balanceActionType;
-    let newBalance = currentBalance;
-    const sign = (type === 'deposit') ? 1 : -1;
+    if (amount <= 0) return toastMsg("أدخل مبلغاً صحيحاً");
     
-    newBalance += amount * sign;
-
-    if (type === 'withdraw' && newBalance < 0) {
-         if(!confirm(`عملية السحب ستجعل رصيدك بالسالب (${formatCurrency(newBalance)}). هل أنت متأكد من الاستمرار؟`)) {
-            return;
-        }
-    }
-
-    const newChange = {
-        id: generateUniqueID(),
-        type: type,
-        amount: amount,
-        desc: desc,
-        date: date,
-        currency: currentCurrency.code,
-        newBalance: newBalance 
-    };
-
-    try {
-        // 1. تحديث جدول الرصيد
-        executeRun("UPDATE balance SET amount = :amount WHERE id = 1;", { ':amount': newBalance });
-        
-        // 2. إدراج سجل حركة الرصيد
-        executeRun(`INSERT INTO balance_changes (id, type, amount, desc, date, currency, newBalance) 
-                    VALUES (:id, :type, :amount, :desc, :date, :currency, :newBalance);`, {
-                        ':id': newChange.id,
-                        ':type': newChange.type,
-                        ':amount': newChange.amount,
-                        ':desc': newChange.desc,
-                        ':date': newChange.date,
-                        ':currency': newChange.currency,
-                        ':newBalance': newChange.newBalance
-                    });
-
-        currentBalance = newBalance;
-        transactionCache.bal.changes.unshift(newChange); // تحديث الكاش
-        updateBalanceDisplay();
-        closeLayer('balanceAction');
-        toastMsg(`تم ${type === 'deposit' ? 'إيداع' : 'سحب'} ${formatCurrency(amount)} بنجاح.`);
-
-    } catch (error) {
-        console.error("Error saving balance action to SQL:", error);
-        toastMsg("حدث خطأ أثناء حفظ العملية في قاعدة البيانات.");
-    }
+    const finalAmount = balanceActionType === 'deposit' ? amount : -amount;
+    await updateBalance(finalAmount, balanceActionType, descInput.value || "عملية يدوية");
+    
+    amtInput.value = ''; descInput.value = '';
+    closeLayer('balanceAction');
+    toastMsg("تم تحديث الرصيد");
 }
 
-// ===================================================
-// 5. وظائف إدارة المعاملات (CRUD - باستخدام SQL)
-// ===================================================
-
-function validateInputs(amountId, typeId) {
-    const amountStr = document.getElementById(amountId).value;
-    const amount = parseFloat(amountStr);
-    const type = document.getElementById(typeId).value;
-
-    if (isNaN(amount) || amount <= 0) {
-        toastMsg("الرجاء إدخال مبلغ صحيح.");
-        return false;
-    }
-    if (type === "") {
-        toastMsg("الرجاء اختيار نوع/فئة.");
-        return false;
-    }
-    return amount;
-}
-
-function clearInputs(amountId, typeId, descId, dateId, imgNameId) {
-    document.getElementById(amountId).value = '';
-    document.getElementById(typeId).value = '';
-    document.getElementById(descId).value = '';
-    document.getElementById(dateId).value = getCurrentTimestamp().slice(0, 16);
-    if(imgNameId) document.getElementById(imgNameId).textContent = '';
-    currentImageBase64 = null;
-    const rDynamicFields = document.getElementById('rDynamicFields');
-    if(rDynamicFields) rDynamicFields.innerHTML = '';
-    const dDynamicFields = document.getElementById('dDynamicFields');
-    if(dDynamicFields) dDynamicFields.innerHTML = '';
-}
-
-// المصروفات
 async function addExpense() {
-    const amount = validateInputs('eAmount', 'eType');
-    if (!amount) return;
-
+    const amt = cleanAmount(document.getElementById('eAmount').value);
     const type = document.getElementById('eType').value;
-    const desc = document.getElementById('eDesc').value.trim();
-    const date = document.getElementById('eDate').value;
-    const imgData = currentImageBase64;
-    
-    if (currentBalance < amount) {
-        if(!confirm(`رصيدك الحالي (${formatCurrency(currentBalance)}) لا يكفي لتغطية هذا المصروف (${formatCurrency(amount)}). هل تريد الاستمرار وإدخال المصروف؟`)) {
-            return;
-        }
-    }
+    if (amt <= 0 || !type) return toastMsg("أكمل البيانات");
 
-    const newExpense = {
-        id: generateUniqueID(),
-        type: 'exp',
-        amount: amount,
-        desc: desc,
-        date: date,
-        currency: currentCurrency.code,
-        img: imgData || null 
+    const item = {
+        amount: amt, type, desc: document.getElementById('eDesc').value,
+        date: document.getElementById('eDate').value || new Date().toISOString()
     };
     
-    const oldBalance = currentBalance;
-    const newBalance = oldBalance - amount;
-
-    try {
-        // 1. إدراج المصروف في جدول المعاملات
-        executeRun(`INSERT INTO transactions (id, type, amount, desc, date, currency, img) 
-                    VALUES (:id, 'exp', :amount, :desc, :date, :currency, :img);`, {
-                        ':id': newExpense.id,
-                        ':amount': newExpense.amount,
-                        ':desc': newExpense.desc,
-                        ':date': newExpense.date,
-                        ':currency': newExpense.currency,
-                        ':img': newExpense.img
-                    });
-
-        // 2. تحديث جدول الرصيد وحركات الرصيد
-        executeRun("UPDATE balance SET amount = :amount WHERE id = 1;", { ':amount': newBalance });
-        executeRun(`INSERT INTO balance_changes (id, type, amount, desc, date, currency, newBalance) 
-                    VALUES (:id, 'expense', :amount, :desc, :date, :currency, :newBalance);`, {
-                        ':id': generateUniqueID(),
-                        ':amount': amount,
-                        ':desc': `مصروف: ${type} - ${desc}`,
-                        ':date': date,
-                        ':currency': currentCurrency.code,
-                        ':newBalance': newBalance
-                    });
-
-        currentBalance = newBalance;
-        transactionCache.exp.unshift(newExpense); // تحديث الكاش
-        await loadAllData(); // إعادة التحميل لضمان الترتيب
-        
-        updateBalanceDisplay();
-        updateStats();
-        clearInputs('eAmount', 'eType', 'eDesc', 'eDate', 'eImgName');
-        toastMsg(`تم حفظ المصروف وخصم ${formatCurrency(amount)} من الرصيد.`);
-    } catch (error) {
-        console.error("Error saving expense to SQL:", error);
-        toastMsg("حدث خطأ أثناء حفظ المصروف.");
-    }
+    await updateBalance(-amt, 'مصروف', item.desc || type);
+    await saveData('exp', item);
+    db.exp.push(item);
+    toastMsg("تم الحفظ");
+    openTab('overview');
 }
 
-// الحقوق (لك)
 async function addRight() {
-    const amount = validateInputs('rAmount', 'rType');
-    if (!amount) return;
-
-    const type = document.getElementById('rType').value;
-    const desc = document.getElementById('rDesc').value.trim();
-    const date = document.getElementById('rDate').value;
+    const amt = cleanAmount(document.getElementById('rAmount').value);
     const status = document.getElementById('rStatus').value;
-    const dueDate = document.getElementById('rDueDate')?.value || null;
-    const person = document.getElementById('rPerson')?.value.trim() || null;
-    
-    if (status === "") {
-        return toastMsg("الرجاء تحديد حالة الحق.");
-    }
-    
-    const isPaid = (status === 'كامل');
-    const paidAmount = isPaid ? amount : 0;
-    
-    const newRight = {
-        id: generateUniqueID(),
-        type: 'rig',
-        amount: amount,
-        paidAmount: paidAmount, 
-        desc: desc,
-        date: date,
-        currency: currentCurrency.code,
-        status: status,
-        dueDate: dueDate,
-        person: person
-    };
-    
-    try {
-        // 1. إدراج الحق في جدول المعاملات
-        executeRun(`INSERT INTO transactions (id, type, amount, paidAmount, desc, date, currency, status, dueDate, person) 
-                    VALUES (:id, 'rig', :amount, :paidAmount, :desc, :date, :currency, :status, :dueDate, :person);`, {
-                        ':id': newRight.id,
-                        ':amount': newRight.amount,
-                        ':paidAmount': newRight.paidAmount,
-                        ':desc': newRight.desc,
-                        ':date': newRight.date,
-                        ':currency': newRight.currency,
-                        ':status': newRight.status,
-                        ':dueDate': newRight.dueDate,
-                        ':person': newRight.person
-                    });
-        
-        // 2. تحديث الرصيد إذا كان مدفوعاً بالكامل
-        if (isPaid) {
-            const oldBalance = currentBalance;
-            const newBalance = oldBalance + amount;
-            executeRun("UPDATE balance SET amount = :amount WHERE id = 1;", { ':amount': newBalance });
-            executeRun(`INSERT INTO balance_changes (id, type, amount, desc, date, currency, newBalance) 
-                        VALUES (:id, 'right_collection', :amount, :desc, :date, :currency, :newBalance);`, {
-                            ':id': generateUniqueID(),
-                            ':amount': amount,
-                            ':desc': `تحصيل حق: ${type} - ${desc}`,
-                            ':date': date,
-                            ':currency': currentCurrency.code,
-                            ':newBalance': newBalance
-                        });
-            currentBalance = newBalance;
-        }
+    if (amt <= 0) return toastMsg("أدخل المبلغ");
 
-        await loadAllData();
-        updateBalanceDisplay();
-        updateStats();
-        clearInputs('rAmount', 'rType', 'rDesc', 'rDate');
-        document.getElementById('rStatus').value = '';
-        toastMsg(`تم حفظ الحق ${isPaid ? 'وتحصيل مبلغه وإضافته للرصيد.' : 'كحق مستحق.'}`);
-    } catch (error) {
-        console.error("Error saving right to SQL:", error);
-        toastMsg("حدث خطأ أثناء حفظ الحق.");
-    }
+    const item = { amount: amt, desc: document.getElementById('rDesc').value, status, date: document.getElementById('rDate').value };
+    if (status === 'كامل') await updateBalance(amt, 'تحصيل حق', item.desc);
+    
+    await saveData('rig', item);
+    db.rig.push(item);
+    toastMsg("تم حفظ الحق");
 }
 
-function updateRightFields(type) {
-    const container = document.getElementById('rDynamicFields');
-    let html = '';
-    if (type === 'دين' || type === 'بيع بالآجل') {
-        html += '<input id="rPerson" placeholder="👤 اسم المدين/الجهة">';
-        html += '<div class="datetime-container"><input id="rDueDate" type="datetime-local" placeholder="📅 تاريخ الاستحقاق (اختياري)"><span class="calendar-icon"><i class="far fa-calendar-alt"></i></span></div>';
-    }
-    container.innerHTML = html;
-}
-
-
-// الالتزامات (عليك)
 async function addDebt() {
-    const amount = validateInputs('dAmount', 'dType');
-    if (!amount) return;
-
-    const type = document.getElementById('dType').value;
-    const desc = document.getElementById('dDesc').value.trim();
-    const date = document.getElementById('dDate').value;
+    const amt = cleanAmount(document.getElementById('dAmount').value);
     const status = document.getElementById('dStatus').value;
+    if (amt <= 0) return toastMsg("أدخل المبلغ");
+
+    const item = { amount: amt, desc: document.getElementById('dDesc').value, status, date: document.getElementById('dDate').value };
+    if (status === 'مدفوع') await updateBalance(-amt, 'دفع التزام', item.desc);
     
-    const totalAmountInput = document.getElementById('dTotalAmount')?.value;
-    const totalAmount = (totalAmountInput && !isNaN(parseFloat(totalAmountInput)) && parseFloat(totalAmountInput) > 0) ? parseFloat(totalAmountInput) : amount;
-    
-    const dueDate = document.getElementById('dDueDate')?.value || null;
-    
-    if (status === "") {
-        return toastMsg("الرجاء تحديد حالة الالتزام.");
-    }
-
-    const isPaid = (status === 'مدفوع');
-    const paidAmount = isPaid ? amount : 0;
-    
-    if (isPaid && currentBalance < amount) {
-        if(!confirm(`رصيدك الحالي (${formatCurrency(currentBalance)}) لا يكفي لدفع هذا الالتزام (${formatCurrency(amount)}). هل تريد الاستمرار وإدخال الالتزام كمدفوع (سيصبح رصيدك بالسالب)؟`)) {
-            return;
-        }
-    }
-
-    const newDebt = {
-        id: generateUniqueID(),
-        type: 'deb',
-        amount: totalAmount, // المبلغ الكلي للالتزام
-        currentAmount: amount, // قيمة القسط/الفاتورة الحالية
-        paidAmount: paidAmount, // المبلغ المدفوع حالياً
-        desc: desc,
-        date: date,
-        currency: currentCurrency.code,
-        status: status,
-        dueDate: dueDate,
-        isInstallment: totalAmount > amount
-    };
-
-    try {
-        // 1. إدراج الالتزام في جدول المعاملات
-        executeRun(`INSERT INTO transactions (id, type, amount, currentAmount, paidAmount, desc, date, currency, status, dueDate) 
-                    VALUES (:id, 'deb', :amount, :currentAmount, :paidAmount, :desc, :date, :currency, :status, :dueDate);`, {
-                        ':id': newDebt.id,
-                        ':amount': newDebt.amount,
-                        ':currentAmount': newDebt.currentAmount,
-                        ':paidAmount': newDebt.paidAmount,
-                        ':desc': newDebt.desc,
-                        ':date': newDebt.date,
-                        ':currency': newDebt.currency,
-                        ':status': newDebt.status,
-                        ':dueDate': newDebt.dueDate
-                    });
-
-        // 2. تحديث الرصيد وحركات الرصيد إذا كان مدفوعاً
-        if (isPaid) {
-            const oldBalance = currentBalance;
-            const newBalance = oldBalance - amount;
-            executeRun("UPDATE balance SET amount = :amount WHERE id = 1;", { ':amount': newBalance });
-            executeRun(`INSERT INTO balance_changes (id, type, amount, desc, date, currency, newBalance) 
-                        VALUES (:id, 'debt_payment', :amount, :desc, :date, :currency, :newBalance);`, {
-                            ':id': generateUniqueID(),
-                            ':amount': amount,
-                            ':desc': `دفع التزام: ${type} - ${desc}`,
-                            ':date': date,
-                            ':currency': currentCurrency.code,
-                            ':newBalance': newBalance
-                        });
-            currentBalance = newBalance;
-        }
-
-        await loadAllData();
-        updateBalanceDisplay();
-        updateStats();
-        clearInputs('dAmount', 'dType', 'dDesc', 'dDate');
-        document.getElementById('dStatus').value = '';
-        toastMsg(`تم حفظ الالتزام ${isPaid ? 'ودفعه وخصمه من الرصيد.' : 'كالتزام مستحق.'}`);
-    } catch (error) {
-        console.error("Error saving debt to SQL:", error);
-        toastMsg("حدث خطأ أثناء حفظ الالتزام.");
-    }
+    await saveData('deb', item);
+    db.deb.push(item);
+    toastMsg("تم حفظ الالتزام");
 }
 
-function updateDebtFields(type) {
-    const container = document.getElementById('dDynamicFields');
+function updateStats() {
+    document.getElementById('sExpTotal').innerText = db.exp.reduce((s,i)=>s+i.amount,0).toFixed(2);
+    document.getElementById('sRigTotal').innerText = db.rig.reduce((s,i)=>s+i.amount,0).toFixed(2);
+    document.getElementById('sDebTotal').innerText = db.deb.reduce((s,i)=>s+i.amount,0).toFixed(2);
+}
+
+function renderLog(type) {
+    const container = document.getElementById('logContent');
     let html = '';
-    if (type === 'قرض' || type === 'دين شخصي' || type === 'قسط/فاتورة أخرى') {
-        html += '<input id="dTotalAmount" type="text" placeholder="💵 المبلغ الكلي للالتزام (اختياري)" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal">';
-        html += '<div class="datetime-container"><input id="dDueDate" type="datetime-local" placeholder="📅 تاريخ الاستحقاق (اختياري)"><span class="calendar-icon"><i class="far fa-calendar-alt"></i></span></div>';
-    }
-    container.innerHTML = html;
-}
-
-// ------------------------------------
-// وظيفة حذف المعاملة (Delete)
-// ------------------------------------
-async function deleteTransaction(id, type, isRigDeb, paidAmount) {
-    if (!confirm("هل أنت متأكد من حذف هذه المعاملة؟ هذا الإجراء لا يمكن التراجع عنه.")) return;
-
-    let balanceImpact = 0;
-    const item = getItemById(id, type);
-    if (!item) return;
-
-    // 1. حساب تأثير الرصيد قبل الحذف
-    if (type === 'exp') {
-        balanceImpact = item.amount; // يجب إضافة المبلغ المخصوم سابقاً
-    } else if (isRigDeb && paidAmount > 0) {
-        balanceImpact = (type === 'rig') ? -paidAmount : paidAmount; 
-    }
-
-    try {
-        // 2. حذف المعاملة من جدول transactions
-        executeRun("DELETE FROM transactions WHERE id = :id;", { ':id': id });
-
-        // 3. تحديث الرصيد وحركات الرصيد
-        if (balanceImpact !== 0) {
-            const oldBalance = currentBalance;
-            const newBalance = oldBalance + balanceImpact;
-            
-            executeRun("UPDATE balance SET amount = :amount WHERE id = 1;", { ':amount': newBalance });
-            executeRun(`INSERT INTO balance_changes (id, type, amount, desc, date, currency, newBalance) 
-                        VALUES (:id, :type, :amount, :desc, :date, :currency, :newBalance);`, {
-                            ':id': generateUniqueID(),
-                            ':type': `delete_${type}`,
-                            ':amount': Math.abs(balanceImpact),
-                            ':desc': `حذف معاملة ${type === 'exp' ? 'مصروف' : (type === 'rig' ? 'حق' : 'التزام')}`,
-                            ':date': getCurrentTimestamp(),
-                            ':currency': currentCurrency.code,
-                            ':newBalance': newBalance
-                        });
-            currentBalance = newBalance;
-        }
-
-        await loadAllData(); // إعادة تحميل البيانات بعد الحذف
-        updateBalanceDisplay();
-        updateStats();
-        renderLog(); 
-        closeLayer('detail');
-        toastMsg("تم حذف المعاملة بنجاح.");
-    } catch (error) {
-        console.error("Error deleting transaction from SQL:", error);
-        toastMsg("حدث خطأ أثناء حذف المعاملة.");
-    }
-}
-
-
-// ------------------------------------
-// وظيفة تحديث المعاملة (Update)
-// ------------------------------------
-async function updateTransaction() {
-    if (!editMode) return;
-    const { id, type } = editMode;
-    let item = getItemById(id, type);
-    if (!item) return toastMsg("خطأ: لم يتم العثور على المعاملة.");
-
-    let oldAmount = type === 'exp' ? item.amount : (item.paidAmount || 0); // المبلغ الذي أثر على الرصيد سابقاً
-    let newAmount = 0; // المبلغ الذي سيؤثر على الرصيد الآن
-    let balanceChangeNeeded = false;
-    let newBalanceImpact = 0;
-    let updateParams = { ':id': id };
-    let updateQuery = "UPDATE transactions SET ";
-
-    if (type === 'exp') {
-        newAmount = parseFloat(document.getElementById('eEditAmount').value);
-        if (isNaN(newAmount) || newAmount <= 0) return toastMsg("الرجاء إدخال مبلغ صحيح.");
-        
-        updateQuery += "amount = :amount, desc = :desc, date = :date, img = :img";
-        updateParams[':amount'] = newAmount;
-        updateParams[':desc'] = document.getElementById('eEditDesc').value.trim();
-        updateParams[':date'] = document.getElementById('eEditDate').value;
-        updateParams[':img'] = currentImageBase64;
-        
-        if (newAmount !== oldAmount) {
-            balanceChangeNeeded = true;
-            newBalanceImpact = oldAmount - newAmount; 
-        }
-    } else { // rig or deb
-        const isRig = type === 'rig';
-        const newTotalAmount = parseFloat(document.getElementById('rdEditAmount').value);
-        const newStatus = document.getElementById('rdEditStatus').value;
-        const newCurrentAmount = (type === 'deb' && document.getElementById('rdEditCurrentAmount')) ? 
-            parseFloat(document.getElementById('rdEditCurrentAmount').value) : newTotalAmount;
-        
-        if (isNaN(newTotalAmount) || newTotalAmount <= 0) return toastMsg("الرجاء إدخال مبلغ كلي صحيح.");
-        if (type === 'deb' && (isNaN(newCurrentAmount) || newCurrentAmount <= 0)) return toastMsg("الرجاء إدخال قيمة قسط صحيحة.");
-
-        const wasPaidInFull = (isRig && item.status === 'كامل') || (!isRig && item.status === 'مدفوع');
-        const isNowPaidInFull = (isRig && newStatus === 'كامل') || (!isRig && newStatus === 'مدفوع');
-        
-        newAmount = isNowPaidInFull ? newCurrentAmount : 0;
-        
-        // حساب تأثير الرصيد
-        if (wasPaidInFull !== isNowPaidInFull) {
-            balanceChangeNeeded = true;
-            newBalanceImpact = isNowPaidInFull ? ((isRig ? 1 : -1) * newCurrentAmount) : ((isRig ? -1 : 1) * oldAmount);
-        } else if (isNowPaidInFull && newAmount !== oldAmount) {
-             balanceChangeNeeded = true;
-             newBalanceImpact = ((isRig ? -1 : 1) * oldAmount) + ((isRig ? 1 : -1) * newCurrentAmount);
-        }
-
-        updateQuery += "amount = :amount, currentAmount = :currentAmount, paidAmount = :paidAmount, desc = :desc, date = :date, status = :status, person = :person, dueDate = :dueDate";
-        updateParams[':amount'] = newTotalAmount;
-        updateParams[':currentAmount'] = newCurrentAmount;
-        updateParams[':paidAmount'] = isNowPaidInFull ? newCurrentAmount : 0;
-        updateParams[':desc'] = document.getElementById('rdEditDesc').value.trim();
-        updateParams[':date'] = document.getElementById('rdEditDate').value;
-        updateParams[':status'] = newStatus;
-        updateParams[':person'] = document.getElementById('rdEditPerson')?.value.trim() || null;
-        updateParams[':dueDate'] = document.getElementById('rdEditDueDate')?.value || null;
-    }
-    
-    try {
-        // 1. تحديث جدول transactions
-        executeRun(updateQuery + " WHERE id = :id;", updateParams);
-
-        if (balanceChangeNeeded) {
-            const oldBalance = currentBalance;
-            const newBalance = oldBalance + newBalanceImpact;
-            
-            // 2. تحديث الرصيد وحركات الرصيد
-            executeRun("UPDATE balance SET amount = :amount WHERE id = 1;", { ':amount': newBalance });
-            executeRun(`INSERT INTO balance_changes (id, type, amount, desc, date, currency, newBalance) 
-                        VALUES (:id_change, :type_change, :amount_change, :desc_change, :date_change, :currency_change, :newBalance_change);`, {
-                            ':id_change': generateUniqueID(),
-                            ':type_change': `edit_${type}`,
-                            ':amount_change': Math.abs(newBalanceImpact),
-                            ':desc_change': `تعديل معاملة ${type === 'exp' ? 'مصروف' : (type === 'rig' ? 'حق' : 'التزام')}`,
-                            ':date_change': getCurrentTimestamp(),
-                            ':currency_change': currentCurrency.code,
-                            ':newBalance_change': newBalance
-                        });
-            currentBalance = newBalance;
-        }
-        
-        await loadAllData(); 
-        updateBalanceDisplay();
-        updateStats();
-        renderLog();
-        closeLayer('edit');
-        toastMsg("تم حفظ التعديلات بنجاح.");
-    } catch (error) {
-        console.error("Error updating transaction in SQL:", error);
-        toastMsg("حدث خطأ أثناء حفظ التعديلات.");
-    }
-}
-
-
-// ------------------------------------
-// وظائف العرض (Log/Detail/Edit)
-// ------------------------------------
-
-function getItemById(id, type) {
-    // نبحث في الكاش المخزن
-    return transactionCache[type].find(item => item.id === id);
+    const items = db[type] || [];
+    items.forEach(item => {
+        html += `<div class="list-item">
+            <b>${item.amount}</b> - ${item.type || item.desc}
+            <div style="font-size:10px; color:#888">${new Date(item.date).toLocaleString()}</div>
+        </div>`;
+    });
+    container.innerHTML = html || '<p style="text-align:center">لا توجد بيانات</p>';
 }
 
 function openLog(type) {
-    currentLog = type;
-    document.getElementById('search').value = '';
-    renderLog();
+    renderLog(type);
     openLayer('log');
-}
-
-function renderLog() {
-    const container = document.getElementById('logContent');
-    const searchTerm = document.getElementById('search').value.toLowerCase();
-    
-    let data = transactionCache[currentLog] || [];
-    
-    // التصفية
-    const filteredData = data.filter(item => {
-        if (!searchTerm) return true;
-        return (item.desc && item.desc.toLowerCase().includes(searchTerm)) || 
-               (item.type && item.type.toLowerCase().includes(searchTerm));
-    });
-
-    if (filteredData.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #999; padding-top: 20px;">لا توجد سجلات مطابقة.</p>`;
-        return;
-    }
-
-    let html = '';
-    filteredData.forEach(item => {
-        const amountToDisplay = item.currentAmount || item.amount;
-        const amountDisplay = formatCurrency(amountToDisplay);
-        let title = item.type || (currentLog === 'exp' ? 'مصروف' : 'معاملة');
-        let icon = '';
-        let color = '';
-        let secondaryText = '';
-        
-        const itemAmountPlain = formatCurrencyPlain(item.amount);
-        const itemPaidPlain = formatCurrencyPlain(item.paidAmount || 0);
-
-        if (currentLog === 'exp') {
-            color = 'var(--danger)';
-            icon = 'fas fa-money-bill-wave';
-            secondaryText = `ملاحظة: ${item.desc || 'لا يوجد'}`;
-        } else if (currentLog === 'rig') {
-            color = item.status === 'كامل' ? 'var(--success)' : 'var(--warning)';
-            icon = 'fas fa-handshake';
-            const remaining = item.amount - (item.paidAmount || 0);
-            secondaryText = `الحالة: ${item.status} | المستحق: ${formatCurrencyPlain(remaining)} ${getCurrencySymbol()}`;
-        } else if (currentLog === 'deb') {
-            color = item.status === 'مدفوع' ? 'var(--success)' : 'var(--warning)';
-            icon = 'fas fa-file-invoice';
-            secondaryText = `الحالة: ${item.status} | القيمة الكلية: ${itemAmountPlain} ${getCurrencySymbol()}`;
-        }
-
-        html += `
-            <div class="list-item" onclick="openDetailModal('${item.id}', '${currentLog}')" style="border-right-color: ${color};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold; font-size: 1.1em; color: ${color};">
-                        <i class="${icon}" style="margin-left: 5px;"></i> ${title}
-                    </span>
-                    <span style="font-weight: bold; color: ${color};">${amountDisplay}</span>
-                </div>
-                <div class="details">
-                    <span>${new Date(item.date).toLocaleDateString('ar-SA')} - ${new Date(item.date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span style="color: #999; font-size: 0.8em;">${secondaryText}</span>
-                </div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
 }
 
 function renderBalanceLog() {
     const container = document.getElementById('balanceLogContent');
-    const log = transactionCache.bal.changes || []; 
-    
-    if (log.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #999; padding-top: 20px;">لا توجد حركات رصيد سابقة.</p>`;
-        return;
-    }
-
     let html = '';
-    log.forEach(item => {
-        let color = 'var(--s)';
-        let sign = '';
-        let icon = 'fas fa-circle-info';
-        
-        if (item.type === 'deposit' || item.type === 'right_collection') {
-            color = 'var(--success)';
-            icon = 'fas fa-plus';
-            sign = '+';
-        } else if (item.type === 'withdraw' || item.type === 'expense' || item.type === 'debt_payment') {
-            color = 'var(--danger)';
-            icon = 'fas fa-minus';
-            sign = '-';
-        }
-
-        const amountDisplay = formatCurrency(item.amount);
-        const newBalanceDisplay = formatCurrency(item.newBalance);
-
-        html += `
-            <div class="list-item" style="border-right-color: ${color};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold; font-size: 1.1em; color: var(--text-dark);">
-                        <i class="${icon}" style="margin-left: 5px; color: ${color};"></i> ${item.desc}
-                    </span>
-                    <span style="font-weight: bold; color: ${color};">${sign}${amountDisplay.replace(getCurrencySymbol(), '').trim()} ${getCurrencySymbol()}</span>
-                </div>
-                <div class="details">
-                    <span>${new Date(item.date).toLocaleDateString('ar-SA')} ${new Date(item.date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span style="color: var(--p); font-weight: bold;">الرصيد بعد العملية: ${newBalanceDisplay}</span>
-                </div>
-            </div>
-        `;
+    (db.bal.changes || []).reverse().forEach(ch => {
+        const color = ch.amount > 0 ? 'green' : 'red';
+        html += `<div class="list-item" style="border-right-color:${color}">
+            <b style="color:${color}">${ch.amount}</b> - ${ch.type} (${ch.desc})
+        </div>`;
     });
     container.innerHTML = html;
-    openLayer('balanceLog');
 }
 
-function openDetailModal(id, type) {
-    const item = getItemById(id, type);
-    if (!item) return;
-
-    const container = document.getElementById('detailContent');
-    let html = `<div class="card" style="border-top-color: var(--p); margin-top: 0;">`;
-    
-    const amount = item.currentAmount || item.amount;
-    const isRigDeb = (type === 'rig' || type === 'deb');
-    const color = (type === 'exp' || type === 'deb') ? 'var(--danger)' : 'var(--success)';
-    const statusColor = item.status === 'مدفوع' || item.status === 'كامل' ? 'var(--success)' : 'var(--danger)';
-    
-    const formattedAmount = formatCurrency(amount);
-    const formattedTotalAmount = item.amount ? formatCurrency(item.amount) : '';
-    const formattedPaidAmount = formatCurrency(item.paidAmount || 0);
-
-    html += `<h3 style="color: var(--p); text-align: center; margin-bottom: 20px;">${item.type}</h3>`;
-    html += `<p style="font-size: 1.5em; font-weight: bold; text-align: center; color: ${color};">
-                المبلغ: ${formattedAmount}
-            </p>`;
-
-    html += `<p><strong>الوصف/الملاحظة:</strong> ${item.desc || 'لا يوجد'}</p>`;
-    html += `<p><strong>التاريخ:</strong> ${new Date(item.date).toLocaleString('ar-SA')}</p>`;
-    
-    if (isRigDeb) {
-        html += `<p><strong>الحالة:</strong> <span style="font-weight: bold; color: ${statusColor};">${item.status}</span></p>`;
-        if (item.dueDate) {
-            html += `<p><strong>تاريخ الاستحقاق:</strong> ${new Date(item.dueDate).toLocaleDateString('ar-SA')}</p>`;
-        }
-        if (item.person) {
-            html += `<p><strong>الطرف الآخر:</strong> ${item.person}</p>`;
-        }
-        if (item.currentAmount) {
-            html += `<p><strong>المبلغ الكلي للالتزام/الحق:</strong> ${formattedTotalAmount}</p>`;
-            html += `<p><strong>قيمة القسط/الدفعة الحالية:</strong> ${formatCurrency(item.currentAmount)}</p>`;
-        }
-        html += `<p><strong>المبلغ المدفوع/المحصل:</strong> ${formattedPaidAmount}</p>`;
-    }
-
-    if (item.img) {
-        html += `<h4 style="margin-top: 20px; color: var(--p);">صورة الفاتورة/المستند:</h4>`;
-        html += `<a href="${item.img}" target="_blank"><img src="${item.img}" style="width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid var(--border-color);"></a>`;
-    }
-
-    html += `</div>`;
-    
-    // أزرار الإجراءات
-    html += `<div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="action" onclick="openEditModal('${item.id}', '${type}')" style="flex: 1; background: var(--s);">
-            <i class="fas fa-edit" style="margin-left: 5px;"></i> تعديل
-        </button>
-        <button class="action" onclick="deleteTransaction('${item.id}', '${type}', ${isRigDeb}, ${item.paidAmount || 0})" style="flex: 1; background: var(--danger);">
-            <i class="fas fa-trash-alt" style="margin-left: 5px;"></i> حذف
-        </button>
-    </div>`;
-
-    if (isRigDeb && item.status !== 'كامل' && item.status !== 'مدفوع') {
-         const btnText = type === 'rig' ? 'تحصيل دفعة جديدة' : 'دفع قسط جديد';
-         const btnColor = type === 'rig' ? 'var(--success)' : 'var(--danger)';
-         html += `<button class="action" onclick="openBalanceActionModal('${type === 'rig' ? 'collect' : 'pay_installment'}', '${item.id}')" style="margin-top: 10px; background: ${btnColor};">
-                     <i class="fas fa-money-bill-transfer" style="margin-left: 5px;"></i> ${btnText}
-                  </button>`;
-    }
-
-    container.innerHTML = html;
-    openLayer('detail');
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
 }
 
-function populateEditForm(item, type) {
-    if (type === 'exp') {
-        const typeSelect = document.getElementById('eEditType');
-        typeSelect.innerHTML = EXP_TYPES.map(t => `<option value="${t}" ${item.type === t ? 'selected' : ''}>${t}</option>`).join('');
-        document.getElementById('eEditAmount').value = item.amount;
-        document.getElementById('eEditDesc').value = item.desc || '';
-        document.getElementById('eEditDate').value = item.date.slice(0, 16);
-        
-        const imgInfo = document.getElementById('eEditImgInfo');
-        const imgRemoveBtn = document.getElementById('eEditImgRemoveBtn');
-        if (item.img) {
-            imgInfo.textContent = 'صورة مرفقة حالياً.';
-            imgRemoveBtn.style.display = 'block';
-            currentImageBase64 = item.img;
-        } else {
-            imgInfo.textContent = 'لا توجد صورة مرفقة.';
-            imgRemoveBtn.style.display = 'none';
-        }
-        document.getElementById('eEditImgNew').value = ''; 
-    } else {
-        const types = type === 'rig' ? RIG_TYPES : DEB_TYPES;
-        const typeSelect = document.getElementById('rdEditType');
-        typeSelect.innerHTML = types.map(t => `<option value="${t}" ${item.type === t ? 'selected' : ''}>${t}</option>`).join('');
-        
-        const statusOptions = type === 'rig' ? 
-            [{v: 'كامل', n: 'مدفوع بالكامل'}, {v: 'غير مدفوع', n: 'غير مدفوع بعد'}] : 
-            [{v: 'مدفوع', n: 'مدفوع'}, {v: 'غير مدفوع', n: 'غير مدفوع'}];
-        const statusSelect = document.getElementById('rdEditStatus');
-        statusSelect.innerHTML = statusOptions.map(s => `<option value="${s.v}" ${item.status === s.v ? 'selected' : ''}>${s.n}</option>`).join('');
-        
-        document.getElementById('rdEditAmount').value = item.amount;
-        document.getElementById('rdEditDesc').value = item.desc || '';
-        document.getElementById('rdEditDate').value = item.date.slice(0, 16);
-        
-        const container = document.getElementById('rdEditDynamicFields');
-        let html = '';
-        if (item.person) html += `<input id="rdEditPerson" placeholder="👤 اسم المدين/الجهة" value="${item.person}">`;
-        if (item.dueDate) html += `<div class="datetime-container"><input id="rdEditDueDate" type="datetime-local" placeholder="📅 تاريخ الاستحقاق (اختياري)" value="${item.dueDate.slice(0, 16)}"><span class="calendar-icon"><i class="far fa-calendar-alt"></i></span></div>`;
-        if (item.currentAmount && type === 'deb') html += `<input id="rdEditCurrentAmount" type="text" placeholder="💵 قيمة القسط الحالي" oninput="formatAmount(this)" pattern="[0-9]*" inputmode="decimal" value="${item.currentAmount}">`;
-        container.innerHTML = html;
-        
-        document.getElementById('rdEditPaidInfo').textContent = `تم دفع/تحصيل: ${formatCurrency(item.paidAmount || 0)}`;
-    }
-}
-
-
-// ------------------------------------
-// وظائف الصور (لم تتغير)
-// ------------------------------------
-
-function showImageSourceModal() { openLayer('imageSource'); }
-function openCameraInput() { document.getElementById('eImgCamera').click(); closeLayer('imageSource'); }
-function openGalleryInput() { document.getElementById('eImgGallery').click(); closeLayer('imageSource'); }
-
-function updateFileName(input, nameDisplayId) {
-    const file = input.files[0];
-    const displayElement = document.getElementById(nameDisplayId);
-    if (file) {
-        displayElement.textContent = `تم اختيار: ${file.name}`;
-        loadDataURLFromLocalFile(file);
-    } else {
-        displayElement.textContent = '';
-        currentImageBase64 = null;
-    }
-}
-
-function updateEditFileName(input, nameDisplayId) {
-     const file = input.files[0];
-    const displayElement = document.getElementById(nameDisplayId);
-    const removeBtn = document.getElementById('eEditImgRemoveBtn');
-    
-    if (file) {
-        displayElement.textContent = `تم اختيار ملف جديد: ${file.name}`;
-        removeBtn.style.display = 'block';
-        loadDataURLFromLocalFile(file);
-    } else {
-        displayElement.textContent = 'صورة مرفقة حالياً.'; 
-    }
-}
-
-function removeEditImage(nameDisplayId) {
-    currentImageBase64 = null;
-    document.getElementById(nameDisplayId).textContent = 'لا توجد صورة مرفقة.';
-    document.getElementById('eEditImgNew').value = ''; 
-    document.getElementById('eEditImgRemoveBtn').style.display = 'none';
-}
-
-function loadDataURLFromLocalFile(file) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-        currentImageBase64 = event.target.result;
-    };
-    reader.onerror = function (error) {
-        console.error("Error reading file:", error);
-        toastMsg("حدث خطأ أثناء قراءة ملف الصورة.");
-        currentImageBase64 = null;
-    };
-    reader.readAsDataURL(file);
-}
-
-// ------------------------------------
-// وظائف الإعدادات (العملات، استيراد، تصدير)
-// ------------------------------------
-
-function openCurrencyModal() {
-    renderCurrencyList();
-    closeLayer('sidebar');
-    openLayer('currency');
-}
-
-function renderCurrencyList() {
-    const container = document.getElementById('currencyList');
-    const searchTerm = document.getElementById('currencySearch').value.toLowerCase();
-    
-    const filteredCurrencies = ARABIC_CURRENCIES.filter(c => 
-        c.name.toLowerCase().includes(searchTerm) || c.code.toLowerCase().includes(searchTerm)
-    );
-
-    let html = '<div style="margin-top: 10px;">';
-    filteredCurrencies.forEach(c => {
-        const isActive = c.code === currentCurrency.code;
-        html += `
-            <div class="list-item" onclick="setCurrency('${c.code}')" style="border-right: 5px solid ${isActive ? 'var(--p)' : 'var(--border-color)'};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold; font-size: 1.1em; color: var(--text-dark);">
-                        ${c.name} (${c.symbol})
-                    </span>
-                    ${isActive ? '<i class="fas fa-check-circle" style="color: var(--success);"></i>' : ''}
-                </div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function setCurrency(code) {
-    currentCurrency = ARABIC_CURRENCIES.find(c => c.code === code);
-    localStorage.setItem('currencyCode', code);
-    updateBalanceDisplay();
-    updateStats(); 
-    document.getElementById('currentCurrencyDisplay').textContent = `العملة: ${currentCurrency.name} (${currentCurrency.symbol})`;
-    closeLayer('currency');
-    toastMsg(`تم تعيين العملة إلى ${currentCurrency.name} (${currentCurrency.symbol})`);
-}
-
-function exportData() {
-    if (!SQL_DB) {
-        toastMsg("قاعدة البيانات غير جاهزة للتصدير.");
-        return;
-    }
-    const data = SQL_DB.export();
-    const buffer = data.buffer;
-    const blob = new Blob([buffer], { type: 'application/x-sqlite3' });
-    const url = URL.createObjectURL(blob);
-    
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", url);
-    downloadAnchorNode.setAttribute("download", `budget_backup_${new Date().toISOString().slice(0, 10)}.sqlite`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    URL.revokeObjectURL(url);
-    toastMsg("تم تصدير البيانات بنجاح كملف SQLite.");
-}
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (!confirm("هل أنت متأكد من استيراد هذا الملف؟ سيؤدي هذا إلى مسح قاعدة البيانات الحالية واستبدالها بالملف المستورد.")) return;
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        try {
-            const importedData = new Uint8Array(e.target.result);
-            
-            // استبدال قاعدة البيانات الحالية بالبيانات المستوردة
-            await saveDatabaseFile(DB_FILENAME, importedData);
-            
-            // إعادة تهيئة SQLite لتحميل الملف الجديد
-            SQL_DB.close();
-            await initDB();
-            
-            toastMsg("تم استيراد البيانات بنجاح.");
-            
-        } catch (error) {
-            console.error("Error importing SQLite file:", error);
-            toastMsg("حدث خطأ أثناء معالجة ملف الاستيراد.");
-        }
-    };
-    reader.readAsArrayBuffer(file);
-    event.target.value = '';
-}
-
-function openAboutModal() {
-    closeLayer('sidebar');
-    openLayer('about');
-}
-
-function confirmResetData() {
-    if (confirm("تحذير: هل أنت متأكد تماماً من إعادة تعيين جميع البيانات؟ سيتم مسح كل شيء ولن يمكن استعادته.")) {
-        if (confirm("تأكيد أخير: هل تريد مسح كل البيانات؟")) {
-            resetData();
-        }
-    }
-}
-
-async function resetData() {
-    if (!SQL_DB) return;
-    try {
-        SQL_DB.exec("DROP TABLE IF EXISTS transactions;");
-        SQL_DB.exec("DROP TABLE IF EXISTS balance;");
-        SQL_DB.exec("DROP TABLE IF EXISTS balance_changes;");
-        createTables(); // إعادة إنشاء الجداول فارغة
-        
-        // مسح ملف التخزين المؤقت من IndexedDB
-        const idb = await initIDBForSQL();
-        const transaction = idb.transaction([IDB_STORE_NAME], "readwrite");
-        const store = transaction.objectStore(IDB_STORE_NAME);
-        store.delete(DB_FILENAME);
-
-        // إعادة تهيئة المتغيرات
-        currentBalance = 0;
-        await loadAllData(); 
-        
-        // تحديث الواجهة
-        updateStats();
-        updateBalanceDisplay();
-        closeLayer('sidebar');
-        toastMsg("تم إعادة تعيين جميع البيانات بنجاح.");
-
-    } catch (error) {
-        console.error("Error resetting data:", error);
-        toastMsg("حدث خطأ أثناء إعادة تعيين البيانات.");
-    }
-}
-
-// ------------------------------------
-// تهيئة التطبيق عند التحميل
-// ------------------------------------
-window.onload = () => {
-    initDB(); // البدء بتحميل SQLite
-    loadDarkModePreference();
-    const now = getCurrentTimestamp().slice(0, 16);
-    document.getElementById('eDate').value = now;
-    document.getElementById('rDate').value = now;
-    document.getElementById('dDate').value = now;
-    
-    document.getElementById('rType').dispatchEvent(new Event('change'));
-    document.getElementById('dType').dispatchEvent(new Event('change'));
+window.onload = async () => {
+    await initDB();
+    if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+    document.getElementById('eDate').value = new Date().toISOString().slice(0, 16);
 };
 </script>
+
 </body>
 </html>
