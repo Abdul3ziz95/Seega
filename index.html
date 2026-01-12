@@ -1,1 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ميزانيتك الذكية | Smart Budget</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+/* تجميع تنسيقاتك الأصلية كما هي دون تغيير */
+:root{
+    --p: #0077b6; --s: #48cae4; --bg: #f7f9fc;
+    --danger: #ef476f; --success: #2a9d8f; --warning: #fbc02d;
+    --text-dark: #333; --text-light: #f7f9fc;
+    --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 6px 15px rgba(0, 0, 0, 0.15);
+    --card-bg: #fff; --input-bg: #fff;
+    --border-color: #ddd;
+}
+body.dark-mode {
+    --bg: #1f1f1f; --card-bg: #2d2d2d; --text-dark: #e0e0e0;
+    --input-bg: #3c3c3c; --border-color: #555;
+}
+* { box-sizing: border-box; }
+body{ margin:0; font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text-dark); transition: 0.3s; }
+header{ background: var(--p); color: var(--text-light); padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+.tabs{ display:flex; background: var(--card-bg); border-bottom: 2px solid var(--border-color); overflow-x: auto; }
+.tabs button{ flex: 1; padding: 15px 10px; border:none; background: var(--card-bg); color: var(--text-dark); font-weight: 700; transition: 0.3s; }
+.tabs button.active{ color: var(--p); border-bottom: 3px solid var(--p); }
+.section{ display:none; padding: 15px; }
+.section.active{ display:block; }
+.card{ background:var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: var(--shadow-light); margin-bottom: 15px; border-top: 5px solid var(--s); }
+input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-dark); }
+button.action{ background: var(--p); color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+.modal{ position:fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:none; flex-direction:column; z-index: 30; overflow-y: auto; }
+.sidebar { position: fixed; top: 0; right: 0; width: 300px; max-width: 85%; height: 100%; background: var(--card-bg); transform: translateX(100%); transition: 0.4s; z-index: 25; }
+.sidebar.open { transform: translateX(0); }
+.sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 24; }
+.sidebar-overlay.open { display: block; }
+.list-item{ background: var(--card-bg); padding: 16px; border-radius: 12px; margin-bottom: 10px; border-right: 5px solid var(--s); }
+.toast{ position:fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 25px; border-radius: 30px; display:none; z-index: 100; }
+</style>
+</head>
+<body>
+
+<header>
+    <button onclick="openSidebar()"><i class="fas fa-bars"></i></button> 
+    <span class="title">ميزانيتك المالية الذكية</span>
+    <button style="visibility: hidden;"><i class="fas fa-search"></i></button> 
+</header>
+
+<div class="tabs">
+    <button class="active" onclick="openTab('overview')">لوحة القيادة</button>
+    <button onclick="openTab('expenses')">مصروفات</button>
+    <button onclick="openTab('rights')">حقوق</button>
+    <button onclick="openTab('debts')">التزامات</button>
+</div>
+
+<div id="overview" class="section active">
+    <div class="card" style="text-align: center;">
+        <h2>الرصيد النقدي الحالي</h2>
+        <p id="currentBalanceDisplay" style="font-size: 32px; font-weight: 800; color: var(--p);">0.00</p>
+        <button onclick="toggleBalanceVisibility()" id="balanceVisibilityToggle"><i class="fas fa-eye"></i></button>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="action" onclick="openBalanceActionModal('deposit')" style="background:var(--success)">إيداع</button>
+        <button class="action" onclick="openBalanceActionModal('withdraw')" style="background:var(--danger)">سحب</button>
+    </div>
+    <div class="card" style="margin-top: 20px;">
+        <h3>ملخص الإحصائيات</h3>
+        <p>إجمالي المصروفات: <b id="sExpTotal">0</b></p>
+        <p>إجمالي الحقوق: <b id="sRigTotal">0</b></p>
+        <p>إجمالي الالتزامات: <b id="sDebTotal">0</b></p>
+    </div>
+</div>
+
+<div id="expenses" class="section">
+    <div class="card">
+        <input id="eAmount" type="text" placeholder="المبلغ" oninput="formatAmount(this)">
+        <select id="eType"><option value="طعام">طعام</option><option value="أخرى">أخرى</option></select>
+        <input id="eDesc" placeholder="الوصف">
+        <input id="eDate" type="datetime-local">
+        <button class="action" onclick="addExpense()">حفظ المصروف</button>
+        <button onclick="openLog('exp')" style="margin-top:10px; width:100%">سجل المصروفات</button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" onclick="closeLayer('sidebar')"></div>
+<div class="sidebar" id="appSidebar">
+    <div style="padding:20px; background:var(--p); color:white;">الإعدادات والبيانات</div>
+    <div style="padding:10px;">
+        <button onclick="exportToExcel()" style="width:100%; margin-bottom:10px;"><i class="fas fa-file-excel"></i> تصدير Excel</button>
+        <button onclick="exportToPDF()" style="width:100%; margin-bottom:10px;"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+        <button onclick="exportData()" style="width:100%; margin-bottom:10px;">تصدير JSON (نسخة احتياطية)</button>
+        <hr>
+        <button onclick="recalculateTrueBalance()" style="width:100%; color:var(--p);">إصلاح وتحديث الرصيد</button>
+    </div>
+</div>
+
+<div class="modal" id="logModal">
+    <header>
+        <button onclick="closeLayer('log')"><i class="fas fa-times"></i></button>
+        <span>السجل</span>
+    </header>
+    <div id="logContent" style="padding:15px;"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// --- إعدادات قاعدة البيانات ---
+const STORE_NAMES = ["exp", "rig", "deb", "bal"];
+let db = { exp: [], rig: [], deb: [], bal: { amount: 0, changes: [] } };
+let IDB_connection = null;
+let currentCurrency = { symbol: "ر.س" };
+let balanceHidden = false;
+
+// --- تصحيح حساب الرصيد (المنطق الجديد) ---
+// هذه الدالة تقوم بجرد كافة المعاملات من الصفر لضمان عدم وجود أخطاء تراكمية
+async function recalculateTrueBalance() {
+    let totalIn = 0; 
+    let totalOut = 0;
+
+    // 1. حركات الرصيد اليدوية (إيداع/سحب)
+    db.bal.changes.forEach(c => {
+        if (c.القيمة_الصافية > 0) totalIn += Math.abs(c.القيمة_الصافية);
+        else totalOut += Math.abs(c.القيمة_الصافية);
+    });
+
+    // 2. المصروفات
+    db.exp.forEach(e => totalOut += parseAmount(e.المبلغ));
+
+    // 3. الحقوق المحصلة
+    db.rig.forEach(r => totalIn += parseAmount(r.المبلغ_المضاف_للرصيد || 0));
+
+    // 4. الالتزامات المدفوعة
+    db.deb.forEach(d => totalOut += parseAmount(d.المبلغ_المخصوم_للرصيد || 0));
+
+    db.bal.amount = totalIn - totalOut;
+    await saveData('bal', db.bal);
+    updateBalanceDisplay();
+    updateStats();
+}
+
+// --- وظائف التصدير الجديدة ---
+function exportToExcel() {
+    const data = [];
+    db.exp.forEach(e => data.push({ "النوع": "مصروف", "الفئة": e.الفئة, "المبلغ": e.المبلغ, "التاريخ": e.التاريخ, "الوصف": e.الوصف }));
+    db.rig.forEach(r => data.push({ "النوع": "حق", "الفئة": r.النوع, "المبلغ": r.المبلغ, "التاريخ": r.التاريخ, "الحالة": r.الحالة }));
+    db.deb.forEach(d => data.push({ "النوع": "التزام", "الفئة": d.النوع, "المبلغ": d.المبلغ, "التاريخ": d.التاريخ, "الحالة": d.الحالة }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تقرير مالي");
+    XLSX.writeFile(wb, `SmartBudget_${new Date().toLocaleDateString()}.xlsx`);
+}
+
+function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Financial Report - Smart Budget", 10, 10);
+    const rows = db.exp.map(e => ["Expense", e.المبلغ, e.الفئة, e.التاريخ]);
+    doc.autoTable({ head: [['Type', 'Amount', 'Category', 'Date']], body: rows, startY: 20 });
+    doc.save("Budget_Report.pdf");
+}
+
+// --- الوظائف الأساسية (معدلة لتعمل مع المنطق الجديد) ---
+function initDB() {
+    const request = indexedDB.open("SmartBudgetDB", 5);
+    request.onupgradeneeded = (e) => {
+        IDB_connection = e.target.result;
+        STORE_NAMES.forEach(s => {
+            if (!IDB_connection.objectStoreNames.contains(s)) IDB_connection.createObjectStore(s, { keyPath: "id", autoIncrement: true });
+        });
+    };
+    request.onsuccess = (e) => {
+        IDB_connection = e.target.result;
+        loadAllData().then(recalculateTrueBalance);
+    };
+}
+
+async function loadAllData() {
+    const transaction = IDB_connection.transaction(STORE_NAMES, "readonly");
+    for (const s of STORE_NAMES) {
+        const store = transaction.objectStore(s);
+        const req = store.getAll();
+        req.onsuccess = (e) => {
+            if (s === 'bal') db.bal = e.target.result[0] || { id: 1, amount: 0, changes: [] };
+            else db[s] = e.target.result;
+        };
+    }
+}
+
+async function saveData(storeName, data) {
+    const tx = IDB_connection.transaction([storeName], "readwrite");
+    tx.objectStore(storeName).put(data);
+}
+
+function addExpense() {
+    const amt = document.getElementById('eAmount').value;
+    if(!amt) return toastMsg("أدخل المبلغ");
+    const data = {
+        المبلغ: amt, الفئة: document.getElementById('eType').value,
+        الوصف: document.getElementById('eDesc').value, التاريخ: document.getElementById('eDate').value
+    };
+    const tx = IDB_connection.transaction(["exp"], "readwrite");
+    tx.objectStore("exp").add(data).onsuccess = () => {
+        toastMsg("تم الحفظ");
+        loadAllData().then(recalculateTrueBalance);
+        clearFields();
+    };
+}
+
+// --- أدوات المساعدة ---
+function parseAmount(a) { return parseFloat(String(a).replace(/,/g, '')) || 0; }
+function formatAmount(i) { i.value = i.value.replace(/[^\d.]/g, ''); }
+function updateBalanceDisplay() {
+    document.getElementById('currentBalanceDisplay').innerText = balanceHidden ? "****" : db.bal.amount.toLocaleString() + " " + currentCurrency.symbol;
+}
+function openSidebar() { document.getElementById('appSidebar').classList.add('open'); document.querySelector('.sidebar-overlay').classList.add('open'); }
+function closeLayer(l) { 
+    if(l === 'sidebar') { document.getElementById('appSidebar').classList.remove('open'); document.querySelector('.sidebar-overlay').classList.remove('open'); }
+    else document.getElementById(l+'Modal').style.display = 'none';
+}
+function openTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+function toastMsg(m) {
+    const t = document.getElementById('toast');
+    t.innerText = m; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+}
+function clearFields() { document.querySelectorAll('input').forEach(i => i.value = ''); }
+
+window.onload = initDB;
+</script>
+</body>
+</html>
